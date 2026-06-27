@@ -1,0 +1,336 @@
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { 
+  Pressable, 
+  StyleSheet, 
+  Text, 
+  View, 
+  ViewProps, 
+  PressableProps,
+  LayoutChangeEvent
+} from 'react-native';
+import Animated, { 
+  useAnimatedStyle, 
+  useSharedValue, 
+  withTiming, 
+  Easing,
+  interpolateColor
+} from 'react-native-reanimated';
+import Svg, { Path } from 'react-native-svg';
+
+// Notice typography and spacing are imported here
+import { colors, borderWidths, spacing, typography } from '../lib/colors';
+import { cn } from '../lib/utils';
+
+// ---------------------------------------------------------------------------
+// Types & Context
+// ---------------------------------------------------------------------------
+interface AccordionContextState {
+  activeValues: string[];
+  toggleValue: (value: string) => void;
+}
+
+const AccordionContext = createContext<AccordionContextState | undefined>(undefined);
+
+function useAccordionContext() {
+  const context = useContext(AccordionContext);
+  if (!context) {
+    throw new Error('Accordion components must be used within an <Accordion />');
+  }
+  return context;
+}
+
+interface AccordionItemContextState {
+  value: string;
+  isOpen: boolean;
+}
+
+const AccordionItemContext = createContext<AccordionItemContextState | undefined>(undefined);
+
+function useAccordionItemContext() {
+  const context = useContext(AccordionItemContext);
+  if (!context) {
+    throw new Error('AccordionTrigger and AccordionContent must be used within an <AccordionItem />');
+  }
+  return context;
+}
+
+export interface AccordionProps extends ViewProps {
+  /**
+   * Defines if multiple items can be open at the same time.
+   * @default 'single'
+   */
+  type?: 'single' | 'multiple';
+  /**
+   * The controlled value(s) of the open item(s).
+   */
+  value?: string | string[];
+  /**
+   * Callback fired when the open state changes.
+   */
+  onValueChange?: (value: any) => void;
+}
+
+export interface AccordionItemProps extends ViewProps {
+  /**
+   * The unique value of the item.
+   */
+  value: string;
+}
+
+export interface AccordionTriggerProps extends Omit<PressableProps, 'onPress'> {
+  /**
+   * Disables the trigger.
+   * @default false
+   */
+  disabled?: boolean;
+}
+
+// ---------------------------------------------------------------------------
+// Design tokens
+// ---------------------------------------------------------------------------
+// Maintained for strict template compliance, though unused by Accordion
+const SHADOW_OFFSET = 4;
+
+// ---------------------------------------------------------------------------
+// Components
+// ---------------------------------------------------------------------------
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+export function Accordion({ 
+  type = 'single', 
+  value, 
+  onValueChange, 
+  children, 
+  style, 
+  ...props 
+}: AccordionProps) {
+  const [internalValues, setInternalValues] = useState<string[]>([]);
+
+  const isControlled = value !== undefined;
+  
+  // Normalize controlled value to array
+  const activeValues = isControlled 
+    ? (Array.isArray(value) ? value : (value ? [value] : []))
+    : internalValues;
+
+  const toggleValue = useCallback((itemValue: string) => {
+    let newValues: string[];
+    const isCurrentlyOpen = activeValues.includes(itemValue);
+
+    if (type === 'single') {
+      newValues = isCurrentlyOpen ? [] : [itemValue];
+    } else {
+      newValues = isCurrentlyOpen 
+        ? activeValues.filter(v => v !== itemValue)
+        : [...activeValues, itemValue];
+    }
+
+    if (!isControlled) {
+      setInternalValues(newValues);
+    }
+
+    if (onValueChange) {
+      onValueChange(type === 'single' ? newValues[0] || '' : newValues);
+    }
+  }, [type, activeValues, isControlled, onValueChange]);
+
+  return (
+    <AccordionContext.Provider value={{ activeValues, toggleValue }}>
+      <View style={cn(styles.root, style)} {...props}>
+        {children}
+      </View>
+    </AccordionContext.Provider>
+  );
+}
+
+export function AccordionItem({ value, children, style, ...props }: AccordionItemProps) {
+  const { activeValues } = useAccordionContext();
+  const isOpen = activeValues.includes(value);
+
+  return (
+    <AccordionItemContext.Provider value={{ value, isOpen }}>
+      <View style={cn(styles.item, style)} {...props}>
+        {children}
+      </View>
+    </AccordionItemContext.Provider>
+  );
+}
+
+export function AccordionTrigger({ disabled = false, children, style, ...props }: AccordionTriggerProps) {
+  const { toggleValue } = useAccordionContext();
+  const { value, isOpen } = useAccordionItemContext();
+  
+  const isPressed = useSharedValue(0);
+  const rotation = useSharedValue(isOpen ? 180 : 0);
+
+  useEffect(() => {
+    rotation.value = withTiming(isOpen ? 180 : 0, { 
+      duration: 200, 
+      easing: Easing.out(Easing.quad) 
+    });
+  }, [isOpen, rotation]);
+
+  const handlePressIn = () => {
+    if (disabled) return;
+    isPressed.value = withTiming(1, { duration: 100, easing: Easing.out(Easing.quad) });
+  };
+
+  const handlePressOut = () => {
+    if (disabled) return;
+    isPressed.value = withTiming(0, { duration: 80, easing: Easing.in(Easing.quad) });
+  };
+
+  const handlePress = () => {
+    if (disabled) return;
+    toggleValue(value);
+  };
+
+  const animatedBackgroundStyle = useAnimatedStyle(() => ({
+    backgroundColor: interpolateColor(
+      isPressed.value,
+      [0, 1],
+      [colors.light.background, colors.light.muted]
+    ),
+  }));
+
+  const animatedChevronStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${rotation.value}deg` }],
+  }));
+
+  return (
+    <AnimatedPressable
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      onPress={handlePress}
+      disabled={disabled}
+      style={[
+        styles.trigger,
+        disabled && styles.triggerDisabled,
+        animatedBackgroundStyle,
+        style
+      ]}
+      accessibilityRole="button"
+      accessibilityState={{ expanded: isOpen, disabled }}
+      {...props}
+    >
+      <Text 
+        style={cn(styles.triggerText, disabled && styles.textDisabled)}
+        numberOfLines={1}
+      >
+        {children}
+      </Text>
+      
+      <Animated.View style={[styles.chevronContainer, animatedChevronStyle]}>
+        <Svg 
+          width="20" 
+          height="20" 
+          viewBox="0 0 24 24" 
+          fill="none" 
+          stroke={disabled ? colors.light.mutedForeground : colors.light.foreground} 
+          strokeWidth="4" // Thick brutalist chevron
+          strokeLinecap="square" 
+          strokeLinejoin="miter"
+        >
+          <Path d="M6 9l6 6 6-6" />
+        </Svg>
+      </Animated.View>
+    </AnimatedPressable>
+  );
+}
+
+export function AccordionContent({ children, style, ...props }: ViewProps) {
+  const { isOpen } = useAccordionItemContext();
+  const [contentHeight, setContentHeight] = useState(0);
+  const height = useSharedValue(0);
+
+  useEffect(() => {
+    if (contentHeight > 0) {
+      height.value = withTiming(isOpen ? contentHeight : 0, {
+        duration: 250,
+        easing: Easing.out(Easing.quad)
+      });
+    }
+  }, [isOpen, contentHeight, height]);
+
+  const handleLayout = (e: LayoutChangeEvent) => {
+    const h = e.nativeEvent.layout.height;
+    if (h > 0 && h !== contentHeight) {
+      setContentHeight(h);
+    }
+  };
+
+  const animatedHeightStyle = useAnimatedStyle(() => ({
+    height: height.value,
+  }));
+
+  return (
+    <Animated.View 
+      style={[styles.contentWrapper, animatedHeightStyle]} 
+      pointerEvents={isOpen ? 'auto' : 'none'}
+    >
+      {/* Position absolute ensures the inner view renders at full natural height 
+        for measurement, even while the wrapper is collapsed to 0 height.
+      */}
+      <View 
+        onLayout={handleLayout} 
+        style={cn(styles.contentInner, style)}
+        {...props}
+      >
+        {children}
+      </View>
+    </Animated.View>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Styles
+// ---------------------------------------------------------------------------
+const styles = StyleSheet.create({
+  root: {
+    width: '100%',
+  },
+  item: {
+    // Thick bottom borders on items as requested
+    borderBottomWidth: borderWidths.heavy,
+    borderColor: colors.light.border,
+    backgroundColor: colors.light.background,
+  },
+  trigger: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+  },
+  triggerDisabled: {
+    backgroundColor: colors.light.muted,
+  },
+  triggerText: {
+    flex: 1,
+    fontSize: typography.md,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+    color: colors.light.foreground,
+  },
+  textDisabled: {
+    color: colors.light.mutedForeground,
+  },
+  chevronContainer: {
+    marginLeft: spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  contentWrapper: {
+    overflow: 'hidden',
+    width: '100%',
+  },
+  contentInner: {
+    position: 'absolute', // Required for accurate layout measurement while hidden
+    width: '100%',
+    padding: spacing.md,
+    // Hard line inside the body separating it from the header
+    borderTopWidth: borderWidths.standard,
+    borderColor: colors.light.border,
+  },
+});
