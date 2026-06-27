@@ -17,6 +17,7 @@ export interface LabelProps extends TextProps {
    * @default false
    */
   disabled?: boolean;
+  children?: React.ReactNode;
 }
 
 // ---------------------------------------------------------------------------

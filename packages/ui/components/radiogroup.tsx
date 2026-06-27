@@ -28,6 +28,8 @@ export interface RadioGroupProps extends ViewProps {
    * @default false
    */
   disabled?: boolean;
+  children?: React.ReactNode;
+  style?: any;
 }
 
 export interface RadioGroupItemProps extends Omit<PressableProps, 'onPress' | 'value'> {

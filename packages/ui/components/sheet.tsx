@@ -40,7 +40,7 @@ export interface SheetProps {
    * Callback fired when the sheet closes (e.g., swiped down or backdrop pressed).
    */
   onOpenChange: (open: boolean) => void;
-  children: React.ReactNode;
+  children: (props: { open: boolean; handleDismiss: () => void }) => React.ReactNode;
 }
 
 export interface SheetContentProps extends ViewProps {
@@ -48,7 +48,8 @@ export interface SheetContentProps extends ViewProps {
    * The height the sheet snaps to when pulled up.
    * @default 400
    */
-  snapPointHeight?: number;
+  PointHeight?: number;
+  children?: React.ReactNode;
 }
 
 // ---------------------------------------------------------------------------

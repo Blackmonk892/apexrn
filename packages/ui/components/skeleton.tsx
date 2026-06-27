@@ -22,6 +22,7 @@ export interface SkeletonProps extends ViewProps {
    * @default false
    */
   paused?: boolean;
+  style?: any;
 }
 
 // ---------------------------------------------------------------------------

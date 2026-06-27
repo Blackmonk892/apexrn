@@ -56,6 +56,7 @@ export interface SelectContentProps extends ViewProps {
    * @default 350
    */
   sheetHeight?: number;
+  children?: React.ReactNode;
 }
 
 export interface SelectItemProps {

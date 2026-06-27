@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native';
+import { Pressable, StyleSheet, Text, View, ViewProps, ViewStyle } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
 
 // Notice typography and spacing are imported here
@@ -15,6 +15,7 @@ export interface SeparatorProps extends ViewProps {
    * @default 'horizontal'
    */
   orientation?: 'horizontal' | 'vertical';
+  style?: any;
 }
 
 // ---------------------------------------------------------------------------

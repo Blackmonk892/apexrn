@@ -57,6 +57,7 @@ export interface DialogContentProps extends ViewProps {
    * Callback fired when the backdrop is pressed.
    */
   onInteractOutside?: () => void;
+  children?: React.ReactNode;
 }
 
 // ---------------------------------------------------------------------------

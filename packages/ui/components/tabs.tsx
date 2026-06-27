@@ -61,6 +61,7 @@ export interface TabsProps extends ViewProps {
    * Callback fired when a tab is selected.
    */
   onValueChange: (value: string) => void;
+  children?: React.ReactNode;
 }
 
 export interface TabsTriggerProps extends Omit<PressableProps, 'onPress'> {
@@ -73,6 +74,7 @@ export interface TabsTriggerProps extends Omit<PressableProps, 'onPress'> {
    * @default false
    */
   disabled?: boolean;
+  children?: React.ReactNode;
 }
 
 export interface TabsContentProps extends ViewProps {
@@ -80,6 +82,7 @@ export interface TabsContentProps extends ViewProps {
    * The value that activates this content block.
    */
   value: string;
+  children?: React.ReactNode;
 }
 
 // ---------------------------------------------------------------------------
