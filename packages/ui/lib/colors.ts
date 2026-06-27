@@ -1,3 +1,6 @@
+import { moderateScale } from './metrics';
+import { normalize } from './metrics';
+
 export const colors = {
   light: {
     background: '#FFFFFF',
@@ -34,13 +37,24 @@ export const colors = {
 } as const;
 
 export const spacing = {
-  xs: 4,
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 24,
-  '2xl': 32,
-  '3xl': 48,
+  xs: moderateScale(4),
+  sm: moderateScale(8),
+  md: moderateScale(12),
+  lg: moderateScale(16),
+  xl: moderateScale(24),
+  '2xl': moderateScale(32),
+  '3xl': moderateScale(48),
+} as const;
+
+export const typography = {
+  xs: normalize(12),
+  sm: normalize(14),
+  md: normalize(16),
+  lg: normalize(18),
+  xl: normalize(20),
+  '2xl': normalize(24),
+  '3xl': normalize(32),
+  '4xl': normalize(40),
 } as const;
 
 export const borderWidths = {

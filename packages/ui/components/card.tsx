@@ -2,7 +2,6 @@ import React, { ReactNode } from 'react';
 import {
   Pressable,
   StyleSheet,
-  Text,
   View,
   ViewStyle,
 } from 'react-native';
@@ -13,6 +12,7 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 
+// Import spacing (which is now dynamically scaled)
 import { colors, borderWidths, spacing } from '../lib/colors';
 
 // ---------------------------------------------------------------------------
@@ -198,6 +198,7 @@ const styles = StyleSheet.create({
     borderRadius: 0,
   },
   content: {
+    // This will now automatically scale because you updated spacing.lg in colors.ts
     padding: spacing.lg,
   },
   header: {

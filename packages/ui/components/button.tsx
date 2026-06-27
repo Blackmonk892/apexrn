@@ -14,7 +14,8 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 
-import { colors, borderWidths } from '../lib/colors';
+// Import spacing and typography from your updated colors/metrics file
+import { colors, borderWidths, spacing, typography } from '../lib/colors';
 import { cn } from '../lib/utils';
 
 // ---------------------------------------------------------------------------
@@ -71,10 +72,11 @@ const VARIANTS: Record<Variant, { bg: string; fg: string; hasShadow: boolean }> 
   },
 };
 
+// Replaced hardcoded numbers with responsive scaling tokens
 const SIZES: Record<Size, { py: number; px: number; fontSize: number }> = {
-  sm: { py: 8, px: 14, fontSize: 13 },
-  md: { py: 12, px: 20, fontSize: 15 },
-  lg: { py: 16, px: 28, fontSize: 17 },
+  sm: { py: spacing.sm, px: spacing.md, fontSize: typography.sm },
+  md: { py: spacing.md, px: spacing.lg, fontSize: typography.md },
+  lg: { py: spacing.lg, px: spacing.xl, fontSize: typography.lg },
 };
 
 // ---------------------------------------------------------------------------
