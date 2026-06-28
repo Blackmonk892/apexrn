@@ -23,7 +23,7 @@ import { colors, borderWidths, spacing, typography } from '../lib/colors';
 import { cn } from '../lib/utils';
 
 // ⚠️ IMPORTANT: Composing the existing ListItem primitive
-import ListItem from './list-item';
+import ListItem from './listitem';
 
 // ---------------------------------------------------------------------------
 // Types & Context

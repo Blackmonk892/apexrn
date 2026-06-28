@@ -7,7 +7,7 @@ import { colors, borderWidths, spacing, typography } from '../lib/colors';
 import { cn } from '../lib/utils';
 
 // ⚠️ IMPORTANT: Composing existing ApexRN primitives
-import Input from './input';
+import Input from './Input';
 import { Sheet, SheetContent } from './sheet';
 import Button from './button';
 
