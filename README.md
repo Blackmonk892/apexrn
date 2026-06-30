@@ -54,6 +54,9 @@ ApexRN prioritizes:
 
 ## Features
 
+<img width="720" height="1600" alt="Screenshot_2026-06-30-07-36-06-440_host exp exponent" src="https://github.com/user-attachments/assets/bb7c92c4-ed5c-4616-b7d8-2de099726d45" />
+
+
 * Buttons
 * Cards
 * Inputs
