@@ -1,4 +1,4 @@
-<img width="720" height="1600" alt="Screenshot_2026-06-30-07-35-56-360_host exp exponent" src="https://github.com/user-attachments/assets/5a8fa406-101c-4971-82ad-27ad6988dc2f" />
+
 # ApexRN
 
 > **A brutalist React Native UI library built for developers who want bold interfaces—not boring ones.**
