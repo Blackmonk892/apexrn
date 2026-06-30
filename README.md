@@ -1,4 +1,4 @@
-
+<img width="720" height="1600" alt="Screenshot_2026-06-30-07-35-56-360_host exp exponent" src="https://github.com/user-attachments/assets/5a8fa406-101c-4971-82ad-27ad6988dc2f" />
 # ApexRN
 
 > **A brutalist React Native UI library built for developers who want bold interfaces—not boring ones.**
@@ -54,7 +54,43 @@ ApexRN prioritizes:
 
 ## Features
 
-<img width="720" height="1600" alt="Screenshot_2026-06-30-07-36-06-440_host exp exponent" src="https://github.com/user-attachments/assets/bb7c92c4-ed5c-4616-b7d8-2de099726d45" />
+<table align="center">
+  <tr>
+    <td align="center">
+      <img src="https://github.com/user-attachments/assets/41d1960b-59a2-4a2a-a863-c2118e2b5fe8" width="220" alt="Home" />
+    </td>
+    <td align="center">
+      <img src="https://github.com/user-attachments/assets/646a24e0-ec3a-437a-99e0-7aad05931eaf" width="220 alt="Buttons" />
+    </td>
+    <td align="center">
+      <img src="https://github.com/user-attachments/assets/6fef9971-1f6e-4626-939b-753682eb143d" width="220" alt="Cards" />
+    </td>
+    <td align="center">
+      <img src="https://github.com/user-attachments/assets/07d400ff-84ed-411b-bb4a-3b8794c7dfa0" width="220" alt="Cards" />
+    </td>
+      <td align="center">
+      <img src="https://github.com/user-attachments/assets/571014fd-d31e-412e-ab46-5a25e9cae01a" width="220" alt="Cards" />
+    </td>
+     <td align="center">
+      <img src="https://github.com/user-attachments/assets/099bd77b-be2c-4667-bff1-c34b5910a90f" width="220" alt="Cards" />
+    </td>
+      <td align="center">
+      <img src="https://github.com/user-attachments/assets/e11a34b6-87f3-4e50-a267-0410f3fbca79" width="220" alt="Cards" />
+    </td>
+    </td>
+      <td align="center">
+      <img src="https://github.com/user-attachments/assets/59f4bac3-2bec-413a-bb0d-5669c566e320" width="220" alt="Cards" />
+    </td>
+     <td align="center">
+      <img src="https://github.com/user-attachments/assets/d40ed797-0e4a-44d2-88cb-eacc1f7782c4" width="220" alt="Cards" />
+    </td>
+     <td align="center">
+      <img src="https://github.com/user-attachments/assets/6232931b-59be-448c-8b25-fb01a41d5a67" width="220" alt="Cards" />
+    </td>
+    
+
+  </tr>
+</table>
 
 
 * Buttons
