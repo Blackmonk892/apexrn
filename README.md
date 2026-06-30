@@ -1,6 +1,3 @@
-Here's a README that feels like a modern open-source project instead of a generated one.
-
----
 
 # ApexRN
 
