@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Pressable, StyleSheet, Text, View, ViewProps } from 'react-native';
+import { StyleSheet, View, ViewProps } from 'react-native';
 import Animated, { 
   useAnimatedStyle, 
   useSharedValue, 
@@ -8,8 +8,8 @@ import Animated, {
   Easing 
 } from 'react-native-reanimated';
 
-// Notice typography and spacing are imported here
-import { colors, borderWidths, spacing, typography } from '../lib/colors';
+import { borderWidths, spacing } from '../lib/colors';
+import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
 
 // ---------------------------------------------------------------------------
@@ -18,7 +18,6 @@ import { cn } from '../lib/utils';
 export interface SkeletonProps extends ViewProps {
   /**
    * Optional flag to pause the animation.
-   * Useful for respecting reduced motion preferences.
    * @default false
    */
   paused?: boolean;
@@ -26,21 +25,14 @@ export interface SkeletonProps extends ViewProps {
 }
 
 // ---------------------------------------------------------------------------
-// Design tokens
-// ---------------------------------------------------------------------------
-// Maintained for strict template compliance, though unused by the Skeleton.
-const SHADOW_OFFSET = 4;
-
-// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-
 export default function Skeleton({
   paused = false,
   style,
   ...props
 }: SkeletonProps) {
+  const { colors } = useTheme();
   const position = useSharedValue(-100);
 
   useEffect(() => {
@@ -49,14 +41,13 @@ export default function Skeleton({
       return;
     }
     
-    // Creates a harsh, bouncing linear sweep back and forth
     position.value = withRepeat(
       withTiming(100, { 
         duration: 900, 
         easing: Easing.linear 
       }),
-      -1, // infinite loop
-      true // reverse direction on each cycle
+      -1,
+      true
     );
   }, [paused, position]);
 
@@ -68,13 +59,13 @@ export default function Skeleton({
 
   return (
     <View
-      style={cn(styles.base, style)}
+      style={cn(styles.base, { backgroundColor: colors.muted, borderColor: colors.border }, style)}
       accessibilityRole="progressbar"
       accessibilityLabel="Loading content"
       accessibilityState={{ busy: true }}
       {...props}
     >
-      <Animated.View style={[styles.swipe, animatedStyle]} />
+      <Animated.View style={[styles.swipe, { backgroundColor: colors.mutedForeground }, animatedStyle]} />
     </View>
   );
 }
@@ -84,13 +75,10 @@ export default function Skeleton({
 // ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
   base: {
-    backgroundColor: colors.light.muted,
-    borderColor: colors.light.border,
     borderWidth: borderWidths.standard,
     borderRadius: 0,
     overflow: 'hidden',
     position: 'relative',
-    // Default fallback dimensions in case it isn't flexed or sized by the parent
     minHeight: spacing.xl,
     minWidth: '100%',
   },
@@ -99,8 +87,7 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     width: '40%',
-    backgroundColor: colors.light.mutedForeground, 
-    opacity: 0.3, // High-contrast harsh block rather than a soft gradient mask
+    opacity: 0.3,
     borderRadius: 0,
   },
 });

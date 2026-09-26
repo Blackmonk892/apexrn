@@ -1,7 +1,8 @@
 import React, { ReactNode } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View, ViewStyle } from 'react-native';
 
-import { colors, spacing, typography } from '../lib/colors';
+import { spacing, typography } from '../lib/colors';
+import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
 import BrutalSurface from './brutal_surface';
 
@@ -19,7 +20,6 @@ export interface ButtonProps {
   onPress?: () => void;
   /** Visual variant. @default 'default' */
   variant?: Variant;
-  /** Size preset. @default 'md' */
   size?: Size;
   /** Disables the button. */
   disabled?: boolean;
@@ -40,29 +40,6 @@ export interface ButtonProps {
 // ---------------------------------------------------------------------------
 
 const SHADOW_OFFSET = 4;
-
-const VARIANTS: Record<Variant, { bg: string; fg: string; hasShadow: boolean }> = {
-  default: {
-    bg: colors.light.background,
-    fg: colors.light.foreground,
-    hasShadow: true,
-  },
-  primary: {
-    bg: colors.light.primary,
-    fg: colors.light.primaryForeground,
-    hasShadow: true,
-  },
-  outline: {
-    bg: 'transparent',
-    fg: colors.light.foreground,
-    hasShadow: false,
-  },
-  destructive: {
-    bg: colors.light.destructive,
-    fg: colors.light.destructiveForeground,
-    hasShadow: true,
-  },
-};
 
 const SIZES: Record<Size, { py: number; px: number; fontSize: number }> = {
   sm: { py: spacing.sm, px: spacing.md, fontSize: typography.sm },
@@ -86,14 +63,39 @@ export default function Button({
   style,
   accessibilityLabel,
 }: ButtonProps) {
+  const { colors } = useTheme();
+
+  const VARIANTS: Record<Variant, { bg: string; fg: string; hasShadow: boolean }> = {
+    default: {
+      bg: colors.background,
+      fg: colors.foreground,
+      hasShadow: true,
+    },
+    primary: {
+      bg: colors.primary,
+      fg: colors.primaryForeground,
+      hasShadow: true,
+    },
+    outline: {
+      bg: 'transparent',
+      fg: colors.foreground,
+      hasShadow: false,
+    },
+    destructive: {
+      bg: colors.destructive,
+      fg: colors.destructiveForeground,
+      hasShadow: true,
+    },
+  };
+
   const isDisabled = disabled || loading;
   const v = VARIANTS[variant];
   const s = SIZES[size];
   const showShadow = v.hasShadow && !isDisabled;
 
-  const surfaceBg = isDisabled ? colors.light.muted : v.bg;
-  const textColor = isDisabled ? colors.light.mutedForeground : v.fg;
-  const borderColor = isDisabled ? colors.light.mutedForeground : colors.light.border;
+  const surfaceBg = isDisabled ? colors.muted : v.bg;
+  const textColor = isDisabled ? colors.mutedForeground : v.fg;
+  const borderColor = isDisabled ? colors.mutedForeground : colors.border;
 
   const content = loading ? (
     <ActivityIndicator size="small" color={textColor} />

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View, ViewProps, LayoutChangeEvent } from 'react-native';
+import { StyleSheet, Text, View, ViewProps, LayoutChangeEvent } from 'react-native';
 import Animated, { 
   useAnimatedStyle, 
   useSharedValue, 
@@ -8,8 +8,8 @@ import Animated, {
   Easing 
 } from 'react-native-reanimated';
 
-// Notice typography and spacing are imported here
-import { colors, borderWidths, spacing, typography } from '../lib/colors';
+import { borderWidths, spacing, typography } from '../lib/colors';
+import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
 
 // ---------------------------------------------------------------------------
@@ -38,16 +38,8 @@ export interface MarqueeProps extends ViewProps {
 }
 
 // ---------------------------------------------------------------------------
-// Design tokens
-// ---------------------------------------------------------------------------
-// Maintained for strict template compliance
-const SHADOW_OFFSET = 4;
-
-// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-
 export default function Marquee({
   text,
   speed = 60,
@@ -56,22 +48,16 @@ export default function Marquee({
   style,
   ...props
 }: MarqueeProps) {
+  const { colors } = useTheme();
   const [textWidth, setTextWidth] = useState(0);
   const translateX = useSharedValue(0);
 
   const content = `${text}${divider}`;
-  
-  // We render the text multiple times to ensure it fills wider screens 
-  // without clipping before the loop resets.
   const repetitions = [0, 1, 2, 3, 4];
 
   useEffect(() => {
     if (textWidth > 0 && !disabled) {
-      // Calculate duration based on the actual measured width of ONE text block
-      // to maintain a constant scroll speed regardless of text length.
       const duration = (textWidth / speed) * 1000;
-
-      // Reset value in case width changes dynamically
       translateX.value = 0;
       
       translateX.value = withRepeat(
@@ -79,8 +65,8 @@ export default function Marquee({
           duration,
           easing: Easing.linear,
         }),
-        -1, // Infinite loop
-        false // Do not reverse, jump back to 0 seamlessly
+        -1,
+        false
       );
     } else if (disabled) {
       translateX.value = 0;
@@ -104,7 +90,8 @@ export default function Marquee({
     <View
       style={cn(
         styles.container,
-        disabled && styles.containerDisabled,
+        { backgroundColor: colors.background, borderColor: colors.border },
+        disabled && { backgroundColor: colors.muted, borderColor: colors.mutedForeground },
         style
       )}
       accessibilityRole="text"
@@ -112,12 +99,12 @@ export default function Marquee({
       {...props}
     >
       <Animated.View style={[styles.track, animatedStyle]}>
-        {/* The first item is measured to dictate the loop distance */}
         <View onLayout={handleLayout} style={styles.textWrapper}>
           <Text
             style={cn(
               styles.text,
-              disabled && styles.textDisabled
+              { color: colors.foreground },
+              disabled && { color: colors.mutedForeground }
             )}
             numberOfLines={1}
           >
@@ -125,14 +112,14 @@ export default function Marquee({
           </Text>
         </View>
 
-        {/* Subsequent items fill the visual gap while translating */}
         {textWidth > 0 &&
           repetitions.slice(1).map((key) => (
             <View key={key} style={styles.textWrapper}>
               <Text
                 style={cn(
                   styles.text,
-                  disabled && styles.textDisabled
+                  { color: colors.foreground },
+                  disabled && { color: colors.mutedForeground }
                 )}
                 numberOfLines={1}
               >
@@ -152,15 +139,9 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
     overflow: 'hidden',
-    backgroundColor: colors.light.background,
     borderTopWidth: borderWidths.heavy,
     borderBottomWidth: borderWidths.heavy,
-    borderColor: colors.light.border,
     paddingVertical: spacing.sm,
-  },
-  containerDisabled: {
-    backgroundColor: colors.light.muted,
-    borderColor: colors.light.mutedForeground,
   },
   track: {
     flexDirection: 'row',
@@ -170,16 +151,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   text: {
-    // Assuming '3xl' is standard in your typography tokens. 
-    // Typescript might complain if you strictly type without brackets in your lib.
-    // Bracket notation used to safely access numerical/symbolic keys.
     fontSize: typography['3xl'] || 32,
     fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 0.4,
-    color: colors.light.foreground,
-  },
-  textDisabled: {
-    color: colors.light.mutedForeground,
   },
 });

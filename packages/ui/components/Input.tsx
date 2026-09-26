@@ -6,12 +6,11 @@ import {
   TextInputProps,
   TextStyle,
   View,
-  NativeSyntheticEvent,
-  TextInputFocusEventData,
 } from 'react-native';
 import { useAnimatedStyle, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
 
-import { colors, borderWidths, spacing, typography } from '../lib/colors';
+import { borderWidths, spacing, typography } from '../lib/colors';
+import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
 import BrutalSurface from './brutal_surface';
 
@@ -54,14 +53,14 @@ const Input = forwardRef<TextInput, InputProps>(({
   style,
   onFocus,
   onBlur,
+  placeholderTextColor,
   ...props
 }, ref) => {
+  const { colors } = useTheme();
   const [isFocused, setIsFocused] = useState(false);
-  // Focus-driven shadow reveal, not press physics — kept independent of
-  // BrutalSurface's own (unused here, since pressable={false}) press timing.
   const focusProgress = useSharedValue(0);
 
-  const handleFocus = (e: NativeSyntheticEvent<TextInputFocusEventData>) => {
+  const handleFocus = (e: any) => {
     if (disabled) return;
     setIsFocused(true);
     focusProgress.value = withTiming(1, {
@@ -71,7 +70,7 @@ const Input = forwardRef<TextInput, InputProps>(({
     onFocus?.(e);
   };
 
-  const handleBlur = (e: NativeSyntheticEvent<TextInputFocusEventData>) => {
+  const handleBlur = (e: any) => {
     if (disabled) return;
     setIsFocused(false);
     focusProgress.value = withTiming(0, {
@@ -93,7 +92,9 @@ const Input = forwardRef<TextInput, InputProps>(({
         shadowStyle={animatedShadowStyle}
         offset={SHADOW_OFFSET}
         borderWidth={isFocused ? 'heavy' : 'standard'}
-        surfaceStyle={[styles.surface, disabled && styles.surfaceDisabled]}
+        backgroundColor={disabled ? colors.muted : colors.background}
+        borderColor={disabled ? colors.mutedForeground : colors.border}
+        surfaceStyle={styles.surface}
       >
         {leadingIcon && (
           <View style={cn(styles.iconContainer, styles.leadingIcon)}>
@@ -105,13 +106,14 @@ const Input = forwardRef<TextInput, InputProps>(({
           ref={ref}
           style={cn(
             styles.input,
-            disabled && styles.textDisabled,
+            { color: colors.foreground },
+            disabled && { color: colors.mutedForeground },
             inputStyle
           )}
           editable={!disabled}
           onFocus={handleFocus}
           onBlur={handleBlur}
-          placeholderTextColor={colors.light.mutedForeground}
+          placeholderTextColor={placeholderTextColor ?? colors.mutedForeground}
           accessibilityState={{ disabled }}
           {...props}
         />
@@ -139,28 +141,15 @@ const styles = StyleSheet.create({
   surface: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.light.background,
-    // Provide a stable min-height so border snapping doesn't collapse the layout
     minHeight: 48,
-  },
-  surfaceDisabled: {
-    backgroundColor: colors.light.muted,
-    borderColor: colors.light.mutedForeground,
-    borderWidth: borderWidths.standard,
   },
   input: {
     flex: 1,
-    color: colors.light.foreground,
     fontSize: typography.md,
-    fontFamily: 'System', // Replace with your brutalist font family if configured
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
-    // Remove default Android padding
     padding: 0,
     margin: 0,
-  },
-  textDisabled: {
-    color: colors.light.mutedForeground,
   },
   iconContainer: {
     justifyContent: 'center',

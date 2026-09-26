@@ -1,11 +1,8 @@
 import React from 'react';
 import { StyleSheet, Text, TextProps } from 'react-native';
-// Reanimated is imported to fulfill the strict file structure requirement,
-// but remains unused here since the Label is a non-interactive primitive.
-import Animated, { useAnimatedStyle, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
 
-// Notice typography and spacing are imported here
-import { colors, borderWidths, spacing, typography } from '../lib/colors';
+import { spacing, typography } from '../lib/colors';
+import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
 
 // ---------------------------------------------------------------------------
@@ -21,12 +18,6 @@ export interface LabelProps extends TextProps {
 }
 
 // ---------------------------------------------------------------------------
-// Design tokens
-// ---------------------------------------------------------------------------
-// Maintained for strict template compliance, though unused by the Label.
-const SHADOW_OFFSET = 4;
-
-// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 export default function Label({
@@ -35,11 +26,13 @@ export default function Label({
   children,
   ...props
 }: LabelProps) {
+  const { colors } = useTheme();
+
   return (
     <Text
       style={cn(
         styles.label,
-        disabled && styles.disabled,
+        { color: disabled ? colors.mutedForeground : colors.foreground },
         style
       )}
       accessibilityRole="text"
@@ -60,9 +53,5 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 0.4,
-    color: colors.light.foreground,
-  },
-  disabled: {
-    color: colors.light.mutedForeground,
   },
 });

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Layout from '../components/Layout';
 import { useShowcaseTheme } from '../context/ThemeContext';
-import Input from '@ui/components/Input';
+import Input from '@ui/components/input';
 import Checkbox from '@ui/components/checkbox';
 import { RadioGroup, RadioGroupItem } from '@ui/components/radiogroup';
 import Switch from '@ui/components/switch';

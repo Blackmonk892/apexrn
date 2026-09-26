@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Layout from '../components/Layout';
 import { useShowcaseTheme } from '../context/ThemeContext';
-import Input from '@ui/components/Input';
+import Input from '@ui/components/input';
 
 export default function InputScreen({ onBack }: { onBack: () => void }) {
   const { isDark } = useShowcaseTheme();

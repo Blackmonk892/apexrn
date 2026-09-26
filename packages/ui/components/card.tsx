@@ -1,7 +1,8 @@
 import React, { ReactNode } from 'react';
 import { StyleSheet, View, ViewStyle } from 'react-native';
 
-import { colors, borderWidths, spacing } from '../lib/colors';
+import { borderWidths, spacing } from '../lib/colors';
+import { useTheme } from '../lib/theme';
 import BrutalSurface from './brutal_surface';
 
 // ---------------------------------------------------------------------------
@@ -39,36 +40,23 @@ export interface CardFooterProps {
 
 const SHADOW_OFFSET = 4;
 
-const VARIANTS: Record<Variant, { bg: string; fg: string }> = {
-  default: {
-    bg: colors.light.background,
-    fg: colors.light.foreground,
-  },
-  primary: {
-    bg: colors.light.primary,
-    fg: colors.light.primaryForeground,
-  },
-  accent: {
-    bg: colors.light.accent,
-    fg: colors.light.accentForeground,
-  },
-};
-
 // ---------------------------------------------------------------------------
 // Sub-components
 // ---------------------------------------------------------------------------
 
 export function CardHeader({ children, style }: CardHeaderProps) {
+  const { colors } = useTheme();
   return (
-    <View style={[styles.header, style]}>
+    <View style={[styles.header, { borderBottomColor: colors.border }, style]}>
       {children}
     </View>
   );
 }
 
 export function CardFooter({ children, style }: CardFooterProps) {
+  const { colors } = useTheme();
   return (
-    <View style={[styles.footer, style]}>
+    <View style={[styles.footer, { borderTopColor: colors.border }, style]}>
       {children}
     </View>
   );
@@ -85,6 +73,23 @@ export default function Card({
   style,
   accessibilityLabel,
 }: CardProps) {
+  const { colors } = useTheme();
+
+  const VARIANTS: Record<Variant, { bg: string; fg: string }> = {
+    default: {
+      bg: colors.background,
+      fg: colors.foreground,
+    },
+    primary: {
+      bg: colors.primary,
+      fg: colors.primaryForeground,
+    },
+    accent: {
+      bg: colors.accent,
+      fg: colors.accentForeground,
+    },
+  };
+
   const v = VARIANTS[variant];
   const isPressable = !!onPress;
 
@@ -118,13 +123,11 @@ const styles = StyleSheet.create({
     paddingTop: spacing.lg,
     paddingBottom: spacing.sm,
     borderBottomWidth: borderWidths.standard,
-    borderBottomColor: colors.light.border,
   },
   footer: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.lg,
     paddingTop: spacing.sm,
     borderTopWidth: borderWidths.standard,
-    borderTopColor: colors.light.border,
   },
 });

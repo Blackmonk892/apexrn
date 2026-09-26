@@ -16,8 +16,8 @@ import Animated, {
   Easing 
 } from 'react-native-reanimated';
 
-// Notice typography and spacing are imported here
-import { colors, borderWidths, spacing, typography } from '../lib/colors';
+import { borderWidths, spacing, typography } from '../lib/colors';
+import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
 import BrutalSurface from './brutal_surface';
 
@@ -107,6 +107,7 @@ export function Tabs({ value, onValueChange, children, style, ...props }: TabsPr
 
 export function TabsList({ children, style, ...props }: ViewProps) {
   const { value } = useTabsContext();
+  const { colors } = useTheme();
   const [layouts, setLayouts] = useState<Record<string, LayoutRectangle>>({});
   
   const translateX = useSharedValue(0);
@@ -115,7 +116,6 @@ export function TabsList({ children, style, ...props }: ViewProps) {
 
   const registerLayout = useCallback((tabValue: string, layout: LayoutRectangle) => {
     setLayouts((prev) => {
-      // Prevent unnecessary state updates if layout hasn't changed
       if (prev[tabValue]?.x === layout.x && prev[tabValue]?.width === layout.width) {
         return prev;
       }
@@ -128,12 +128,10 @@ export function TabsList({ children, style, ...props }: ViewProps) {
     
     if (activeLayout) {
       if (isFirstRender.value) {
-        // Snap instantly on mount to avoid a sliding-in-from-zero flash
         translateX.value = activeLayout.x;
         indicatorWidth.value = activeLayout.width;
         isFirstRender.value = false;
       } else {
-        // Smooth linear transition for subsequent changes
         translateX.value = withTiming(activeLayout.x, { 
           duration: 150, 
           easing: Easing.out(Easing.quad) 
@@ -155,17 +153,14 @@ export function TabsList({ children, style, ...props }: ViewProps) {
     <TabsListContext.Provider value={{ registerLayout }}>
       <BrutalSurface
         style={[styles.listWrapper, style]}
-        surfaceStyle={styles.listSurface}
+        surfaceStyle={[styles.listSurface, { backgroundColor: colors.background }]}
         offset={SHADOW_OFFSET}
         borderWidth="heavy"
         pressable={false}
         accessibilityRole="tablist"
         {...props}
       >
-        {/* The solid black block that translates behind the text.
-          We only render it if width > 0 to prevent a 1px artifact on mount.
-        */}
-        <Animated.View style={[styles.indicator, animatedIndicatorStyle]} />
+        <Animated.View style={[styles.indicator, { backgroundColor: colors.foreground, borderColor: colors.border }, animatedIndicatorStyle]} />
         {children}
       </BrutalSurface>
     </TabsListContext.Provider>
@@ -175,6 +170,7 @@ export function TabsList({ children, style, ...props }: ViewProps) {
 export function TabsTrigger({ value, disabled = false, children, style, ...props }: TabsTriggerProps) {
   const { value: selectedValue, onValueChange } = useTabsContext();
   const { registerLayout } = useTabsListContext();
+  const { colors } = useTheme();
   
   const isSelected = selectedValue === value;
 
@@ -201,8 +197,9 @@ export function TabsTrigger({ value, disabled = false, children, style, ...props
       <Text 
         style={cn(
           styles.triggerText, 
-          isSelected && styles.triggerTextSelected,
-          disabled && styles.triggerTextDisabled
+          { color: colors.foreground },
+          isSelected && { color: colors.background },
+          disabled && { color: colors.mutedForeground }
         )}
         numberOfLines={1}
       >
@@ -222,7 +219,6 @@ export function TabsContent({ value, children, style, ...props }: TabsContentPro
   return (
     <View 
       style={cn(styles.content, style)} 
-      accessibilityRole="tabpanel"
       {...props}
     >
       {children}
@@ -240,25 +236,19 @@ const styles = StyleSheet.create({
   },
   listWrapper: {
     width: '100%',
-    // `style` is applied after BrutalSurface's own offset-based margin, so it
-    // must restate the shadow clearance (SHADOW_OFFSET) alongside the extra gap.
     marginBottom: SHADOW_OFFSET + spacing.md,
   },
   listSurface: {
     flexDirection: 'row',
-    backgroundColor: colors.light.background,
   },
   indicator: {
     position: 'absolute',
     top: 0,
     bottom: 0,
     left: 0,
-    backgroundColor: colors.light.foreground,
-    zIndex: 1, // Sits strictly behind the text layer
-    // Ensures the indicator has the exact same brutal borders to visually merge
+    zIndex: 1,
     borderRightWidth: borderWidths.standard,
     borderLeftWidth: borderWidths.standard,
-    borderColor: colors.light.border,
   },
   trigger: {
     flex: 1,
@@ -266,21 +256,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 2, // Text layer strictly above the indicator
+    zIndex: 2,
   },
   triggerText: {
     fontSize: typography.sm,
     fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 0.4,
-    color: colors.light.foreground,
-  },
-  triggerTextSelected: {
-    // Inverts fully when the black active block translates behind it
-    color: colors.light.background,
-  },
-  triggerTextDisabled: {
-    color: colors.light.mutedForeground,
   },
   content: {
     width: '100%',

@@ -1,13 +1,11 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback } from 'react';
 import { Pressable, StyleSheet, Text, View, ViewProps } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
 
-// Notice typography and spacing are imported here
-import { colors, borderWidths, spacing, typography } from '../lib/colors';
+import { borderWidths, spacing, typography } from '../lib/colors';
+import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
 
-// ⚠️ IMPORTANT: Composing existing ApexRN primitives
-import Input from './Input';
+import Input from './input';
 import { Sheet, SheetContent } from './sheet';
 import Button from './button';
 
@@ -74,9 +72,23 @@ export function DatePicker({ value, onChange, children }: DatePickerProps) {
     onChange(date);
   }, [onChange]);
 
+  const triggerChildren: React.ReactNode[] = [];
+  const contentChildren: React.ReactNode[] = [];
+
+  React.Children.forEach(children, (child) => {
+    if (React.isValidElement(child) && (child.type === DatePickerContent || (child.type as any)?.name === 'DatePickerContent')) {
+      contentChildren.push(child);
+    } else {
+      triggerChildren.push(child);
+    }
+  });
+
   return (
     <DatePickerContext.Provider value={{ selectedDate: value, onDateChange, isOpen, setIsOpen }}>
-      {children}
+      {triggerChildren}
+      <Sheet open={isOpen} onOpenChange={setIsOpen}>
+        {() => contentChildren}
+      </Sheet>
     </DatePickerContext.Provider>
   );
 }
@@ -92,6 +104,8 @@ export function DatePickerTrigger({ placeholder, style, ...props }: DatePickerTr
     ? selectedDate.toISOString().split('T')[0] 
     : '';
 
+  const { onBlur, onFocus, ...inputProps } = props as any;
+
   return (
     <Pressable 
       onPress={handlePress} 
@@ -101,13 +115,12 @@ export function DatePickerTrigger({ placeholder, style, ...props }: DatePickerTr
       accessibilityLabel={`Date Picker: ${selectedDate ? formattedValue : 'Select a date'}`}
     >
       <Input
-        // The Input acts as a display trigger; native keyboard is suppressed
         editable={false} 
         value={formattedValue}
         placeholder={placeholder}
         pointerEvents="none"
         style={styles.inputReset}
-        {...props}
+        {...inputProps}
       />
     </Pressable>
   );
@@ -115,8 +128,8 @@ export function DatePickerTrigger({ placeholder, style, ...props }: DatePickerTr
 
 export function DatePickerContent({ style, ...props }: ViewProps) {
   const { selectedDate, onDateChange, setIsOpen } = useDatePickerContext();
+  const { colors } = useTheme();
   
-  // Default calendar grid view tracks the current month/year
   const [currentDate, setCurrentDate] = useState(new Date());
   
   const year = currentDate.getFullYear();
@@ -125,16 +138,13 @@ export function DatePickerContent({ style, ...props }: ViewProps) {
   const daysCount = getDaysInMonth(year, month);
   const firstDayOffset = getFirstDayOfMonth(year, month);
 
-  // Generates the harsh block grid for the active month
   const renderGrid = () => {
     const grid = [];
     
-    // Add empty slots padding for the beginning of the week
     for (let i = 0; i < firstDayOffset; i++) {
       grid.push(<View key={`empty-${i}`} style={styles.gridCell} />);
     }
 
-    // Populate numbered days
     for (let day = 1; day <= daysCount; day++) {
       const isSelected = 
         selectedDate &&
@@ -152,13 +162,13 @@ export function DatePickerContent({ style, ...props }: ViewProps) {
           onPress={handleSelect}
           style={cn(
             styles.cellSurface,
-            isSelected && styles.cellSelected
+            isSelected && [styles.cellSelected, { backgroundColor: colors.primary, borderColor: colors.border }]
           )}
           accessibilityRole="adjustable"
           accessibilityLabel={`${day} ${month + 1} ${year}`}
           accessibilityState={{ selected: !!isSelected }}
         >
-          <Text style={cn(styles.cellText, isSelected && styles.cellTextSelected)}>
+          <Text style={cn(styles.cellText, { color: colors.foreground }, isSelected && { color: colors.primaryForeground, fontWeight: '800' })}>
             {day}
           </Text>
         </Pressable>
@@ -180,7 +190,6 @@ export function DatePickerContent({ style, ...props }: ViewProps) {
   };
 
   return (
-    // Uses the Sheet overlay, forcing a bottom rise
     <SheetContent PointHeight={420} style={style} {...props}>
       <View style={styles.headerRow}>
         <Button
@@ -189,7 +198,7 @@ export function DatePickerContent({ style, ...props }: ViewProps) {
           onPress={handlePrevMonth}
           style={styles.navButton}
         />
-        <Text style={styles.headerTitle}>
+        <Text style={[styles.headerTitle, { color: colors.foreground }]}>
           {currentDate.toLocaleString('default', { month: 'long', year: 'numeric' }).toUpperCase()}
         </Text>
         <Button
@@ -200,16 +209,14 @@ export function DatePickerContent({ style, ...props }: ViewProps) {
         />
       </View>
 
-      {/* Week Header */}
-      <View style={styles.weekRow}>
+      <View style={[styles.weekRow, { borderColor: colors.border }]}>
         {DAYS_OF_WEEK.map((day) => (
           <View key={day} style={styles.gridCell}>
-            <Text style={styles.weekText}>{day}</Text>
+            <Text style={[styles.weekText, { color: colors.mutedForeground }]}>{day}</Text>
           </View>
         ))}
       </View>
 
-      {/* Blocky calendar day matrix */}
       <View style={styles.gridContainer}>
         {renderGrid()}
       </View>
@@ -247,20 +254,17 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 0.4,
-    color: colors.light.foreground,
   },
   weekRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: spacing.xs,
     borderBottomWidth: borderWidths.standard,
-    borderColor: colors.light.border,
     paddingBottom: spacing.xs,
   },
   weekText: {
     fontSize: typography.xs,
     fontWeight: '800',
-    color: colors.light.mutedForeground,
     textAlign: 'center',
   },
   gridContainer: {
@@ -280,22 +284,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: 'transparent',
-    borderRadius: 0, // Strict blocky Brutalism
+    borderRadius: 0,
   },
   cellSelected: {
-    backgroundColor: colors.light.primary,
-    borderColor: colors.light.border,
     borderWidth: borderWidths.standard,
   },
   cellText: {
     fontSize: typography.sm,
     fontWeight: '600',
-    color: colors.light.foreground,
-  },
-  cellTextSelected: {
-    // Sharp inversion of text color when surface becomes solid primary
-    color: colors.light.primaryForeground,
-    fontWeight: '800',
   },
   footer: {
     marginTop: 'auto',

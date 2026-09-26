@@ -9,19 +9,12 @@ import {
 } from 'react-native';
 import Animated from 'react-native-reanimated';
 
-import { colors, borderWidths } from '../lib/colors';
+import { borderWidths } from '../lib/colors';
+import { useTheme } from '../lib/theme';
 import { usePressPhysics } from '../lib/usePressPhysics';
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
 
 type BorderWidthKey = keyof typeof borderWidths;
 
-// `surfaceStyle` also accepts a Reanimated animated-style object (or an array
-// containing one) — BrutalSurface always renders the foreground as an
-// Animated-capable component, so consumers that need their own animated
-// background (e.g. Checkbox's checked-state fill) can pass it straight in.
 export interface BrutalSurfaceProps
   extends Omit<PressableProps, 'style' | 'children'> {
   children?: ReactNode;
@@ -29,30 +22,26 @@ export interface BrutalSurfaceProps
   offset?: number;
   /** Border thickness preset. @default 'heavy' */
   borderWidth?: BorderWidthKey;
-  /** Wires up press physics + haptics. Set false for non-interactive surfaces (Badge, Avatar, a decorative thumb). @default true */
+  /** Wires up press physics + haptics. Set false for non-interactive surfaces. @default true */
   pressable?: boolean;
-  /** Whether the hard shadow backing renders at all — some variants/states (outline, disabled) drop it entirely rather than just freezing it. @default true */
+  /** Whether the hard shadow backing renders at all. @default true */
   hasShadow?: boolean;
-  /** Matches PressableProps' `disabled` (which allows `null`) so consumers can spread props straight through without a cast. */
+  /** Matches PressableProps' disabled. */
   disabled?: boolean | null;
   /** Skip the haptic tick on press-in without disabling the animation. @default true */
   haptics?: boolean;
   backgroundColor?: string;
   borderColor?: string;
   shadowColor?: string;
-  /** Corner radius for both shadow and surface. Real-brutalism defaults to 0 — only the documented circle exceptions (Avatar, radio dots) should ever pass 999. @default 0 */
+  /** Corner radius for both shadow and surface. @default 0 */
   borderRadius?: number;
-  /** Style for the outer wrapper (reserves margin for the shadow offset). */
+  /** Style for the outer wrapper. */
   style?: StyleProp<ViewStyle>;
-  /** Style for the foreground surface itself (padding, layout, size, background). Also accepts a Reanimated animated-style object. */
+  /** Style for the foreground surface itself. */
   surfaceStyle?: StyleProp<ViewStyle> | any;
-  /** Extra style for the shadow layer — e.g. an animated opacity driven by something other than press (focus, in InputOTP/Input). Also accepts a Reanimated animated-style object. */
+  /** Extra style for the shadow layer. */
   shadowStyle?: StyleProp<ViewStyle> | any;
 }
-
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -64,9 +53,9 @@ export default function BrutalSurface({
   hasShadow = true,
   disabled = false,
   haptics = true,
-  backgroundColor = colors.light.background,
-  borderColor = colors.light.border,
-  shadowColor = colors.light.shadow,
+  backgroundColor,
+  borderColor,
+  shadowColor,
   borderRadius = 0,
   style,
   surfaceStyle,
@@ -75,6 +64,10 @@ export default function BrutalSurface({
   onPressOut,
   ...pressableProps
 }: BrutalSurfaceProps) {
+  const { colors: themeColors } = useTheme();
+  const bg = backgroundColor ?? themeColors.background;
+  const bc = borderColor ?? themeColors.border;
+  const sc = shadowColor ?? themeColors.shadow;
   const isInteractive = pressable && !disabled;
   const bw = borderWidths[borderWidth];
 
@@ -83,7 +76,7 @@ export default function BrutalSurface({
 
   const surfaceContent = [
     styles.surface,
-    { backgroundColor, borderColor, borderWidth: bw, borderRadius },
+    { backgroundColor: bg, borderColor: bc, borderWidth: bw, borderRadius },
     surfaceStyle,
   ];
 
@@ -104,8 +97,8 @@ export default function BrutalSurface({
               left: offset,
               right: -offset,
               bottom: -offset,
-              backgroundColor: shadowColor,
-              borderColor,
+              backgroundColor: sc,
+              borderColor: bc,
               borderWidth: bw,
               borderRadius,
             },
@@ -117,15 +110,15 @@ export default function BrutalSurface({
 
       {pressable ? (
         <AnimatedPressable
-          onPressIn={(e) => {
+          onPressIn={(e: any) => {
             handlePressIn();
             onPressIn?.(e);
           }}
-          onPressOut={(e) => {
+          onPressOut={(e: any) => {
             handlePressOut();
             onPressOut?.(e);
           }}
-          disabled={disabled}
+          disabled={!!disabled}
           style={[styles.surfaceWrap, surfaceContent, isInteractive && animatedSurfaceStyle]}
           {...pressableProps}
         >
@@ -141,7 +134,6 @@ export default function BrutalSurface({
 // ---------------------------------------------------------------------------
 // Styles
 // ---------------------------------------------------------------------------
-
 const styles = StyleSheet.create({
   root: {
     position: 'relative',

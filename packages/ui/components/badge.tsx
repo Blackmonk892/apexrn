@@ -1,7 +1,8 @@
 import React from 'react';
 import { StyleSheet, Text, ViewProps } from 'react-native';
 
-import { colors, spacing, typography } from '../lib/colors';
+import { spacing, typography } from '../lib/colors';
+import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
 import BrutalSurface from './brutal_surface';
 
@@ -30,25 +31,6 @@ export interface BadgeProps extends ViewProps {
 // ---------------------------------------------------------------------------
 const SHADOW_OFFSET_SUBTLE = 2;
 
-const VARIANTS = {
-  default: {
-    surface: { backgroundColor: colors.light.background },
-    text: { color: colors.light.foreground },
-  },
-  primary: {
-    surface: { backgroundColor: colors.light.primary },
-    text: { color: colors.light.primaryForeground },
-  },
-  outline: {
-    surface: { backgroundColor: 'transparent' },
-    text: { color: colors.light.foreground },
-  },
-  accent: {
-    surface: { backgroundColor: colors.light.accent },
-    text: { color: colors.light.accentForeground },
-  },
-};
-
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -59,6 +41,27 @@ export default function Badge({
   style,
   ...props
 }: BadgeProps) {
+  const { colors } = useTheme();
+
+  const VARIANTS = {
+    default: {
+      surface: { backgroundColor: colors.background },
+      text: { color: colors.foreground },
+    },
+    primary: {
+      surface: { backgroundColor: colors.primary },
+      text: { color: colors.primaryForeground },
+    },
+    outline: {
+      surface: { backgroundColor: 'transparent' },
+      text: { color: colors.foreground },
+    },
+    accent: {
+      surface: { backgroundColor: colors.accent },
+      text: { color: colors.accentForeground },
+    },
+  };
+
   const activeVariant = VARIANTS[variant];
 
   return (

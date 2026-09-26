@@ -1,0 +1,21 @@
+{
+  "name": "@apexrn/ui",
+  "version": "1.0.0",
+  "description": "Production-grade neo-brutalist component library for React Native & Expo",
+  "main": "index.ts",
+  "module": "index.ts",
+  "types": "index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "expo": "*",
+    "expo-haptics": "*",
+    "react": "*",
+    "react-native": "*",
+    "react-native-gesture-handler": "*",
+    "react-native-reanimated": "*",
+    "react-native-svg": "*"
+  },
+  "license": "MIT"
+}

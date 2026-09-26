@@ -1,14 +1,12 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
-import { Pressable, StyleSheet, View, ViewProps, Text } from 'react-native';
+import React, { createContext, useContext, useState } from 'react';
+import { Pressable, StyleSheet, View, ViewProps } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
 
-// Notice typography and spacing are imported here
-import { colors, borderWidths, spacing, typography } from '../lib/colors';
+import { borderWidths, spacing } from '../lib/colors';
+import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
 
-// ⚠️ IMPORTANT: Composing existing ApexRN primitives
-import Input from './Input';
+import Input from './input';
 import { Sheet, SheetContent } from './sheet';
 import ListItem from './listitem';
 
@@ -65,26 +63,17 @@ export interface SelectItemProps {
 }
 
 // ---------------------------------------------------------------------------
-// Design tokens
-// ---------------------------------------------------------------------------
-// Maintained for strict template compliance
-const SHADOW_OFFSET = 4;
-
-// ---------------------------------------------------------------------------
 // Components
 // ---------------------------------------------------------------------------
 
 export function Select({ value, onValueChange, children }: SelectProps) {
   const [open, setOpen] = useState(false);
 
-  // Split children so <SelectTrigger/> renders once, in the normal layout tree,
-  // and <SelectContent/> renders once, only inside the Sheet's modal.
-  // (Previously both rendered in both places, mounting everything twice.)
   const triggerChildren: React.ReactNode[] = [];
   const contentChildren: React.ReactNode[] = [];
 
   React.Children.forEach(children, (child) => {
-    if (React.isValidElement(child) && child.type === SelectContent) {
+    if (React.isValidElement(child) && (child.type === SelectContent || (child.type as any)?.name === 'SelectContent')) {
       contentChildren.push(child);
     } else {
       triggerChildren.push(child);
@@ -103,12 +92,12 @@ export function Select({ value, onValueChange, children }: SelectProps) {
 
 export function SelectTrigger({ placeholder, style, ...props }: SelectTriggerProps) {
   const { value, setOpen } = useSelectContext();
+  const { colors } = useTheme();
 
   const handlePress = () => {
     setOpen(true);
   };
 
-  // Trailing Chevron Icon to mimic a standard dropdown trigger
   const trailingChevron = (
     <View style={styles.chevronContainer}>
       <Svg 
@@ -116,7 +105,7 @@ export function SelectTrigger({ placeholder, style, ...props }: SelectTriggerPro
         height="16" 
         viewBox="0 0 24 24" 
         fill="none" 
-        stroke={colors.light.foreground} 
+        stroke={colors.foreground} 
         strokeWidth="4" 
         strokeLinecap="square" 
         strokeLinejoin="miter"
@@ -126,6 +115,8 @@ export function SelectTrigger({ placeholder, style, ...props }: SelectTriggerPro
     </View>
   );
 
+  const { onBlur, onFocus, ...inputProps } = props as any;
+
   return (
     <Pressable 
       onPress={handlePress} 
@@ -134,15 +125,13 @@ export function SelectTrigger({ placeholder, style, ...props }: SelectTriggerPro
       accessibilityState={{ expanded: false }}
     >
       <Input
-        // Forcefully disabled internally so text input doesn't actually trigger the native OS keyboard
-        // Interacting with it simply opens the Sheet overlay
         editable={false} 
         value={value || ''}
         placeholder={placeholder}
         pointerEvents="none"
         trailingIcon={trailingChevron}
         style={styles.inputReset}
-        {...props}
+        {...inputProps}
       />
     </Pressable>
   );
@@ -150,7 +139,6 @@ export function SelectTrigger({ placeholder, style, ...props }: SelectTriggerPro
 
 export function SelectContent({ sheetHeight = 350, children, style, ...props }: SelectContentProps) {
   return (
-    // Sheet strictly enforces mobile presentation overlays rather than web dropdowns
     <SheetContent PointHeight={sheetHeight} style={style} {...props}>
       <View style={styles.listContainer}>
         {children}
@@ -161,11 +149,12 @@ export function SelectContent({ sheetHeight = 350, children, style, ...props }: 
 
 export function SelectItem({ label, value }: SelectItemProps) {
   const { value: selectedValue, onValueChange, setOpen } = useSelectContext();
+  const { colors } = useTheme();
   const isSelected = selectedValue === value;
 
   const handleSelect = () => {
     onValueChange(value);
-    setOpen(false); // Dismiss sheet immediately upon selection
+    setOpen(false);
   };
 
   return (
@@ -174,7 +163,8 @@ export function SelectItem({ label, value }: SelectItemProps) {
       onPress={handleSelect}
       style={cn(
         styles.item, 
-        isSelected && styles.itemSelected
+        { borderColor: colors.border },
+        isSelected && { backgroundColor: colors.muted }
       )}
       accessibilityRole="menuitem"
       accessibilityState={{ checked: isSelected }}
@@ -190,7 +180,6 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   inputReset: {
-    // Overrides any input-specific margin so the parent container calculates boundaries correctly
     marginBottom: 0,
     marginRight: 0,
   },
@@ -205,11 +194,7 @@ const styles = StyleSheet.create({
   },
   item: {
     borderBottomWidth: borderWidths.standard,
-    borderColor: colors.light.border,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.md,
-  },
-  itemSelected: {
-    backgroundColor: colors.light.muted, // Harsh highlighted feedback when matching value
   },
 });

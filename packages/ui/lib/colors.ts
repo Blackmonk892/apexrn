@@ -1,7 +1,27 @@
-import { moderateScale } from './metrics';
-import { normalize } from './metrics';
+import { moderateScale, normalize } from './metrics';
 
-export const colors = {
+export interface ColorScheme {
+  background: string;
+  foreground: string;
+  primary: string;
+  primaryForeground: string;
+  secondary: string;
+  secondaryForeground: string;
+  accent: string;
+  accentForeground: string;
+  muted: string;
+  mutedForeground: string;
+  destructive: string;
+  destructiveForeground: string;
+  warning: string;
+  warningForeground: string;
+  success: string;
+  successForeground: string;
+  border: string;
+  shadow: string;
+}
+
+export const colors: { light: ColorScheme; dark: ColorScheme } = {
   light: {
     background: '#FFFFFF',
     foreground: '#000000',
@@ -42,7 +62,7 @@ export const colors = {
     border: '#FFFFFF',
     shadow: '#000000',
   },
-} as const;
+};
 
 export const spacing = {
   xs: moderateScale(4),
@@ -76,5 +96,3 @@ export const shadowOffset = {
   standard: { width: 4, height: 4 },
   elevated: { width: 6, height: 6 },
 } as const;
-
-export type ColorScheme = typeof colors.light;

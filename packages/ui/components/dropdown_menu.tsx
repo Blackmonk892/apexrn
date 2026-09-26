@@ -18,11 +18,8 @@ import Animated, {
   runOnJS
 } from 'react-native-reanimated';
 
-// Notice typography and spacing are imported here
-import { colors, borderWidths, spacing, typography } from '../lib/colors';
-import { cn } from '../lib/utils';
-
-// ⚠️ IMPORTANT: Composing the existing ListItem primitive
+import { borderWidths, spacing } from '../lib/colors';
+import { useTheme } from '../lib/theme';
 import ListItem from './listitem';
 
 // ---------------------------------------------------------------------------
@@ -63,7 +60,6 @@ export interface DropdownMenuItemProps extends Omit<PressableProps, 'style'> {
 // Design tokens
 // ---------------------------------------------------------------------------
 const SHADOW_OFFSET = 4;
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 // ---------------------------------------------------------------------------
 // Components
@@ -98,8 +94,6 @@ export function DropdownMenuTrigger({ children, asChild, ...props }: PressablePr
       return;
     }
 
-    // Measure the actual trigger element (not the menu itself) before opening,
-    // so DropdownMenuContent can anchor to real on-screen coordinates.
     if (triggerRef.current) {
       triggerRef.current.measure((x, y, width, height, pageX, pageY) => {
         setTriggerLayout({ x: pageX, y: pageY, width, height });
@@ -127,48 +121,45 @@ export function DropdownMenuTrigger({ children, asChild, ...props }: PressablePr
 
 export function DropdownMenuContent({ children, style, ...props }: ViewProps) {
   const { isOpen, close, triggerLayout } = useDropdownContext();
+  const { colors } = useTheme();
   const [isModalVisible, setIsModalVisible] = useState(false);
 
   const scale = useSharedValue(0);
   const opacity = useSharedValue(0);
 
-  // Trigger layout is measured by DropdownMenuTrigger and shared via context —
-  // by the time isOpen flips true, triggerLayout already reflects the real trigger.
   useEffect(() => {
     if (isOpen) {
       setIsModalVisible(true);
-      scale.value = withTiming(1, { duration: 100, easing: Easing.out(Easing.quad) });
-      opacity.value = withTiming(1, { duration: 100, easing: Easing.out(Easing.quad) });
+      scale.value = withTiming(1, { duration: 120, easing: Easing.out(Easing.quad) });
+      opacity.value = withTiming(1, { duration: 120, easing: Easing.out(Easing.quad) });
+    } else if (isModalVisible) {
+      scale.value = withTiming(0, { duration: 100, easing: Easing.in(Easing.quad) });
+      opacity.value = withTiming(0, { duration: 100, easing: Easing.in(Easing.quad) }, (finished) => {
+        if (finished) {
+          runOnJS(setIsModalVisible)(false);
+        }
+      });
     }
-  }, [isOpen, scale, opacity]);
+  }, [isOpen, isModalVisible, scale, opacity]);
 
   const handleClose = () => {
-    scale.value = withTiming(0, { duration: 80, easing: Easing.in(Easing.quad) });
-    opacity.value = withTiming(0, { duration: 80, easing: Easing.in(Easing.quad) }, (finished) => {
-      if (finished) {
-        runOnJS(setIsModalVisible)(false);
-        runOnJS(close)();
-      }
-    });
+    close();
   };
 
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      opacity: opacity.value,
-      transform: [
-        { scale: interpolate(scale.value, [0, 1], [0.8, 1]) }
-      ],
-    };
-  });
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [
+      { scale: interpolate(scale.value, [0, 1], [0.85, 1]) }
+    ],
+  }));
 
-  if (!isOpen) return null;
+  const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-  // Calculate absolute position anchored to trigger
-  // Attempt to drop below, fallback to above if near screen bottom
+  // Position calculation anchored to trigger
   const topPosition = triggerLayout 
     ? (triggerLayout.y + triggerLayout.height + spacing.xs > SCREEN_HEIGHT - 200 
-        ? triggerLayout.y - 150 
-        : triggerLayout.y + triggerLayout.height)
+        ? Math.max(10, triggerLayout.y - 150)
+        : triggerLayout.y + triggerLayout.height + spacing.xs)
     : 100;
 
   const leftPosition = triggerLayout 
@@ -199,9 +190,9 @@ export function DropdownMenuContent({ children, style, ...props }: ViewProps) {
           ]}
           {...props}
         >
-          <View style={styles.shadow} />
+          <View style={[styles.shadow, { backgroundColor: colors.shadow, borderColor: colors.border }]} />
           
-          <View style={styles.surface}>
+          <View style={[styles.surface, { backgroundColor: colors.background, borderColor: colors.border }]}>
             {children}
           </View>
         </Animated.View>
@@ -216,24 +207,26 @@ export function DropdownMenuItem({
   leading, 
   trailing, 
   onPress, 
+  disabled,
   ...props 
 }: DropdownMenuItemProps) {
   const { close } = useDropdownContext();
+  const { colors } = useTheme();
 
   const handlePress = (e: any) => {
     onPress?.(e);
     close();
   };
 
-  // Stack of ListItem components ensuring flat interaction flash without translation
   return (
     <ListItem
       title={label}
       description={description}
       leading={leading}
       trailing={trailing}
+      disabled={!!disabled}
       onPress={handlePress}
-      style={styles.menuItem}
+      style={[styles.menuItem, { borderColor: colors.border }]}
       {...props}
     />
   );
@@ -244,17 +237,16 @@ export function DropdownMenuItem({
 // ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
   portalOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'transparent',
   },
   backdrop: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'transparent',
   },
   menuWrapper: {
     position: 'absolute',
     width: 200,
-    // Reserve space for hard 4px shadow offset
     marginBottom: SHADOW_OFFSET,
     marginRight: SHADOW_OFFSET,
     zIndex: 1,
@@ -265,8 +257,6 @@ const styles = StyleSheet.create({
     left: SHADOW_OFFSET,
     right: -SHADOW_OFFSET,
     bottom: -SHADOW_OFFSET,
-    backgroundColor: colors.light.shadow,
-    borderColor: colors.light.border,
     borderWidth: borderWidths.heavy,
     zIndex: 1,
     borderRadius: 0,
@@ -274,17 +264,13 @@ const styles = StyleSheet.create({
   surface: {
     position: 'relative',
     zIndex: 2,
-    backgroundColor: colors.light.background,
-    borderColor: colors.light.border,
-    borderWidth: borderWidths.heavy, // Thick borders as requested
+    borderWidth: borderWidths.heavy,
     borderRadius: 0,
     overflow: 'hidden',
     flexDirection: 'column',
   },
   menuItem: {
     borderBottomWidth: borderWidths.standard,
-    borderColor: colors.light.border,
-    // Resets padding slightly to keep compact stack proportions
     paddingVertical: spacing.sm, 
     paddingHorizontal: spacing.sm,
   },

@@ -8,7 +8,8 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 
-import { colors, spacing, typography } from '../lib/colors';
+import { spacing, typography } from '../lib/colors';
+import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
 import BrutalSurface from './brutal_surface';
 
@@ -49,22 +50,6 @@ export interface ToastProps extends ViewProps {
 // ---------------------------------------------------------------------------
 const SHADOW_OFFSET = 4;
 
-const VARIANTS = {
-  default: {
-    // Inverted high-contrast by default
-    surface: { backgroundColor: colors.light.foreground },
-    text: { color: colors.light.background },
-  },
-  primary: {
-    surface: { backgroundColor: colors.light.primary },
-    text: { color: colors.light.primaryForeground },
-  },
-  destructive: {
-    surface: { backgroundColor: colors.light.destructive },
-    text: { color: colors.light.destructiveForeground },
-  },
-};
-
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -78,9 +63,25 @@ export default function Toast({
   style,
   ...props
 }: ToastProps) {
-  // Start off-screen (-150px)
+  const { colors } = useTheme();
   const translateY = useSharedValue(-150);
-  const activeVariant = VARIANTS[variant];
+
+  const variants = {
+    default: {
+      surface: { backgroundColor: colors.foreground },
+      text: { color: colors.background },
+    },
+    primary: {
+      surface: { backgroundColor: colors.primary },
+      text: { color: colors.primaryForeground },
+    },
+    destructive: {
+      surface: { backgroundColor: colors.destructive },
+      text: { color: colors.destructiveForeground },
+    },
+  };
+
+  const activeVariant = variants[variant];
 
   const hideToast = useCallback(() => {
     translateY.value = withTiming(
@@ -95,21 +96,18 @@ export default function Toast({
   }, [translateY, onDismiss]);
 
   useEffect(() => {
-    let timeout: NodeJS.Timeout;
+    let timeout: ReturnType<typeof setTimeout>;
 
     if (visible) {
-      // Slide in
       translateY.value = withTiming(0, {
         duration: 300,
-        easing: Easing.out(Easing.back(1.5)) // Slight brutalist snap
+        easing: Easing.out(Easing.back(1.5))
       });
 
-      // Set auto-dismiss timer
       timeout = setTimeout(() => {
         hideToast();
       }, duration);
     } else {
-      // If forced hidden externally, slide out
       translateY.value = withTiming(-150, {
         duration: 250,
         easing: Easing.in(Easing.quad)
@@ -125,8 +123,6 @@ export default function Toast({
     };
   });
 
-  // If it's not visible and fully translated away, we still render it
-  // but it's hidden out of the viewport. React Native handles this efficiently.
   return (
     <Animated.View
       style={[styles.absoluteWrapper, animatedStyle, style]}
@@ -162,10 +158,10 @@ export default function Toast({
 const styles = StyleSheet.create({
   absoluteWrapper: {
     position: 'absolute',
-    top: 60, // Standard top inset offset. Adjust based on your Safe Area strategy.
+    top: 60,
     left: spacing.md,
     right: spacing.md,
-    zIndex: 9999, // Toasts must sit above everything
+    zIndex: 9999,
   },
   surface: {
     flexDirection: 'row',

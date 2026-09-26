@@ -2,7 +2,7 @@ import React, { forwardRef } from 'react';
 import { TextInput, TextInputProps } from 'react-native';
 
 // ⚠️ COMPOSITION: Reusing the existing Input component
-import Input from './Input'; 
+import Input from './input'; 
 
 // ---------------------------------------------------------------------------
 // Types

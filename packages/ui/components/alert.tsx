@@ -1,11 +1,8 @@
 import React from 'react';
 import { StyleSheet, Text, View, ViewProps } from 'react-native';
-// Reanimated is imported to fulfill the strict file structure requirement,
-// but remains unused here since the Alert is a static visual banner.
-import Animated, { useAnimatedStyle, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
 
-// Notice typography and spacing are imported here
-import { colors, borderWidths, spacing, typography } from '../lib/colors';
+import { borderWidths, spacing, typography } from '../lib/colors';
+import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
 
 // ---------------------------------------------------------------------------
@@ -35,14 +32,7 @@ export interface AlertProps extends ViewProps {
 // Design tokens
 // ---------------------------------------------------------------------------
 const SHADOW_OFFSET = 4;
-const LEFT_BORDER_WIDTH = 8; // Extra thick left border as requested
-
-const VARIANT_COLORS = {
-  default: colors.light.foreground,
-  destructive: colors.light.destructive,
-  warning: colors.light.warning,
-  success: colors.light.success,
-};
+const LEFT_BORDER_WIDTH = 8;
 
 // ---------------------------------------------------------------------------
 // Component
@@ -55,7 +45,16 @@ export default function Alert({
   style,
   ...props
 }: AlertProps) {
-  const activeColor = VARIANT_COLORS[variant];
+  const { colors } = useTheme();
+
+  const variantColors = {
+    default: colors.foreground,
+    destructive: colors.destructive,
+    warning: colors.warning,
+    success: colors.success,
+  };
+
+  const activeColor = variantColors[variant];
 
   return (
     <View
@@ -63,12 +62,16 @@ export default function Alert({
       accessibilityRole="alert"
       {...props}
     >
-      <View style={styles.shadow} />
+      <View style={[styles.shadow, { backgroundColor: colors.shadow, borderColor: colors.border }]} />
       
       <View 
         style={[
           styles.surface, 
-          { borderLeftColor: activeColor }
+          { 
+            backgroundColor: colors.background, 
+            borderColor: colors.border,
+            borderLeftColor: activeColor 
+          }
         ]}
       >
         {icon && (
@@ -78,11 +81,11 @@ export default function Alert({
         )}
         
         <View style={styles.contentContainer}>
-          <Text style={styles.title} numberOfLines={2}>
+          <Text style={[styles.title, { color: colors.foreground }]} numberOfLines={2}>
             {title}
           </Text>
           {description ? (
-            <Text style={styles.description}>
+            <Text style={[styles.description, { color: colors.foreground }]}>
               {description}
             </Text>
           ) : null}
@@ -99,7 +102,6 @@ const styles = StyleSheet.create({
   container: {
     position: 'relative',
     width: '100%',
-    // Reserve space so the 4px shadow doesn't clip into adjacent elements
     marginBottom: SHADOW_OFFSET,
     marginRight: SHADOW_OFFSET,
   },
@@ -109,8 +111,6 @@ const styles = StyleSheet.create({
     left: SHADOW_OFFSET,
     right: -SHADOW_OFFSET,
     bottom: -SHADOW_OFFSET,
-    backgroundColor: colors.light.shadow,
-    borderColor: colors.light.border,
     borderWidth: borderWidths.heavy,
     zIndex: 1,
     borderRadius: 0,
@@ -120,8 +120,6 @@ const styles = StyleSheet.create({
     zIndex: 2,
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: colors.light.background,
-    borderColor: colors.light.border,
     borderWidth: borderWidths.heavy,
     borderLeftWidth: LEFT_BORDER_WIDTH,
     borderRadius: 0,
@@ -129,7 +127,6 @@ const styles = StyleSheet.create({
   },
   iconContainer: {
     marginRight: spacing.sm,
-    // Slightly adjust top margin to align standard icons with the capitalized title text
     marginTop: 2, 
   },
   contentContainer: {
@@ -142,11 +139,8 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 0.4,
-    color: colors.light.foreground,
   },
   description: {
     fontSize: typography.sm,
-    color: colors.light.foreground,
-    // Normal font weight for description to contrast with the harsh heading
   },
 });

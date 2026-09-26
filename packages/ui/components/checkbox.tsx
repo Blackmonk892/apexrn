@@ -9,7 +9,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
 
-import { colors } from '../lib/colors';
+import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
 import BrutalSurface from './brutal_surface';
 
@@ -26,7 +26,7 @@ export interface CheckboxProps extends Omit<PressableProps, 'onPress' | 'onPress
    */
   onCheckedChange: (checked: boolean) => void;
   /**
-   * Disables the checkbox, applying muted styles and preventing interactions.
+   * Disables the checkbox.
    * @default false
    */
   disabled?: boolean;
@@ -35,7 +35,7 @@ export interface CheckboxProps extends Omit<PressableProps, 'onPress' | 'onPress
 // ---------------------------------------------------------------------------
 // Design tokens
 // ---------------------------------------------------------------------------
-const SHADOW_OFFSET = 2; // Fixed 2px hard shadow for this component
+const SHADOW_OFFSET = 2;
 const CHECKBOX_SIZE = 24;
 
 // ---------------------------------------------------------------------------
@@ -50,9 +50,9 @@ export default function Checkbox({
   style,
   ...props
 }: CheckboxProps) {
+  const { colors } = useTheme();
   const isChecked = useSharedValue(checked ? 1 : 0);
 
-  // Sync internal animated value with external prop
   useEffect(() => {
     isChecked.value = withTiming(checked ? 1 : 0, {
       duration: 150,
@@ -65,17 +65,14 @@ export default function Checkbox({
     onCheckedChange(!checked);
   };
 
-  // Background fills from background -> foreground when checked. The
-  // press-in/out translate + squash is handled by BrutalSurface itself.
   const animatedFillStyle = useAnimatedStyle(() => ({
     backgroundColor: interpolateColor(
       isChecked.value,
       [0, 1],
-      [colors.light.background, colors.light.foreground]
+      [colors.background, colors.foreground]
     ),
   }));
 
-  // Checkmark scales in from 0 to 1
   const animatedCheckStyle = useAnimatedStyle(() => {
     return {
       transform: [{ scale: isChecked.value }],
@@ -86,7 +83,11 @@ export default function Checkbox({
   return (
     <BrutalSurface
       style={cn(styles.container, style)}
-      surfaceStyle={[styles.surface, disabled && styles.surfaceDisabled, !disabled && animatedFillStyle]}
+      surfaceStyle={[
+        styles.surface, 
+        disabled && { backgroundColor: colors.muted, borderColor: colors.mutedForeground }, 
+        !disabled && animatedFillStyle
+      ]}
       offset={SHADOW_OFFSET}
       borderWidth="heavy"
       hasShadow={!disabled}
@@ -102,10 +103,9 @@ export default function Checkbox({
           height={CHECKBOX_SIZE - 8}
           viewBox="0 0 24 24"
           fill="none"
-          // Use background color for the checkmark so it contrasts against the black filled box
-          stroke={disabled ? colors.light.mutedForeground : colors.light.background}
-          strokeWidth="4" // Thick brutalist stroke
-          strokeLinecap="square" // Harsh square caps instead of round
+          stroke={disabled ? colors.mutedForeground : colors.background}
+          strokeWidth="4"
+          strokeLinecap="square"
           strokeLinejoin="miter"
         >
           <Path d="M20 6L9 17l-5-5" />
@@ -128,10 +128,6 @@ const styles = StyleSheet.create({
     height: CHECKBOX_SIZE,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  surfaceDisabled: {
-    backgroundColor: colors.light.muted,
-    borderColor: colors.light.mutedForeground,
   },
   iconContainer: {
     alignItems: 'center',

@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { StyleSheet, View, ViewProps } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
 
-import { colors } from '../lib/colors';
+import { useTheme } from '../lib/theme';
 import BrutalSurface from './brutal_surface';
 
 // ---------------------------------------------------------------------------
@@ -30,7 +30,6 @@ export interface ProgressProps extends ViewProps {
 // Design tokens
 // ---------------------------------------------------------------------------
 const SHADOW_OFFSET = 4;
-// A standard chunky height for brutalist linear indicators
 const PROGRESS_HEIGHT = 24;
 
 // ---------------------------------------------------------------------------
@@ -43,7 +42,7 @@ export default function Progress({
   style,
   ...props
 }: ProgressProps) {
-  // Clamp the progress between 0 and 100 percentage points
+  const { colors } = useTheme();
   const safeValue = Math.min(Math.max((value / max) * 100, 0), 100);
   const progress = useSharedValue(0);
 
@@ -63,7 +62,7 @@ export default function Progress({
   return (
     <BrutalSurface
       style={[styles.container, style]}
-      surfaceStyle={styles.track}
+      surfaceStyle={[styles.track, { backgroundColor: colors.background }]}
       offset={SHADOW_OFFSET}
       borderWidth="heavy"
       pressable={false}
@@ -72,7 +71,7 @@ export default function Progress({
       accessibilityValue={{ min: 0, max, now: value }}
       {...props}
     >
-      <Animated.View style={[styles.fill, animatedFillStyle]} />
+      <Animated.View style={[styles.fill, { backgroundColor: colors.foreground }, animatedFillStyle]} />
     </BrutalSurface>
   );
 }
@@ -87,12 +86,10 @@ const styles = StyleSheet.create({
   track: {
     width: '100%',
     height: PROGRESS_HEIGHT,
-    backgroundColor: colors.light.background,
-    overflow: 'hidden', // Ensures the fill never spills out
+    overflow: 'hidden',
   },
   fill: {
     height: '100%',
-    backgroundColor: colors.light.foreground,
-    borderRadius: 0, // Strict butt caps, no rounding
+    borderRadius: 0,
   },
 });

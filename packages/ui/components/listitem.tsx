@@ -2,7 +2,8 @@ import React from 'react';
 import { Pressable, PressableProps, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, interpolateColor } from 'react-native-reanimated';
 
-import { colors, borderWidths, spacing, typography } from '../lib/colors';
+import { borderWidths, spacing, typography } from '../lib/colors';
+import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
 import { usePressPhysics } from '../lib/usePressPhysics';
 
@@ -19,21 +20,18 @@ export interface ListItemProps extends Omit<PressableProps, 'style'> {
    */
   description?: string;
   /**
-   * Optional React node to display on the leading (left) edge (e.g., an Avatar or Icon).
+   * Optional React node to display on the leading (left) edge.
    */
   leading?: React.ReactNode;
   /**
-   * Optional React node to display on the trailing (right) edge (e.g., a Chevron or Badge).
+   * Optional React node to display on the trailing (right) edge.
    */
   trailing?: React.ReactNode;
   /**
-   * Disables the list item, applying muted styles and preventing interactions.
+   * Disables the list item.
    * @default false
    */
   disabled?: boolean;
-  /**
-   * Optional style overrides.
-   */
   style?: any;
 }
 
@@ -53,8 +51,8 @@ export default function ListItem({
   onPressOut,
   ...props
 }: ListItemProps) {
-  // No shadow block on a list row — reuse the shared spring/haptics timing
-  // via the raw `pressed` value rather than pulling in BrutalSurface.
+  const { colors } = useTheme();
+
   const { pressed, handlePressIn, handlePressOut } = usePressPhysics({
     offset: 0,
     disabled,
@@ -76,8 +74,7 @@ export default function ListItem({
       backgroundColor: interpolateColor(
         pressed.value,
         [0, 1],
-        // Flash to muted color on press
-        [colors.light.background, colors.light.muted]
+        [colors.background, colors.muted]
       ),
     };
   });
@@ -89,7 +86,8 @@ export default function ListItem({
       disabled={disabled}
       style={[
         styles.container,
-        disabled && styles.containerDisabled,
+        { borderColor: colors.border },
+        disabled && { backgroundColor: colors.muted },
         animatedBackgroundStyle,
         style,
       ]}
@@ -107,7 +105,8 @@ export default function ListItem({
         <Text
           style={cn(
             styles.title,
-            disabled && styles.textDisabled
+            { color: colors.foreground },
+            disabled && { color: colors.mutedForeground }
           )}
           numberOfLines={1}
         >
@@ -118,7 +117,7 @@ export default function ListItem({
           <Text
             style={cn(
               styles.description,
-              disabled && styles.textDisabled
+              { color: colors.mutedForeground }
             )}
             numberOfLines={2}
           >
@@ -145,13 +144,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.md,
-    borderBottomWidth: borderWidths.standard, // Strict 2px inner divider border
-    borderColor: colors.light.border,
+    borderBottomWidth: borderWidths.standard,
     borderRadius: 0,
     width: '100%',
-  },
-  containerDisabled: {
-    backgroundColor: colors.light.muted,
   },
   contentContainer: {
     flex: 1,
@@ -174,13 +169,8 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 0.4,
-    color: colors.light.foreground,
   },
   description: {
     fontSize: typography.sm,
-    color: colors.light.mutedForeground,
-  },
-  textDisabled: {
-    color: colors.light.mutedForeground,
   },
 });

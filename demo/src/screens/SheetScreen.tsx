@@ -4,7 +4,7 @@ import Layout from '../components/Layout';
 import { useShowcaseTheme } from '../context/ThemeContext';
 import { Sheet, SheetContent } from '@ui/components/sheet';
 import Button from '@ui/components/button';
-import Input from '@ui/components/Input';
+import Input from '@ui/components/input';
 
 export default function SheetScreen({ onBack }: { onBack: () => void }) {
   const { isDark } = useShowcaseTheme();

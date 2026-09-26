@@ -18,8 +18,8 @@ import Animated, {
   interpolate
 } from 'react-native-reanimated';
 
-// Notice typography and spacing are imported here
-import { colors, spacing, typography } from '../lib/colors';
+import { spacing, typography } from '../lib/colors';
+import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
 import BrutalSurface from './brutal_surface';
 
@@ -64,7 +64,7 @@ export interface DialogContentProps extends ViewProps {
 // ---------------------------------------------------------------------------
 // Design tokens
 // ---------------------------------------------------------------------------
-const DIALOG_SHADOW_OFFSET = 8; // Massive 8px shadow as requested
+const DIALOG_SHADOW_OFFSET = 8;
 
 // ---------------------------------------------------------------------------
 // Components
@@ -126,11 +126,11 @@ export function DialogContent({
   ...props 
 }: DialogContentProps) {
   const { open, setOpen } = useDialogContext();
+  const { colors } = useTheme();
   const [isVisible, setIsVisible] = useState(open);
   
   const progress = useSharedValue(0);
 
-  // Handle entry and exit animations
   useEffect(() => {
     if (open) {
       setIsVisible(true);
@@ -139,7 +139,6 @@ export function DialogContent({
         easing: Easing.out(Easing.quad) 
       });
     } else if (isVisible) {
-      // Exit animation
       progress.value = withTiming(0, { 
         duration: 100, 
         easing: Easing.in(Easing.quad) 
@@ -174,11 +173,10 @@ export function DialogContent({
     <Modal
       transparent
       visible={isVisible}
-      animationType="none" // Reanimated handles the animation natively
+      animationType="none"
       onRequestClose={() => setOpen(false)}
     >
       <View style={styles.modalContainer}>
-        {/* Animated 50% opacity backdrop */}
         <AnimatedPressable 
           style={[styles.backdrop, backdropAnimatedStyle]} 
           onPress={handleBackdropPress}
@@ -186,16 +184,13 @@ export function DialogContent({
           accessibilityLabel="Close Dialog"
         />
         
-        {/* Scaling Brutalist Dialog Box */}
         <Animated.View
           style={[contentAnimatedStyle, style]}
-          accessibilityRole="dialog"
-          accessibilityModal={true}
           {...props}
         >
           <BrutalSurface
             style={styles.dialogWrapper}
-            surfaceStyle={styles.surface}
+            surfaceStyle={[styles.surface, { backgroundColor: colors.background }]}
             offset={DIALOG_SHADOW_OFFSET}
             borderWidth="extraHeavy"
             pressable={false}
@@ -221,9 +216,10 @@ export function DialogFooter({ style, ...props }: ViewProps) {
 }
 
 export function DialogTitle({ style, ...props }: TextProps) {
+  const { colors } = useTheme();
   return (
     <Text 
-      style={cn(styles.title, style)} 
+      style={cn(styles.title, { color: colors.foreground }, style)} 
       accessibilityRole="header" 
       {...props} 
     />
@@ -231,8 +227,9 @@ export function DialogTitle({ style, ...props }: TextProps) {
 }
 
 export function DialogDescription({ style, ...props }: TextProps) {
+  const { colors } = useTheme();
   return (
-    <Text style={cn(styles.description, style)} {...props} />
+    <Text style={cn(styles.description, { color: colors.mutedForeground }, style)} {...props} />
   );
 }
 
@@ -247,7 +244,7 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
   },
   backdrop: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     zIndex: 0,
   },
@@ -256,7 +253,6 @@ const styles = StyleSheet.create({
     maxWidth: 400,
   },
   surface: {
-    backgroundColor: colors.light.background,
     padding: spacing.xl,
     gap: spacing.md,
   },
@@ -275,10 +271,8 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 0.4,
-    color: colors.light.foreground,
   },
   description: {
     fontSize: typography.md,
-    color: colors.light.mutedForeground,
   },
 });

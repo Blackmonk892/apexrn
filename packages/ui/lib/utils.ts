@@ -1,11 +1,9 @@
-import { ImageStyle, TextStyle, ViewStyle } from 'react-native';
-
-type Style = ViewStyle | TextStyle | ImageStyle;
+import { StyleSheet } from 'react-native';
 
 /**
- * Merges multiple style objects, filtering out falsy values.
- * The ApexRN equivalent of shadcn's cn() utility.
+ * Merges multiple style values (objects or nested arrays), filtering out falsy values.
+ * Flattens array styles for clean React Native application.
  */
-export function cn(...styles: (Style | undefined | null | false)[]): Style {
-  return Object.assign({}, ...styles.filter(Boolean));
+export function cn(...styles: any[]): any {
+  return StyleSheet.flatten(styles) ?? {};
 }

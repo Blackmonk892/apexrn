@@ -17,8 +17,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
 
-// Notice typography and spacing are imported here
-import { colors, borderWidths, spacing, typography } from '../lib/colors';
+import { borderWidths, spacing, typography } from '../lib/colors';
+import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
 
 // ---------------------------------------------------------------------------
@@ -85,15 +85,6 @@ export interface AccordionTriggerProps extends Omit<PressableProps, 'onPress'> {
   disabled?: boolean;
 }
 
-// ---------------------------------------------------------------------------
-// Design tokens
-// ---------------------------------------------------------------------------
-// Maintained for strict template compliance, though unused by Accordion
-const SHADOW_OFFSET = 4;
-
-// ---------------------------------------------------------------------------
-// Components
-// ---------------------------------------------------------------------------
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export function Accordion({ 
@@ -108,7 +99,6 @@ export function Accordion({
 
   const isControlled = value !== undefined;
   
-  // Normalize controlled value to array
   const activeValues = isControlled 
     ? (Array.isArray(value) ? value : (value ? [value] : []))
     : internalValues;
@@ -145,11 +135,12 @@ export function Accordion({
 
 export function AccordionItem({ value, children, style, ...props }: AccordionItemProps) {
   const { activeValues } = useAccordionContext();
+  const { colors } = useTheme();
   const isOpen = activeValues.includes(value);
 
   return (
     <AccordionItemContext.Provider value={{ value, isOpen }}>
-      <View style={cn(styles.item, style)} {...props}>
+      <View style={cn(styles.item, { borderColor: colors.border, backgroundColor: colors.background }, style)} {...props}>
         {children}
       </View>
     </AccordionItemContext.Provider>
@@ -159,6 +150,7 @@ export function AccordionItem({ value, children, style, ...props }: AccordionIte
 export function AccordionTrigger({ disabled = false, children, style, ...props }: AccordionTriggerProps) {
   const { toggleValue } = useAccordionContext();
   const { value, isOpen } = useAccordionItemContext();
+  const { colors } = useTheme();
   
   const isPressed = useSharedValue(0);
   const rotation = useSharedValue(isOpen ? 180 : 0);
@@ -189,7 +181,7 @@ export function AccordionTrigger({ disabled = false, children, style, ...props }
     backgroundColor: interpolateColor(
       isPressed.value,
       [0, 1],
-      [colors.light.background, colors.light.muted]
+      [colors.background, colors.muted]
     ),
   }));
 
@@ -205,7 +197,7 @@ export function AccordionTrigger({ disabled = false, children, style, ...props }
       disabled={disabled}
       style={[
         styles.trigger,
-        disabled && styles.triggerDisabled,
+        disabled && { backgroundColor: colors.muted },
         animatedBackgroundStyle,
         style
       ]}
@@ -214,10 +206,10 @@ export function AccordionTrigger({ disabled = false, children, style, ...props }
       {...props}
     >
       <Text 
-        style={cn(styles.triggerText, disabled && styles.textDisabled)}
+        style={cn(styles.triggerText, { color: disabled ? colors.mutedForeground : colors.foreground })}
         numberOfLines={1}
       >
-        {children}
+        {children as any}
       </Text>
       
       <Animated.View style={[styles.chevronContainer, animatedChevronStyle]}>
@@ -226,8 +218,8 @@ export function AccordionTrigger({ disabled = false, children, style, ...props }
           height="20" 
           viewBox="0 0 24 24" 
           fill="none" 
-          stroke={disabled ? colors.light.mutedForeground : colors.light.foreground} 
-          strokeWidth="4" // Thick brutalist chevron
+          stroke={disabled ? colors.mutedForeground : colors.foreground} 
+          strokeWidth="4"
           strokeLinecap="square" 
           strokeLinejoin="miter"
         >
@@ -240,6 +232,7 @@ export function AccordionTrigger({ disabled = false, children, style, ...props }
 
 export function AccordionContent({ children, style, ...props }: ViewProps) {
   const { isOpen } = useAccordionItemContext();
+  const { colors } = useTheme();
   const [contentHeight, setContentHeight] = useState(0);
   const height = useSharedValue(0);
 
@@ -268,12 +261,9 @@ export function AccordionContent({ children, style, ...props }: ViewProps) {
       style={[styles.contentWrapper, animatedHeightStyle]} 
       pointerEvents={isOpen ? 'auto' : 'none'}
     >
-      {/* Position absolute ensures the inner view renders at full natural height 
-        for measurement, even while the wrapper is collapsed to 0 height.
-      */}
       <View 
         onLayout={handleLayout} 
-        style={cn(styles.contentInner, style)}
+        style={cn(styles.contentInner, { borderColor: colors.border }, style)}
         {...props}
       >
         {children}
@@ -290,10 +280,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   item: {
-    // Thick bottom borders on items as requested
     borderBottomWidth: borderWidths.heavy,
-    borderColor: colors.light.border,
-    backgroundColor: colors.light.background,
   },
   trigger: {
     flexDirection: 'row',
@@ -302,19 +289,12 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.md,
   },
-  triggerDisabled: {
-    backgroundColor: colors.light.muted,
-  },
   triggerText: {
     flex: 1,
     fontSize: typography.md,
     fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 0.4,
-    color: colors.light.foreground,
-  },
-  textDisabled: {
-    color: colors.light.mutedForeground,
   },
   chevronContainer: {
     marginLeft: spacing.md,
@@ -326,11 +306,9 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   contentInner: {
-    position: 'absolute', // Required for accurate layout measurement while hidden
+    position: 'absolute',
     width: '100%',
     padding: spacing.md,
-    // Hard line inside the body separating it from the header
     borderTopWidth: borderWidths.standard,
-    borderColor: colors.light.border,
   },
 });

@@ -9,8 +9,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
-// Notice typography and spacing are imported here
-import { colors, borderWidths, spacing, typography } from '../lib/colors';
+import { borderWidths, spacing } from '../lib/colors';
+import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
 import BrutalSurface from './brutal_surface';
 
@@ -42,20 +42,17 @@ export interface SliderProps extends Omit<ViewProps, 'style'> {
    */
   step?: number;
   /**
-   * Disables the slider, applying muted styles and preventing interactions.
+   * Disables the slider.
    * @default false
    */
   disabled?: boolean;
-  /**
-   * Optional style overrides for the root container.
-   */
   style?: any;
 }
 
 // ---------------------------------------------------------------------------
 // Design tokens
 // ---------------------------------------------------------------------------
-const SHADOW_OFFSET = 2; // Specific 2px hard shadow requested for the thumb
+const SHADOW_OFFSET = 2;
 const THUMB_WIDTH = 16;
 const THUMB_HEIGHT = 32;
 
@@ -72,18 +69,17 @@ export default function Slider({
   style,
   ...props
 }: SliderProps) {
+  const { colors } = useTheme();
   const [trackWidth, setTrackWidth] = useState(0);
   const maxTravel = Math.max(0, trackWidth - THUMB_WIDTH);
   
   const translateX = useSharedValue(0);
   const offset = useSharedValue(0);
   
-  // Calculate initial/external value changes
   useEffect(() => {
     if (trackWidth > 0) {
       const clampedValue = Math.max(min, Math.min(value, max));
       const ratio = (clampedValue - min) / (max - min);
-      // Smoothly animate to new value if changed externally
       translateX.value = withTiming(ratio * maxTravel, {
         duration: 150,
         easing: Easing.out(Easing.quad),
@@ -102,7 +98,6 @@ export default function Slider({
     })
     .onUpdate((event) => {
       let nextX = offset.value + event.translationX;
-      // Clamp within the track bounds
       nextX = Math.max(0, Math.min(nextX, maxTravel));
       translateX.value = nextX;
     })
@@ -110,19 +105,16 @@ export default function Slider({
       const currentRatio = translateX.value / maxTravel;
       const rawValue = min + currentRatio * (max - min);
       
-      // Snap to step
       const snappedValue = Math.round(rawValue / step) * step;
       const finalValue = Math.max(min, Math.min(snappedValue, max));
       
       const finalRatio = (finalValue - min) / (max - min);
       
-      // Animate the thumb to the exact snapped position
       translateX.value = withTiming(finalRatio * maxTravel, { 
         duration: 100,
         easing: Easing.out(Easing.quad) 
       });
       
-      // Safely call back to JS thread with the new value
       runOnJS(onValueChange)(finalValue);
     });
 
@@ -141,26 +133,24 @@ export default function Slider({
       accessibilityState={{ disabled }}
       {...props}
     >
-      {/* Brutalist Thick Track Line */}
       <View 
         style={cn(
           styles.trackLine,
-          disabled && styles.trackLineDisabled
+          { backgroundColor: colors.border },
+          disabled && { backgroundColor: colors.mutedForeground }
         )} 
       />
 
-      {/* Draggable DJ-Fader Thumb */}
       <GestureDetector gesture={pan}>
         <Animated.View style={[styles.thumbWrapper, animatedThumbStyle]}>
-          {/* Purely decorative — the GestureDetector drives the drag, so this
-              never wires up press physics. Shadow is hidden in disabled state
-              per brutalism rules. */}
           <BrutalSurface
             pressable={false}
             hasShadow={!disabled}
             offset={SHADOW_OFFSET}
             borderWidth="standard"
-            surfaceStyle={cn(styles.thumbSurface, disabled && styles.thumbSurfaceDisabled)}
+            backgroundColor={disabled ? colors.muted : colors.background}
+            borderColor={disabled ? colors.mutedForeground : colors.border}
+            surfaceStyle={styles.thumbSurface}
           />
         </Animated.View>
       </GestureDetector>
@@ -177,18 +167,13 @@ const styles = StyleSheet.create({
     height: THUMB_HEIGHT + SHADOW_OFFSET,
     justifyContent: 'center',
     position: 'relative',
-    // Extra margin so the shadow doesn't clip
     marginBottom: spacing.sm,
   },
   trackLine: {
     position: 'absolute',
     left: 0,
     right: 0,
-    height: borderWidths.standard, // 2px exact track line as requested
-    backgroundColor: colors.light.border,
-  },
-  trackLineDisabled: {
-    backgroundColor: colors.light.mutedForeground,
+    height: borderWidths.standard,
   },
   thumbWrapper: {
     position: 'absolute',
@@ -200,10 +185,5 @@ const styles = StyleSheet.create({
   thumbSurface: {
     width: THUMB_WIDTH,
     height: THUMB_HEIGHT,
-    backgroundColor: colors.light.background,
-  },
-  thumbSurfaceDisabled: {
-    backgroundColor: colors.light.muted,
-    borderColor: colors.light.mutedForeground,
   },
 });

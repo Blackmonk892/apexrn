@@ -2,8 +2,8 @@ import React, { useRef, useState, useEffect, forwardRef, useImperativeHandle } f
 import { Pressable, StyleSheet, Text, TextInput, TextInputProps, View } from 'react-native';
 import { useAnimatedStyle, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
 
-// Notice typography and spacing are imported here
-import { colors, borderWidths, spacing, typography } from '../lib/colors';
+import { borderWidths, spacing, typography } from '../lib/colors';
+import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
 import BrutalSurface from './brutal_surface';
 
@@ -25,7 +25,7 @@ export interface InputOTPProps extends Omit<TextInputProps, 'onChangeText' | 'va
    */
   value: string;
   /**
-   * Disables the OTP inputs, applying muted styles and preventing interactions.
+   * Disables the OTP inputs.
    * @default false
    */
   disabled?: boolean;
@@ -38,13 +38,7 @@ const SHADOW_OFFSET = 4;
 const BLOCK_SIZE = 56;
 
 // ---------------------------------------------------------------------------
-// OTPBlock — one component instance per digit, so each owns its own hooks.
-// This is what resolves the Step 1 hooks-in-a-loop deferral: the previous
-// implementation called useSharedValue/useAnimatedStyle inside Array.from(...)
-// and inside a renderBlocks() loop, which broke Rules of Hooks the moment
-// `length` changed between renders. A real component per block sidesteps
-// that entirely — React tracks each block's hooks independently, and
-// mounting/unmounting a block when `length` changes is safe by construction.
+// OTPBlock — sub-component per digit
 // ---------------------------------------------------------------------------
 interface OTPBlockProps {
   char?: string;
@@ -53,6 +47,7 @@ interface OTPBlockProps {
 }
 
 function OTPBlock({ char, isActive, disabled }: OTPBlockProps) {
+  const { colors } = useTheme();
   const focusProgress = useSharedValue(isActive ? 1 : 0);
 
   useEffect(() => {
@@ -62,12 +57,10 @@ function OTPBlock({ char, isActive, disabled }: OTPBlockProps) {
     });
   }, [isActive, focusProgress]);
 
-  // Shadow only reveals on the active block, not every resting block.
   const animatedShadowStyle = useAnimatedStyle(() => ({
     opacity: focusProgress.value,
   }));
 
-  // Border width snaps on the active block.
   const animatedSurfaceStyle = useAnimatedStyle(() => ({
     borderWidth: focusProgress.value === 1 ? borderWidths.heavy : borderWidths.standard,
   }));
@@ -75,19 +68,22 @@ function OTPBlock({ char, isActive, disabled }: OTPBlockProps) {
   return (
     <BrutalSurface
       style={styles.blockContainer}
-      surfaceStyle={[styles.surface, disabled && styles.surfaceDisabled, animatedSurfaceStyle]}
+      surfaceStyle={[
+        styles.surface, 
+        disabled ? { backgroundColor: colors.muted, borderColor: colors.mutedForeground } : { backgroundColor: colors.background, borderColor: colors.border },
+        animatedSurfaceStyle
+      ]}
       shadowStyle={animatedShadowStyle}
       offset={SHADOW_OFFSET}
       pressable={false}
       hasShadow={!disabled}
     >
-      <Text style={cn(styles.blockText, disabled && styles.textDisabled)}>
+      <Text style={cn(styles.blockText, { color: colors.foreground }, disabled && { color: colors.mutedForeground })}>
         {char || ''}
       </Text>
 
-      {/* Custom Brutalism cursor indicator on the active block */}
       {isActive && char === undefined && (
-        <View style={styles.cursor} />
+        <View style={[styles.cursor, { backgroundColor: colors.foreground }]} />
       )}
     </BrutalSurface>
   );
@@ -105,7 +101,6 @@ const InputOTP = forwardRef<TextInput, InputOTPProps>(({
   ...props
 }, ref) => {
   const inputRef = useRef<TextInput>(null);
-  // Expose the underlying TextInput ref to parent forms
   useImperativeHandle(ref, () => inputRef.current as TextInput);
 
   const [isFocused, setIsFocused] = useState(false);
@@ -129,7 +124,6 @@ const InputOTP = forwardRef<TextInput, InputOTPProps>(({
 
   return (
     <View style={cn(styles.root, style)}>
-      {/* Invisible engine for native input tracking */}
       <TextInput
         ref={inputRef}
         value={value}
@@ -146,7 +140,6 @@ const InputOTP = forwardRef<TextInput, InputOTPProps>(({
         {...props}
       />
 
-      {/* Separated Visual Blocks */}
       <Pressable
         onPress={handlePressContainer}
         style={styles.blocksRow}
@@ -197,26 +190,16 @@ const styles = StyleSheet.create({
   surface: {
     width: BLOCK_SIZE,
     height: BLOCK_SIZE,
-    backgroundColor: colors.light.background,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  surfaceDisabled: {
-    backgroundColor: colors.light.muted,
-    borderColor: colors.light.mutedForeground,
   },
   blockText: {
     fontSize: typography.xl,
     fontWeight: '800',
-    color: colors.light.foreground,
-  },
-  textDisabled: {
-    color: colors.light.mutedForeground,
   },
   cursor: {
     width: 8,
     height: 24,
-    backgroundColor: colors.light.foreground,
-    borderRadius: 0, // Harsh unrounded blinking block cursor
+    borderRadius: 0,
   },
 });

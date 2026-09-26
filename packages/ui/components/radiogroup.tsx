@@ -7,8 +7,8 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 
-// Notice typography and spacing are imported here
-import { colors, borderWidths, spacing, typography } from '../lib/colors';
+import { borderWidths, spacing } from '../lib/colors';
+import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
 import { usePressPhysics } from '../lib/usePressPhysics';
 
@@ -56,8 +56,6 @@ const RadioContext = createContext<RadioContextValue | null>(null);
 // ---------------------------------------------------------------------------
 // Design tokens
 // ---------------------------------------------------------------------------
-// Maintained for strict template compliance, though no shadow is used here
-const SHADOW_OFFSET = 4; 
 const RADIO_SIZE = 24;
 const DOT_SIZE = 12;
 
@@ -95,6 +93,7 @@ export function RadioGroupItem({
   ...props
 }: RadioGroupItemProps) {
   const context = useContext(RadioContext);
+  const { colors } = useTheme();
   
   if (!context) {
     throw new Error('RadioGroupItem must be used within a RadioGroup');
@@ -105,7 +104,6 @@ export function RadioGroupItem({
 
   const scale = useSharedValue(isSelected ? 1 : 0);
 
-  // Sync internal animated value with external selection state
   useEffect(() => {
     scale.value = withTiming(isSelected ? 1 : 0, {
       duration: 150,
@@ -113,8 +111,6 @@ export function RadioGroupItem({
     });
   }, [isSelected, scale]);
 
-  // Circular shape doesn't fit BrutalSurface's square-shadow model, but it
-  // still gets the shared spring/haptics press feedback via the raw hook.
   const { animatedSurfaceStyle, handlePressIn, handlePressOut } = usePressPhysics({
     offset: 0,
     disabled: isDisabled,
@@ -128,7 +124,7 @@ export function RadioGroupItem({
   const animatedDotStyle = useAnimatedStyle(() => {
     return {
       transform: [{ scale: scale.value }],
-      opacity: scale.value, // Smooth fade alongside the scale
+      opacity: scale.value,
     };
   });
 
@@ -139,7 +135,8 @@ export function RadioGroupItem({
       onPressOut={handlePressOut}
       style={[
         styles.item,
-        isDisabled && styles.itemDisabled,
+        { backgroundColor: colors.background, borderColor: colors.border },
+        isDisabled && { backgroundColor: colors.muted, borderColor: colors.mutedForeground },
         animatedSurfaceStyle,
         style,
       ]}
@@ -151,7 +148,8 @@ export function RadioGroupItem({
       <AnimatedView
         style={[
           styles.dot,
-          isDisabled && styles.dotDisabled,
+          { backgroundColor: colors.foreground },
+          isDisabled && { backgroundColor: colors.mutedForeground },
           animatedDotStyle
         ]}
       />
@@ -170,25 +168,14 @@ const styles = StyleSheet.create({
   item: {
     width: RADIO_SIZE,
     height: RADIO_SIZE,
-    backgroundColor: colors.light.background,
-    borderColor: colors.light.border,
-    borderWidth: borderWidths.heavy, // Thick borders as requested
-    // The visual hack to make the standard Brutalist square look circular
+    borderWidth: borderWidths.heavy,
     borderRadius: 999, 
     alignItems: 'center',
     justifyContent: 'center',
   },
-  itemDisabled: {
-    backgroundColor: colors.light.muted,
-    borderColor: colors.light.mutedForeground,
-  },
   dot: {
     width: DOT_SIZE,
     height: DOT_SIZE,
-    backgroundColor: colors.light.foreground,
     borderRadius: 999,
-  },
-  dotDisabled: {
-    backgroundColor: colors.light.mutedForeground,
   },
 });

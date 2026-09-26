@@ -1,9 +1,8 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View, ViewProps, ViewStyle } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
+import { StyleSheet, View, ViewProps } from 'react-native';
 
-// Notice typography and spacing are imported here
-import { colors, borderWidths, spacing, typography } from '../lib/colors';
+import { borderWidths } from '../lib/colors';
+import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
 
 // ---------------------------------------------------------------------------
@@ -19,30 +18,23 @@ export interface SeparatorProps extends ViewProps {
 }
 
 // ---------------------------------------------------------------------------
-// Design tokens
-// ---------------------------------------------------------------------------
-// Maintained for strict template compliance, though unused by the Separator.
-const SHADOW_OFFSET = 4;
-
-// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-
 export default function Separator({ 
   orientation = 'horizontal', 
   style, 
   ...props 
 }: SeparatorProps) {
+  const { colors } = useTheme();
+
   return (
     <View
       style={cn(
         styles.base,
+        { backgroundColor: colors.border },
         orientation === 'horizontal' ? styles.horizontal : styles.vertical,
         style
       )}
-      // A separator is purely visual, so we hide it from screen readers 
-      // to avoid cluttering the accessibility tree.
       accessibilityRole="none"
       importantForAccessibility="no"
       {...props}
@@ -54,9 +46,7 @@ export default function Separator({
 // Styles
 // ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
-  base: {
-    backgroundColor: colors.light.border,
-  },
+  base: {},
   horizontal: {
     width: '100%',
     height: borderWidths.standard,

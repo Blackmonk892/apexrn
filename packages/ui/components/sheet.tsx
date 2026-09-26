@@ -1,24 +1,25 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { Dimensions, Modal, Pressable, StyleSheet, View, ViewProps } from 'react-native';
 import Animated, { 
   useAnimatedStyle, 
   useSharedValue, 
   withTiming, 
   Easing,
-  runOnJS,
-  interpolate
+  runOnJS
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
-// Notice typography and spacing are imported here
-import { colors, borderWidths, spacing, typography } from '../lib/colors';
+import { borderWidths, spacing } from '../lib/colors';
+import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
 
 // ---------------------------------------------------------------------------
 // Types & Context
 // ---------------------------------------------------------------------------
 interface SheetContextState {
+  open: boolean;
   close: () => void;
+  onDismissAnimationFinished: () => void;
 }
 
 const SheetContext = createContext<SheetContextState | undefined>(undefined);
@@ -40,7 +41,7 @@ export interface SheetProps {
    * Callback fired when the sheet closes (e.g., swiped down or backdrop pressed).
    */
   onOpenChange: (open: boolean) => void;
-  children: (props: { open: boolean; handleDismiss: () => void }) => React.ReactNode;
+  children: React.ReactNode | ((props: { open: boolean; handleDismiss: () => void }) => React.ReactNode);
 }
 
 export interface SheetContentProps extends ViewProps {
@@ -52,45 +53,38 @@ export interface SheetContentProps extends ViewProps {
   children?: React.ReactNode;
 }
 
-// ---------------------------------------------------------------------------
-// Design tokens
-// ---------------------------------------------------------------------------
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
-
-// ---------------------------------------------------------------------------
-// Components
-// ---------------------------------------------------------------------------
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export function Sheet({ open, onOpenChange, children }: SheetProps) {
-  const [isVisible, setIsVisible] = useState(open);
+  const [isModalVisible, setIsModalVisible] = useState(open);
 
   useEffect(() => {
     if (open) {
-      setIsVisible(true);
+      setIsModalVisible(true);
     }
-    // Closing sequence is handled by the SheetContent component's animation
   }, [open]);
 
   const close = useCallback(() => {
     onOpenChange(false);
   }, [onOpenChange]);
 
-  // We unmount the Modal entirely after the exit animation completes
-  const handleDismiss = useCallback(() => {
-    setIsVisible(false);
+  const onDismissAnimationFinished = useCallback(() => {
+    setIsModalVisible(false);
   }, []);
 
+  const childrenRender = typeof children === 'function' 
+    ? children({ open, handleDismiss: close })
+    : children;
+
   return (
-    <SheetContext.Provider value={{ close }}>
+    <SheetContext.Provider value={{ open, close, onDismissAnimationFinished }}>
       <Modal
-        visible={isVisible}
+        visible={isModalVisible}
         transparent
         animationType="none"
         onRequestClose={close}
       >
-        {/* Children should be SheetContent */}
-        {children({ open, handleDismiss })}
+        {childrenRender}
       </Modal>
     </SheetContext.Provider>
   );
@@ -102,32 +96,52 @@ export function SheetContent({
   style, 
   ...props 
 }: SheetContentProps) {
-  const { close } = useSheetContext();
+  const { open, close, onDismissAnimationFinished } = useSheetContext();
+  const { colors } = useTheme();
   
   // TranslateY: 0 is open/docked, PointHeight is fully closed/hidden
   const translateY = useSharedValue(PointHeight);
   const backdropOpacity = useSharedValue(0);
   const contextY = useSharedValue(0);
 
-  useEffect(() => {
-    // Slide and fade in when mounting
-    translateY.value = withTiming(0, { 
-      duration: 250, 
-      easing: Easing.out(Easing.quad) 
-    });
-    backdropOpacity.value = withTiming(0.5, { 
-      duration: 250 
-    });
-  }, [PointHeight, translateY, backdropOpacity]);
+  const isClosingRef = useRef(false);
 
-  const handleClose = () => {
-    // Animate out before notifying parent to trigger unmount
+  // Animate in/out when `open` state changes
+  useEffect(() => {
+    if (open) {
+      isClosingRef.current = false;
+      translateY.value = withTiming(0, { 
+        duration: 250, 
+        easing: Easing.out(Easing.quad) 
+      });
+      backdropOpacity.value = withTiming(0.5, { 
+        duration: 250 
+      });
+    } else {
+      if (isClosingRef.current) return;
+      isClosingRef.current = true;
+      translateY.value = withTiming(PointHeight, { 
+        duration: 200, 
+        easing: Easing.in(Easing.quad) 
+      }, (finished) => {
+        if (finished) {
+          runOnJS(onDismissAnimationFinished)();
+        }
+      });
+      backdropOpacity.value = withTiming(0, { duration: 200 });
+    }
+  }, [open, PointHeight, translateY, backdropOpacity, onDismissAnimationFinished]);
+
+  const triggerClose = () => {
+    if (isClosingRef.current) return;
+    isClosingRef.current = true;
     translateY.value = withTiming(PointHeight, { 
       duration: 200, 
       easing: Easing.in(Easing.quad) 
     }, (finished) => {
       if (finished) {
         runOnJS(close)();
+        runOnJS(onDismissAnimationFinished)();
       }
     });
     backdropOpacity.value = withTiming(0, { duration: 200 });
@@ -138,25 +152,13 @@ export function SheetContent({
       contextY.value = translateY.value;
     })
     .onUpdate((event) => {
-      // Allow pulling down past 0 slightly for resistance, but snap back
       const nextY = Math.max(-20, contextY.value + event.translationY);
-      // Don't let them drag past the point height (fully closed threshold)
       translateY.value = Math.min(nextY, PointHeight);
     })
     .onEnd((event) => {
-      // If pulled down significantly (past 1/3 of the sheet height) or flicked downwards, close it
       if (translateY.value > PointHeight / 3 || event.velocityY > 500) {
-        translateY.value = withTiming(PointHeight, { 
-          duration: 200, 
-          easing: Easing.in(Easing.quad) 
-        }, (finished) => {
-          if (finished) {
-            runOnJS(close)();
-          }
-        });
-        backdropOpacity.value = withTiming(0, { duration: 200 });
+        runOnJS(triggerClose)();
       } else {
-        // Snap back to docked/open position
         translateY.value = withTiming(0, { 
           duration: 150, 
           easing: Easing.out(Easing.quad) 
@@ -174,10 +176,10 @@ export function SheetContent({
 
   return (
     <View style={styles.wrapper}>
-      {/* Harsh solid black backdrop */}
+      {/* Backdrop */}
       <AnimatedPressable 
         style={[styles.backdrop, animatedBackdropStyle]} 
-        onPress={handleClose}
+        onPress={triggerClose}
         accessibilityRole="button"
         accessibilityLabel="Dismiss Sheet"
       />
@@ -186,15 +188,19 @@ export function SheetContent({
         <Animated.View 
           style={[
             styles.sheet, 
-            { height: PointHeight }, 
+            { 
+              height: PointHeight,
+              backgroundColor: colors.background,
+              borderColor: colors.border,
+            }, 
             animatedSheetStyle,
             style
           ]}
           {...props}
         >
-          {/* Strict brutalist top drag handle */}
+          {/* Top drag handle */}
           <View style={styles.handleContainer}>
-            <View style={styles.handleBar} />
+            <View style={[styles.handleBar, { backgroundColor: colors.foreground }]} />
           </View>
           
           <View style={styles.content}>
@@ -215,7 +221,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   backdrop: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: '#000000',
     zIndex: 0,
   },
@@ -225,9 +231,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 1,
-    backgroundColor: colors.light.background,
-    borderColor: colors.light.border,
-    // ExtraHeavy top border (4px) per instructions, sides/bottom rest flush
     borderTopWidth: borderWidths.extraHeavy, 
     borderLeftWidth: borderWidths.heavy,
     borderRightWidth: borderWidths.heavy,
@@ -242,8 +245,7 @@ const styles = StyleSheet.create({
   },
   handleBar: {
     width: 40,
-    height: 4, // Thick 4px line as requested
-    backgroundColor: colors.light.foreground,
+    height: 4,
     borderRadius: 0,
   },
   content: {

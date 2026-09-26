@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Image, StyleSheet, Text, View, ViewProps } from 'react-native';
 
-import { colors, typography } from '../lib/colors';
+import { typography } from '../lib/colors';
+import { useTheme } from '../lib/theme';
 import BrutalSurface from './brutal_surface';
 
 // ---------------------------------------------------------------------------
@@ -14,7 +15,6 @@ export interface AvatarProps extends ViewProps {
   src?: string;
   /**
    * Initials to display if the image fails to load or is not provided.
-   * Will be truncated to 2 characters.
    */
   initials?: string;
   /**
@@ -33,8 +33,6 @@ export interface AvatarProps extends ViewProps {
 // Design tokens
 // ---------------------------------------------------------------------------
 const SHADOW_OFFSET = 4;
-// The Exception: 999 border radius is allowed here — a brutalist avatar is
-// still conventionally circular, unlike everything else in the library.
 const AVATAR_RADIUS = 999;
 
 const SIZES = {
@@ -60,6 +58,7 @@ export default function Avatar({
   style,
   ...props
 }: AvatarProps) {
+  const { colors } = useTheme();
   const [imageFailed, setImageFailed] = useState(false);
   const dimension = SIZES[size];
   const fontSize = TYPOGRAPHY_SIZES[size];
@@ -70,7 +69,7 @@ export default function Avatar({
   return (
     <BrutalSurface
       style={[styles.container, style]}
-      surfaceStyle={{ width: dimension, height: dimension, backgroundColor: colors.light.background, overflow: 'hidden' }}
+      surfaceStyle={{ width: dimension, height: dimension, backgroundColor: colors.background, overflow: 'hidden' }}
       offset={SHADOW_OFFSET}
       borderWidth="standard"
       borderRadius={AVATAR_RADIUS}
@@ -81,8 +80,8 @@ export default function Avatar({
       {...props}
     >
       {showFallback ? (
-        <View style={styles.fallbackContainer}>
-          <Text style={[styles.initialsText, { fontSize }]} numberOfLines={1}>
+        <View style={[styles.fallbackContainer, { backgroundColor: colors.muted }]}>
+          <Text style={[styles.initialsText, { fontSize, color: colors.foreground }]} numberOfLines={1}>
             {displayInitials}
           </Text>
         </View>
@@ -112,12 +111,10 @@ const styles = StyleSheet.create({
   fallbackContainer: {
     width: '100%',
     height: '100%',
-    backgroundColor: colors.light.muted,
     alignItems: 'center',
     justifyContent: 'center',
   },
   initialsText: {
-    color: colors.light.foreground,
     fontWeight: '800',
     letterSpacing: 0.4,
     textTransform: 'uppercase',

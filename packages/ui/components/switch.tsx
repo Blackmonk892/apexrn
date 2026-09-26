@@ -8,8 +8,8 @@ import Animated, {
   interpolateColor 
 } from 'react-native-reanimated';
 
-// Notice typography and spacing are imported here
-import { colors, borderWidths, spacing, typography } from '../lib/colors';
+import { borderWidths } from '../lib/colors';
+import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
 import BrutalSurface from './brutal_surface';
 
@@ -26,7 +26,7 @@ export interface SwitchProps extends Omit<PressableProps, 'onPress' | 'onPressIn
    */
   onCheckedChange: (checked: boolean) => void;
   /**
-   * Disables the switch, applying muted styles and preventing interactions.
+   * Disables the switch.
    * @default false
    */
   disabled?: boolean;
@@ -35,16 +35,10 @@ export interface SwitchProps extends Omit<PressableProps, 'onPress' | 'onPressIn
 // ---------------------------------------------------------------------------
 // Design tokens
 // ---------------------------------------------------------------------------
-const SHADOW_OFFSET = 2; // Specific 2px shadow for the thumb
+const SHADOW_OFFSET = 2;
 const TRACK_WIDTH = 56;
 const TRACK_HEIGHT = 32;
 const THUMB_SIZE = 24;
-
-// Calculate travel distance:
-// Inner track width = TRACK_WIDTH - (borderWidth * 2) = 56 - 4 = 52.
-// Total thumb footprint (including 2px shadow) = THUMB_SIZE + SHADOW_OFFSET = 26.
-// Available travel = 52 - 26 = 26.
-// We subtract an extra 2px to give it a 1px padding on the right side.
 const THUMB_TRAVEL_DISTANCE = 24;
 
 // ---------------------------------------------------------------------------
@@ -60,9 +54,9 @@ export default function Switch({
   style,
   ...props
 }: SwitchProps) {
+  const { colors } = useTheme();
   const isChecked = useSharedValue(checked ? 1 : 0);
 
-  // Sync internal animated value with external prop
   useEffect(() => {
     isChecked.value = withTiming(checked ? 1 : 0, { 
       duration: 150, 
@@ -80,7 +74,7 @@ export default function Switch({
       backgroundColor: interpolateColor(
         isChecked.value,
         [0, 1],
-        [colors.light.muted, colors.light.primary]
+        [colors.muted, colors.primary]
       ),
     };
   });
@@ -98,7 +92,8 @@ export default function Switch({
       onPress={handlePress}
       style={[
         styles.track,
-        disabled && styles.trackDisabled,
+        { borderColor: colors.border },
+        disabled && { backgroundColor: colors.muted, borderColor: colors.mutedForeground },
         animatedTrackStyle,
         style,
       ]}
@@ -108,14 +103,13 @@ export default function Switch({
       {...props}
     >
       <AnimatedView style={[styles.thumbContainer, animatedThumbStyle]}>
-        {/* Purely decorative — the track (not the thumb) owns onPress, so this
-            never wires up press physics. Shadow is hidden in disabled state
-            per brutalism rules. */}
         <BrutalSurface
           pressable={false}
           hasShadow={!disabled}
           offset={SHADOW_OFFSET}
-          surfaceStyle={cn(styles.thumbSurface, disabled && styles.thumbSurfaceDisabled)}
+          backgroundColor={disabled ? colors.muted : colors.background}
+          borderColor={disabled ? colors.mutedForeground : colors.border}
+          surfaceStyle={styles.thumbSurface}
         />
       </AnimatedView>
     </AnimatedPressable>
@@ -129,15 +123,10 @@ const styles = StyleSheet.create({
   track: {
     width: TRACK_WIDTH,
     height: TRACK_HEIGHT,
-    borderColor: colors.light.border,
     borderWidth: borderWidths.standard,
     borderRadius: 0,
     justifyContent: 'center',
-    paddingHorizontal: 2, // Gives the thumb a slight inner padding from the track edges
-  },
-  trackDisabled: {
-    backgroundColor: colors.light.muted, // Forces muted bg regardless of checked state
-    borderColor: colors.light.mutedForeground,
+    paddingHorizontal: 2,
   },
   thumbContainer: {
     position: 'relative',
@@ -147,13 +136,5 @@ const styles = StyleSheet.create({
   thumbSurface: {
     width: THUMB_SIZE,
     height: THUMB_SIZE,
-    backgroundColor: colors.light.background,
-    borderColor: colors.light.border,
-    borderWidth: borderWidths.heavy,
-  },
-  thumbSurfaceDisabled: {
-    backgroundColor: colors.light.muted,
-    borderColor: colors.light.mutedForeground,
-    borderWidth: borderWidths.standard, // Lighten the border if disabled to match inputs
   },
 });

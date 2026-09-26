@@ -8,10 +8,9 @@ import {
   NativeScrollEvent,
   Dimensions
 } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
 
-// Notice typography and spacing are imported here
-import { colors, borderWidths, spacing, typography } from '../lib/colors';
+import { borderWidths, spacing } from '../lib/colors';
+import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
 
 // ---------------------------------------------------------------------------
@@ -36,7 +35,7 @@ export interface CarouselProps extends ViewProps {
    */
   itemWidth?: number;
   /**
-   * Gap between items. Pulls from spacing tokens.
+   * Gap between items.
    * @default spacing.md
    */
   gap?: number;
@@ -60,12 +59,12 @@ export default function Carousel({
   style,
   ...props
 }: CarouselProps) {
+  const { colors } = useTheme();
   const [activeIndex, setActiveIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const contentOffsetX = event.nativeEvent.contentOffset.x;
-    // Calculate the index based on item width plus gap padding
     const index = Math.round(contentOffsetX / (itemWidth + gap));
     if (index !== activeIndex && index >= 0 && index < data.length) {
       setActiveIndex(index);
@@ -82,7 +81,6 @@ export default function Carousel({
         pagingEnabled
         snapToInterval={itemWidth + gap}
         decelerationRate="fast"
-        // Massive horizontal padding reserved so internal card shadows don't clip at edges
         contentContainerStyle={[
           styles.contentContainer,
           { paddingHorizontal: spacing.xl, gap }
@@ -97,7 +95,6 @@ export default function Carousel({
         scrollEventThrottle={16}
       />
 
-      {/* Brutalist Indicator Dots */}
       {showIndicators && data.length > 1 && (
         <View style={styles.indicatorsContainer} accessibilityRole="adjustable">
           {data.map((_, index) => (
@@ -105,7 +102,8 @@ export default function Carousel({
               key={index} 
               style={[
                 styles.dot,
-                index === activeIndex && styles.activeDot
+                { backgroundColor: colors.muted, borderColor: colors.border },
+                index === activeIndex && { backgroundColor: colors.foreground }
               ]} 
             />
           ))}
@@ -122,12 +120,11 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
     flexDirection: 'column',
-    // Extra margin so the container itself reserves space for children shadows
     marginBottom: SHADOW_OFFSET,
   },
   contentContainer: {
     alignItems: 'center',
-    paddingVertical: SHADOW_OFFSET * 2, // Space for top/bottom shadow offsets
+    paddingVertical: SHADOW_OFFSET * 2,
   },
   indicatorsContainer: {
     flexDirection: 'row',
@@ -139,12 +136,7 @@ const styles = StyleSheet.create({
   dot: {
     width: 12,
     height: 12,
-    backgroundColor: colors.light.muted,
-    borderColor: colors.light.border,
     borderWidth: borderWidths.standard,
-    borderRadius: 0, // Strict brutalist square indicator
-  },
-  activeDot: {
-    backgroundColor: colors.light.foreground, // Harsh inversion when active
+    borderRadius: 0,
   },
 });
