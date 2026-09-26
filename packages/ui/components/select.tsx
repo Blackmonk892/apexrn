@@ -77,11 +77,25 @@ const SHADOW_OFFSET = 4;
 export function Select({ value, onValueChange, children }: SelectProps) {
   const [open, setOpen] = useState(false);
 
+  // Split children so <SelectTrigger/> renders once, in the normal layout tree,
+  // and <SelectContent/> renders once, only inside the Sheet's modal.
+  // (Previously both rendered in both places, mounting everything twice.)
+  const triggerChildren: React.ReactNode[] = [];
+  const contentChildren: React.ReactNode[] = [];
+
+  React.Children.forEach(children, (child) => {
+    if (React.isValidElement(child) && child.type === SelectContent) {
+      contentChildren.push(child);
+    } else {
+      triggerChildren.push(child);
+    }
+  });
+
   return (
     <SelectContext.Provider value={{ value, onValueChange, setOpen }}>
-      {children}
+      {triggerChildren}
       <Sheet open={open} onOpenChange={setOpen}>
-        {({ handleDismiss }) => children}
+        {() => contentChildren}
       </Sheet>
     </SelectContext.Provider>
   );

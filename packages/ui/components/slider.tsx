@@ -12,6 +12,7 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 // Notice typography and spacing are imported here
 import { colors, borderWidths, spacing, typography } from '../lib/colors';
 import { cn } from '../lib/utils';
+import BrutalSurface from './brutal_surface';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -151,14 +152,15 @@ export default function Slider({
       {/* Draggable DJ-Fader Thumb */}
       <GestureDetector gesture={pan}>
         <Animated.View style={[styles.thumbWrapper, animatedThumbStyle]}>
-          {/* Shadow is hidden in disabled state per brutalism rules */}
-          {!disabled && <View style={styles.thumbShadow} />}
-          
-          <View 
-            style={cn(
-              styles.thumbSurface,
-              disabled && styles.thumbSurfaceDisabled
-            )} 
+          {/* Purely decorative — the GestureDetector drives the drag, so this
+              never wires up press physics. Shadow is hidden in disabled state
+              per brutalism rules. */}
+          <BrutalSurface
+            pressable={false}
+            hasShadow={!disabled}
+            offset={SHADOW_OFFSET}
+            borderWidth="standard"
+            surfaceStyle={cn(styles.thumbSurface, disabled && styles.thumbSurfaceDisabled)}
           />
         </Animated.View>
       </GestureDetector>
@@ -195,27 +197,10 @@ const styles = StyleSheet.create({
     width: THUMB_WIDTH + SHADOW_OFFSET,
     height: THUMB_HEIGHT + SHADOW_OFFSET,
   },
-  thumbShadow: {
-    position: 'absolute',
-    top: SHADOW_OFFSET,
-    left: SHADOW_OFFSET,
-    width: THUMB_WIDTH,
-    height: THUMB_HEIGHT,
-    backgroundColor: colors.light.shadow,
-    borderColor: colors.light.border,
-    borderWidth: borderWidths.standard, // Matching standard border so tiny elements aren't overwhelmed
-    zIndex: 1,
-    borderRadius: 0,
-  },
   thumbSurface: {
-    position: 'relative',
-    zIndex: 2,
     width: THUMB_WIDTH,
     height: THUMB_HEIGHT,
     backgroundColor: colors.light.background,
-    borderColor: colors.light.border,
-    borderWidth: borderWidths.standard, 
-    borderRadius: 0,
   },
   thumbSurfaceDisabled: {
     backgroundColor: colors.light.muted,

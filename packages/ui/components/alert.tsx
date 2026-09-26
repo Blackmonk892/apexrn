@@ -37,13 +37,11 @@ export interface AlertProps extends ViewProps {
 const SHADOW_OFFSET = 4;
 const LEFT_BORDER_WIDTH = 8; // Extra thick left border as requested
 
-// We extract variant colors here. Fallbacks are provided just in case 
-// your specific `colors.light` object doesn't have these exact semantic keys yet.
 const VARIANT_COLORS = {
-  default: colors.light.foreground || '#000000',
-  destructive: colors.light.destructive || '#EF4444',
-  warning: colors.light.warning || '#F59E0B',
-  success: colors.light.success || '#10B981',
+  default: colors.light.foreground,
+  destructive: colors.light.destructive,
+  warning: colors.light.warning,
+  success: colors.light.success,
 };
 
 // ---------------------------------------------------------------------------

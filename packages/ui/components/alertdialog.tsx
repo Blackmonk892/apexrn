@@ -131,18 +131,18 @@ export default function AlertDialog({
         {/* The required forced footer layout for alerts */}
         <DialogFooter style={styles.footerLayout}>
           <View style={styles.buttonWrapper}>
-            <Button 
-              variant="outline" 
-              label={cancelText} 
-              onPress={handleCancel} 
+            <Button
+              variant="outline"
+              title={cancelText}
+              onPress={handleCancel}
             />
           </View>
           <View style={styles.buttonWrapper}>
             {/* Action button strictly forced to the destructive variant */}
-            <Button 
-              variant="destructive" 
-              label={actionText} 
-              onPress={handleAction} 
+            <Button
+              variant="destructive"
+              title={actionText}
+              onPress={handleAction}
             />
           </View>
         </DialogFooter>

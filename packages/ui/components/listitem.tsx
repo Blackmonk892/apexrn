@@ -1,16 +1,10 @@
 import React from 'react';
 import { Pressable, PressableProps, StyleSheet, Text, View } from 'react-native';
-import Animated, { 
-  useAnimatedStyle, 
-  useSharedValue, 
-  withTiming, 
-  Easing, 
-  interpolateColor 
-} from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, interpolateColor } from 'react-native-reanimated';
 
-// Notice typography and spacing are imported here
 import { colors, borderWidths, spacing, typography } from '../lib/colors';
 import { cn } from '../lib/utils';
+import { usePressPhysics } from '../lib/usePressPhysics';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -44,12 +38,6 @@ export interface ListItemProps extends Omit<PressableProps, 'style'> {
 }
 
 // ---------------------------------------------------------------------------
-// Design tokens
-// ---------------------------------------------------------------------------
-// Maintained for strict template compliance, though unused by the ListItem.
-const SHADOW_OFFSET = 4;
-
-// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -65,30 +53,28 @@ export default function ListItem({
   onPressOut,
   ...props
 }: ListItemProps) {
-  const isPressed = useSharedValue(0);
+  // No shadow block on a list row — reuse the shared spring/haptics timing
+  // via the raw `pressed` value rather than pulling in BrutalSurface.
+  const { pressed, handlePressIn, handlePressOut } = usePressPhysics({
+    offset: 0,
+    disabled,
+    haptics: false,
+  });
 
-  const handlePressIn = (e: any) => {
-    if (disabled) return;
-    isPressed.value = withTiming(1, { 
-      duration: 100, 
-      easing: Easing.out(Easing.quad) 
-    });
+  const handlePressInInternal = (e: any) => {
+    handlePressIn();
     onPressIn?.(e);
   };
 
-  const handlePressOut = (e: any) => {
-    if (disabled) return;
-    isPressed.value = withTiming(0, { 
-      duration: 80, 
-      easing: Easing.in(Easing.quad) 
-    });
+  const handlePressOutInternal = (e: any) => {
+    handlePressOut();
     onPressOut?.(e);
   };
 
   const animatedBackgroundStyle = useAnimatedStyle(() => {
     return {
       backgroundColor: interpolateColor(
-        isPressed.value,
+        pressed.value,
         [0, 1],
         // Flash to muted color on press
         [colors.light.background, colors.light.muted]
@@ -98,8 +84,8 @@ export default function ListItem({
 
   return (
     <AnimatedPressable
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
+      onPressIn={handlePressInInternal}
+      onPressOut={handlePressOutInternal}
       disabled={disabled}
       style={[
         styles.container,
@@ -118,22 +104,22 @@ export default function ListItem({
       )}
 
       <View style={styles.contentContainer}>
-        <Text 
+        <Text
           style={cn(
-            styles.title, 
+            styles.title,
             disabled && styles.textDisabled
-          )} 
+          )}
           numberOfLines={1}
         >
           {title}
         </Text>
-        
+
         {description ? (
-          <Text 
+          <Text
             style={cn(
-              styles.description, 
+              styles.description,
               disabled && styles.textDisabled
-            )} 
+            )}
             numberOfLines={2}
           >
             {description}

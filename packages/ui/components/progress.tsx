@@ -1,15 +1,9 @@
 import React, { useEffect } from 'react';
 import { StyleSheet, View, ViewProps } from 'react-native';
-import Animated, { 
-  useAnimatedStyle, 
-  useSharedValue, 
-  withTiming, 
-  Easing 
-} from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
 
-// Notice typography and spacing are imported here
-import { colors, borderWidths, spacing, typography } from '../lib/colors';
-import { cn } from '../lib/utils';
+import { colors } from '../lib/colors';
+import BrutalSurface from './brutal_surface';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -37,7 +31,7 @@ export interface ProgressProps extends ViewProps {
 // ---------------------------------------------------------------------------
 const SHADOW_OFFSET = 4;
 // A standard chunky height for brutalist linear indicators
-const PROGRESS_HEIGHT = 24; 
+const PROGRESS_HEIGHT = 24;
 
 // ---------------------------------------------------------------------------
 // Component
@@ -67,22 +61,19 @@ export default function Progress({
   });
 
   return (
-    <View 
-      style={cn(
-        styles.container, 
-        withShadow && styles.containerWithShadow,
-        style
-      )}
+    <BrutalSurface
+      style={[styles.container, style]}
+      surfaceStyle={styles.track}
+      offset={SHADOW_OFFSET}
+      borderWidth="heavy"
+      pressable={false}
+      hasShadow={withShadow}
       accessibilityRole="progressbar"
       accessibilityValue={{ min: 0, max, now: value }}
       {...props}
     >
-      {withShadow && <View style={styles.shadow} />}
-      
-      <View style={styles.track}>
-        <Animated.View style={[styles.fill, animatedFillStyle]} />
-      </View>
-    </View>
+      <Animated.View style={[styles.fill, animatedFillStyle]} />
+    </BrutalSurface>
   );
 }
 
@@ -91,36 +82,12 @@ export default function Progress({
 // ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
   container: {
-    position: 'relative',
     width: '100%',
   },
-  containerWithShadow: {
-    // Reserve space so the shadow doesn't clip into adjacent layout elements
-    marginBottom: SHADOW_OFFSET,
-    marginRight: SHADOW_OFFSET,
-  },
-  shadow: {
-    position: 'absolute',
-    top: SHADOW_OFFSET,
-    left: SHADOW_OFFSET,
-    right: -SHADOW_OFFSET,
-    bottom: -SHADOW_OFFSET,
-    height: PROGRESS_HEIGHT,
-    backgroundColor: colors.light.shadow,
-    borderColor: colors.light.border,
-    borderWidth: borderWidths.heavy,
-    zIndex: 1,
-    borderRadius: 0,
-  },
   track: {
-    position: 'relative',
-    zIndex: 2,
     width: '100%',
     height: PROGRESS_HEIGHT,
     backgroundColor: colors.light.background,
-    borderColor: colors.light.border,
-    borderWidth: borderWidths.heavy, // Thick-bordered empty box as requested
-    borderRadius: 0,
     overflow: 'hidden', // Ensures the fill never spills out
   },
   fill: {

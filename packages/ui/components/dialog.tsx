@@ -19,8 +19,9 @@ import Animated, {
 } from 'react-native-reanimated';
 
 // Notice typography and spacing are imported here
-import { colors, borderWidths, spacing, typography } from '../lib/colors';
+import { colors, spacing, typography } from '../lib/colors';
 import { cn } from '../lib/utils';
+import BrutalSurface from './brutal_surface';
 
 // ---------------------------------------------------------------------------
 // Types & Context
@@ -64,7 +65,6 @@ export interface DialogContentProps extends ViewProps {
 // Design tokens
 // ---------------------------------------------------------------------------
 const DIALOG_SHADOW_OFFSET = 8; // Massive 8px shadow as requested
-const DIALOG_BORDER_WIDTH = 4; // Extra heavy border as requested
 
 // ---------------------------------------------------------------------------
 // Components
@@ -187,20 +187,21 @@ export function DialogContent({
         />
         
         {/* Scaling Brutalist Dialog Box */}
-        <Animated.View 
-          style={[
-            styles.dialogWrapper, 
-            contentAnimatedStyle,
-            style
-          ]}
+        <Animated.View
+          style={[contentAnimatedStyle, style]}
           accessibilityRole="dialog"
           accessibilityModal={true}
           {...props}
         >
-          <View style={styles.shadow} />
-          <View style={styles.surface}>
+          <BrutalSurface
+            style={styles.dialogWrapper}
+            surfaceStyle={styles.surface}
+            offset={DIALOG_SHADOW_OFFSET}
+            borderWidth="extraHeavy"
+            pressable={false}
+          >
             {children}
-          </View>
+          </BrutalSurface>
         </Animated.View>
       </View>
     </Modal>
@@ -251,33 +252,11 @@ const styles = StyleSheet.create({
     zIndex: 0,
   },
   dialogWrapper: {
-    position: 'relative',
     width: '100%',
     maxWidth: 400,
-    // Reserve margin for massive 8px shadow
-    marginBottom: DIALOG_SHADOW_OFFSET,
-    marginRight: DIALOG_SHADOW_OFFSET,
-    zIndex: 1,
-  },
-  shadow: {
-    position: 'absolute',
-    top: DIALOG_SHADOW_OFFSET,
-    left: DIALOG_SHADOW_OFFSET,
-    right: -DIALOG_SHADOW_OFFSET,
-    bottom: -DIALOG_SHADOW_OFFSET,
-    backgroundColor: colors.light.shadow,
-    borderColor: colors.light.border,
-    borderWidth: DIALOG_BORDER_WIDTH,
-    zIndex: 1,
-    borderRadius: 0,
   },
   surface: {
-    position: 'relative',
-    zIndex: 2,
     backgroundColor: colors.light.background,
-    borderColor: colors.light.border,
-    borderWidth: DIALOG_BORDER_WIDTH,
-    borderRadius: 0,
     padding: spacing.xl,
     gap: spacing.md,
   },

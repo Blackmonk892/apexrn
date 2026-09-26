@@ -1,12 +1,9 @@
 import React from 'react';
-import { StyleSheet, Text, View, ViewProps } from 'react-native';
-// Reanimated is imported to fulfill the strict file structure requirement,
-// but remains unused here since the Badge is a non-interactive visual indicator.
-import Animated, { useAnimatedStyle, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
+import { StyleSheet, Text, ViewProps } from 'react-native';
 
-// Notice typography and spacing are imported here
-import { colors, borderWidths, spacing, typography } from '../lib/colors';
+import { colors, spacing, typography } from '../lib/colors';
 import { cn } from '../lib/utils';
+import BrutalSurface from './brutal_surface';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -47,10 +44,8 @@ const VARIANTS = {
     text: { color: colors.light.foreground },
   },
   accent: {
-    // Assuming 'accent' is mapped to yellow in your colors object. 
-    // Fallbacks included just in case to guarantee the strict brutalist look.
-    surface: { backgroundColor: colors.light.accent || '#FACC15' },
-    text: { color: colors.light.accentForeground || '#000000' },
+    surface: { backgroundColor: colors.light.accent },
+    text: { color: colors.light.accentForeground },
   },
 };
 
@@ -67,26 +62,21 @@ export default function Badge({
   const activeVariant = VARIANTS[variant];
 
   return (
-    <View
-      style={cn(
-        styles.container,
-        withShadow && styles.containerWithShadow,
-        style
-      )}
+    <BrutalSurface
+      style={[styles.container, style]}
+      surfaceStyle={cn(styles.surface, activeVariant.surface)}
+      offset={SHADOW_OFFSET_SUBTLE}
+      borderWidth="standard"
+      pressable={false}
+      hasShadow={withShadow}
       accessibilityRole="text"
       accessibilityLabel={`Badge: ${label}`}
       {...props}
     >
-      {withShadow && <View style={styles.shadow} />}
-      <View style={cn(styles.surface, activeVariant.surface)}>
-        <Text
-          style={cn(styles.label, activeVariant.text)}
-          numberOfLines={1}
-        >
-          {label}
-        </Text>
-      </View>
-    </View>
+      <Text style={cn(styles.label, activeVariant.text)} numberOfLines={1}>
+        {label}
+      </Text>
+    </BrutalSurface>
   );
 }
 
@@ -95,31 +85,9 @@ export default function Badge({
 // ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
   container: {
-    position: 'relative',
     alignSelf: 'flex-start',
   },
-  containerWithShadow: {
-    marginBottom: SHADOW_OFFSET_SUBTLE,
-    marginRight: SHADOW_OFFSET_SUBTLE,
-  },
-  shadow: {
-    position: 'absolute',
-    top: SHADOW_OFFSET_SUBTLE,
-    left: SHADOW_OFFSET_SUBTLE,
-    right: -SHADOW_OFFSET_SUBTLE,
-    bottom: -SHADOW_OFFSET_SUBTLE,
-    backgroundColor: colors.light.shadow,
-    borderColor: colors.light.border,
-    borderWidth: borderWidths.standard,
-    zIndex: 1,
-    borderRadius: 0,
-  },
   surface: {
-    position: 'relative',
-    zIndex: 2,
-    borderWidth: borderWidths.standard,
-    borderColor: colors.light.border,
-    borderRadius: 0,
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
     alignItems: 'center',

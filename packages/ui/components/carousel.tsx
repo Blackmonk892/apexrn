@@ -99,7 +99,7 @@ export default function Carousel({
 
       {/* Brutalist Indicator Dots */}
       {showIndicators && data.length > 1 && (
-        <View style={styles.indicatorsContainer} accessibilityRole="adjustments">
+        <View style={styles.indicatorsContainer} accessibilityRole="adjustable">
           {data.map((_, index) => (
             <View 
               key={index} 

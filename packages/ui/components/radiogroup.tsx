@@ -1,15 +1,16 @@
 import React, { createContext, useContext, useEffect } from 'react';
 import { Pressable, StyleSheet, View, ViewProps, PressableProps } from 'react-native';
-import Animated, { 
-  useAnimatedStyle, 
-  useSharedValue, 
-  withTiming, 
-  Easing 
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+  Easing,
 } from 'react-native-reanimated';
 
 // Notice typography and spacing are imported here
 import { colors, borderWidths, spacing, typography } from '../lib/colors';
 import { cn } from '../lib/utils';
+import { usePressPhysics } from '../lib/usePressPhysics';
 
 // ---------------------------------------------------------------------------
 // Types & Context
@@ -101,16 +102,23 @@ export function RadioGroupItem({
 
   const isSelected = context.value === value;
   const isDisabled = context.disabled || disabled;
-  
+
   const scale = useSharedValue(isSelected ? 1 : 0);
 
   // Sync internal animated value with external selection state
   useEffect(() => {
-    scale.value = withTiming(isSelected ? 1 : 0, { 
-      duration: 150, 
-      easing: Easing.out(Easing.quad) 
+    scale.value = withTiming(isSelected ? 1 : 0, {
+      duration: 150,
+      easing: Easing.out(Easing.quad),
     });
   }, [isSelected, scale]);
+
+  // Circular shape doesn't fit BrutalSurface's square-shadow model, but it
+  // still gets the shared spring/haptics press feedback via the raw hook.
+  const { animatedSurfaceStyle, handlePressIn, handlePressOut } = usePressPhysics({
+    offset: 0,
+    disabled: isDisabled,
+  });
 
   const handlePress = () => {
     if (isDisabled) return;
@@ -127,9 +135,12 @@ export function RadioGroupItem({
   return (
     <AnimatedPressable
       onPress={handlePress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
       style={[
         styles.item,
         isDisabled && styles.itemDisabled,
+        animatedSurfaceStyle,
         style,
       ]}
       accessibilityRole="radio"
@@ -137,12 +148,12 @@ export function RadioGroupItem({
       disabled={isDisabled}
       {...props}
     >
-      <AnimatedView 
+      <AnimatedView
         style={[
-          styles.dot, 
+          styles.dot,
           isDisabled && styles.dotDisabled,
           animatedDotStyle
-        ]} 
+        ]}
       />
     </AnimatedPressable>
   );

@@ -1,19 +1,8 @@
 import React, { ReactNode } from 'react';
-import {
-  Pressable,
-  StyleSheet,
-  View,
-  ViewStyle,
-} from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-  Easing,
-} from 'react-native-reanimated';
+import { StyleSheet, View, ViewStyle } from 'react-native';
 
-// Import spacing (which is now dynamically scaled)
 import { colors, borderWidths, spacing } from '../lib/colors';
+import BrutalSurface from './brutal_surface';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -89,8 +78,6 @@ export function CardFooter({ children, style }: CardFooterProps) {
 // Component
 // ---------------------------------------------------------------------------
 
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-
 export default function Card({
   children,
   variant = 'default',
@@ -98,78 +85,23 @@ export default function Card({
   style,
   accessibilityLabel,
 }: CardProps) {
-  const pressed = useSharedValue(0);
   const v = VARIANTS[variant];
   const isPressable = !!onPress;
 
-  // --- animation (only if pressable) ---
-  const handlePressIn = () => {
-    if (!isPressable) return;
-    pressed.value = withTiming(1, { duration: 100, easing: Easing.out(Easing.quad) });
-  };
-
-  const handlePressOut = () => {
-    if (!isPressable) return;
-    pressed.value = withTiming(0, { duration: 80, easing: Easing.in(Easing.quad) });
-  };
-
-  const animatedSurface = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: pressed.value * SHADOW_OFFSET },
-      { translateY: pressed.value * SHADOW_OFFSET },
-    ],
-  }));
-
-  // --- surface content ---
-  const surfaceContent = (
-    <View style={styles.content}>
-      {children}
-    </View>
-  );
-
-  // --- render ---
   return (
-    <View
-      style={[
-        styles.root,
-        { marginBottom: SHADOW_OFFSET, marginRight: SHADOW_OFFSET },
-        style,
-      ]}
+    <BrutalSurface
+      style={style}
+      surfaceStyle={{ backgroundColor: v.bg }}
+      offset={SHADOW_OFFSET}
+      pressable={isPressable}
+      onPress={onPress}
+      accessibilityRole={isPressable ? 'button' : undefined}
+      accessibilityLabel={accessibilityLabel}
     >
-      {/* Hard shadow backing */}
-      <View
-        style={[
-          styles.shadowBacking,
-          {
-            backgroundColor: colors.light.shadow,
-            borderColor: colors.light.border,
-            borderWidth: borderWidths.heavy,
-          },
-        ]}
-      />
-
-      {/* Surface */}
-      {isPressable ? (
-        <AnimatedPressable
-          onPress={onPress}
-          onPressIn={handlePressIn}
-          onPressOut={handlePressOut}
-          accessibilityRole="button"
-          accessibilityLabel={accessibilityLabel}
-          style={[
-            animatedSurface,
-            styles.surface,
-            { backgroundColor: v.bg },
-          ]}
-        >
-          {surfaceContent}
-        </AnimatedPressable>
-      ) : (
-        <View style={[styles.surface, { backgroundColor: v.bg }]}>
-          {surfaceContent}
-        </View>
-      )}
-    </View>
+      <View style={styles.content}>
+        {children}
+      </View>
+    </BrutalSurface>
   );
 }
 
@@ -178,27 +110,7 @@ export default function Card({
 // ---------------------------------------------------------------------------
 
 const styles = StyleSheet.create({
-  root: {
-    position: 'relative',
-  },
-  surface: {
-    position: 'relative',
-    zIndex: 2,
-    borderWidth: borderWidths.heavy,
-    borderColor: colors.light.border,
-    borderRadius: 0,
-  },
-  shadowBacking: {
-    ...StyleSheet.absoluteFillObject,
-    top: SHADOW_OFFSET,
-    left: SHADOW_OFFSET,
-    right: -SHADOW_OFFSET,
-    bottom: -SHADOW_OFFSET,
-    zIndex: 1,
-    borderRadius: 0,
-  },
   content: {
-    // This will now automatically scale because you updated spacing.lg in colors.ts
     padding: spacing.lg,
   },
   header: {

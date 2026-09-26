@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
 import { 
   Modal, 
   Pressable, 
@@ -32,6 +32,8 @@ interface DropdownContextState {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
   close: () => void;
+  triggerLayout: LayoutRectangle | null;
+  setTriggerLayout: (layout: LayoutRectangle) => void;
 }
 
 const DropdownContext = createContext<DropdownContextState | undefined>(undefined);
@@ -69,6 +71,8 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export function DropdownMenu({ open, onOpenChange, children }: DropdownMenuProps) {
+  const [triggerLayout, setTriggerLayout] = useState<LayoutRectangle | null>(null);
+
   const setIsOpen = useCallback((nextOpen: boolean) => {
     onOpenChange(nextOpen);
   }, [onOpenChange]);
@@ -78,18 +82,32 @@ export function DropdownMenu({ open, onOpenChange, children }: DropdownMenuProps
   }, [onOpenChange]);
 
   return (
-    <DropdownContext.Provider value={{ isOpen: open, setIsOpen, close }}>
+    <DropdownContext.Provider value={{ isOpen: open, setIsOpen, close, triggerLayout, setTriggerLayout }}>
       {children}
     </DropdownContext.Provider>
   );
 }
 
 export function DropdownMenuTrigger({ children, asChild, ...props }: PressableProps & { asChild?: boolean }) {
-  const { isOpen, setIsOpen } = useDropdownContext();
+  const { isOpen, setIsOpen, setTriggerLayout } = useDropdownContext();
   const triggerRef = useRef<View>(null);
 
   const handlePress = () => {
-    setIsOpen(!isOpen);
+    if (isOpen) {
+      setIsOpen(false);
+      return;
+    }
+
+    // Measure the actual trigger element (not the menu itself) before opening,
+    // so DropdownMenuContent can anchor to real on-screen coordinates.
+    if (triggerRef.current) {
+      triggerRef.current.measure((x, y, width, height, pageX, pageY) => {
+        setTriggerLayout({ x: pageX, y: pageY, width, height });
+        setIsOpen(true);
+      });
+    } else {
+      setIsOpen(true);
+    }
   };
 
   if (asChild && React.isValidElement(children)) {
@@ -108,28 +126,21 @@ export function DropdownMenuTrigger({ children, asChild, ...props }: PressablePr
 }
 
 export function DropdownMenuContent({ children, style, ...props }: ViewProps) {
-  const { isOpen, close } = useDropdownContext();
-  const [triggerLayout, setTriggerLayout] = useState<LayoutRectangle | null>(null);
+  const { isOpen, close, triggerLayout } = useDropdownContext();
   const [isModalVisible, setIsModalVisible] = useState(false);
-  
+
   const scale = useSharedValue(0);
   const opacity = useSharedValue(0);
 
-  // Measure the trigger position securely on render
-  const triggerRef = useRef<View>(null);
-
-  const handleLayout = () => {
-    if (triggerRef.current) {
-      triggerRef.current.measure((x, y, width, height, pageX, pageY) => {
-        setTriggerLayout({ x: pageX, y: pageY, width, height });
-        setIsModalVisible(true);
-        
-        // Scale and fade in from trigger origin
-        scale.value = withTiming(1, { duration: 100, easing: Easing.out(Easing.quad) });
-        opacity.value = withTiming(1, { duration: 100, easing: Easing.out(Easing.quad) });
-      });
+  // Trigger layout is measured by DropdownMenuTrigger and shared via context —
+  // by the time isOpen flips true, triggerLayout already reflects the real trigger.
+  useEffect(() => {
+    if (isOpen) {
+      setIsModalVisible(true);
+      scale.value = withTiming(1, { duration: 100, easing: Easing.out(Easing.quad) });
+      opacity.value = withTiming(1, { duration: 100, easing: Easing.out(Easing.quad) });
     }
-  };
+  }, [isOpen, scale, opacity]);
 
   const handleClose = () => {
     scale.value = withTiming(0, { duration: 80, easing: Easing.in(Easing.quad) });
@@ -170,18 +181,16 @@ export function DropdownMenuContent({ children, style, ...props }: ViewProps) {
       transparent
       animationType="none"
       onRequestClose={handleClose}
-      onShow={handleLayout}
     >
       <View style={styles.portalOverlay}>
-        <AnimatedPressable 
-          style={styles.backdrop} 
-          onPress={handleClose} 
+        <AnimatedPressable
+          style={styles.backdrop}
+          onPress={handleClose}
           accessibilityRole="button"
           accessibilityLabel="Dismiss Dropdown"
         />
-        
-        <Animated.View 
-          ref={triggerRef}
+
+        <Animated.View
           style={[
             styles.menuWrapper, 
             { top: topPosition, left: leftPosition },

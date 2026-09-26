@@ -1,11 +1,8 @@
 import React, { useState } from 'react';
 import { Image, StyleSheet, Text, View, ViewProps } from 'react-native';
-// Reanimated is imported to fulfill the strict file structure requirement
-import Animated, { useAnimatedStyle, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
 
-// Notice typography and spacing are imported here
-import { colors, borderWidths, spacing, typography } from '../lib/colors';
-import { cn } from '../lib/utils';
+import { colors, typography } from '../lib/colors';
+import BrutalSurface from './brutal_surface';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -36,6 +33,9 @@ export interface AvatarProps extends ViewProps {
 // Design tokens
 // ---------------------------------------------------------------------------
 const SHADOW_OFFSET = 4;
+// The Exception: 999 border radius is allowed here — a brutalist avatar is
+// still conventionally circular, unlike everything else in the library.
+const AVATAR_RADIUS = 999;
 
 const SIZES = {
   sm: 40,
@@ -68,45 +68,32 @@ export default function Avatar({
   const displayInitials = initials.substring(0, 2).toUpperCase();
 
   return (
-    <View
-      style={cn(
-        styles.container,
-        withShadow && styles.containerWithShadow,
-        style
-      )}
+    <BrutalSurface
+      style={[styles.container, style]}
+      surfaceStyle={{ width: dimension, height: dimension, backgroundColor: colors.light.background, overflow: 'hidden' }}
+      offset={SHADOW_OFFSET}
+      borderWidth="standard"
+      borderRadius={AVATAR_RADIUS}
+      pressable={false}
+      hasShadow={withShadow}
       accessibilityRole="image"
       accessibilityLabel={`Avatar for ${initials}`}
       {...props}
     >
-      {withShadow && (
-        <View
-          style={[
-            styles.shadow,
-            { width: dimension, height: dimension },
-          ]}
+      {showFallback ? (
+        <View style={styles.fallbackContainer}>
+          <Text style={[styles.initialsText, { fontSize }]} numberOfLines={1}>
+            {displayInitials}
+          </Text>
+        </View>
+      ) : (
+        <Image
+          source={{ uri: src }}
+          style={styles.image}
+          onError={() => setImageFailed(true)}
         />
       )}
-      <View
-        style={[
-          styles.surface,
-          { width: dimension, height: dimension },
-        ]}
-      >
-        {showFallback ? (
-          <View style={styles.fallbackContainer}>
-            <Text style={[styles.initialsText, { fontSize }]} numberOfLines={1}>
-              {displayInitials}
-            </Text>
-          </View>
-        ) : (
-          <Image
-            source={{ uri: src }}
-            style={styles.image}
-            onError={() => setImageFailed(true)}
-          />
-        )}
-      </View>
-    </View>
+    </BrutalSurface>
   );
 }
 
@@ -115,33 +102,7 @@ export default function Avatar({
 // ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
   container: {
-    position: 'relative',
     alignSelf: 'flex-start',
-  },
-  containerWithShadow: {
-    marginBottom: SHADOW_OFFSET,
-    marginRight: SHADOW_OFFSET,
-  },
-  shadow: {
-    position: 'absolute',
-    top: SHADOW_OFFSET,
-    left: SHADOW_OFFSET,
-    backgroundColor: colors.light.shadow,
-    borderColor: colors.light.border,
-    borderWidth: borderWidths.standard,
-    // The Exception: 999 border radius is allowed here
-    borderRadius: 999,
-    zIndex: 1,
-  },
-  surface: {
-    position: 'relative',
-    zIndex: 2,
-    borderWidth: borderWidths.standard,
-    borderColor: colors.light.border,
-    // The Exception: 999 border radius is allowed here
-    borderRadius: 999,
-    backgroundColor: colors.light.background,
-    overflow: 'hidden', // Ensures the image doesn't bleed out of the circle
   },
   image: {
     width: '100%',

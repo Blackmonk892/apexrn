@@ -1,28 +1,15 @@
 import React, { ReactNode } from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-  ViewStyle,
-} from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-  Easing,
-} from 'react-native-reanimated';
+import { ActivityIndicator, StyleSheet, Text, View, ViewStyle } from 'react-native';
 
-// Import spacing and typography from your updated colors/metrics file
-import { colors, borderWidths, spacing, typography } from '../lib/colors';
+import { colors, spacing, typography } from '../lib/colors';
 import { cn } from '../lib/utils';
+import BrutalSurface from './brutal_surface';
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
-type Variant = 'default' | 'primary' | 'outline';
+type Variant = 'default' | 'primary' | 'outline' | 'destructive';
 type Size = 'sm' | 'md' | 'lg';
 
 export interface ButtonProps {
@@ -70,9 +57,13 @@ const VARIANTS: Record<Variant, { bg: string; fg: string; hasShadow: boolean }> 
     fg: colors.light.foreground,
     hasShadow: false,
   },
+  destructive: {
+    bg: colors.light.destructive,
+    fg: colors.light.destructiveForeground,
+    hasShadow: true,
+  },
 };
 
-// Replaced hardcoded numbers with responsive scaling tokens
 const SIZES: Record<Size, { py: number; px: number; fontSize: number }> = {
   sm: { py: spacing.sm, px: spacing.md, fontSize: typography.sm },
   md: { py: spacing.md, px: spacing.lg, fontSize: typography.md },
@@ -82,8 +73,6 @@ const SIZES: Record<Size, { py: number; px: number; fontSize: number }> = {
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export default function Button({
   title,
@@ -97,36 +86,15 @@ export default function Button({
   style,
   accessibilityLabel,
 }: ButtonProps) {
-  const pressed = useSharedValue(0);
   const isDisabled = disabled || loading;
   const v = VARIANTS[variant];
   const s = SIZES[size];
   const showShadow = v.hasShadow && !isDisabled;
 
-  // --- animation ---
-  const handlePressIn = () => {
-    if (isDisabled || !showShadow) return;
-    pressed.value = withTiming(1, { duration: 100, easing: Easing.out(Easing.quad) });
-  };
-
-  const handlePressOut = () => {
-    if (isDisabled || !showShadow) return;
-    pressed.value = withTiming(0, { duration: 80, easing: Easing.in(Easing.quad) });
-  };
-
-  const animatedSurface = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: pressed.value * SHADOW_OFFSET },
-      { translateY: pressed.value * SHADOW_OFFSET },
-    ],
-  }));
-
-  // --- colors ---
   const surfaceBg = isDisabled ? colors.light.muted : v.bg;
   const textColor = isDisabled ? colors.light.mutedForeground : v.fg;
   const borderColor = isDisabled ? colors.light.mutedForeground : colors.light.border;
 
-  // --- content ---
   const content = loading ? (
     <ActivityIndicator size="small" color={textColor} />
   ) : (
@@ -147,50 +115,27 @@ export default function Button({
   );
 
   return (
-    <View
-      style={[
-        styles.root,
-        showShadow && { marginBottom: SHADOW_OFFSET, marginRight: SHADOW_OFFSET },
-        style,
-      ]}
+    <BrutalSurface
+      style={[styles.root, style]}
+      surfaceStyle={{
+        backgroundColor: surfaceBg,
+        borderColor,
+        paddingVertical: s.py,
+        paddingHorizontal: s.px,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+      offset={SHADOW_OFFSET}
+      hasShadow={showShadow}
+      disabled={isDisabled}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel ?? title}
+      accessibilityState={{ disabled: isDisabled }}
     >
-      {/* Hard shadow backing */}
-      {showShadow && (
-        <View
-          style={[
-            styles.shadowBacking,
-            {
-              backgroundColor: colors.light.shadow,
-              borderColor,
-              borderWidth: borderWidths.heavy,
-            },
-          ]}
-        />
-      )}
-
-      {/* Pressable surface */}
-      <AnimatedPressable
-        onPress={onPress}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        disabled={isDisabled}
-        accessibilityRole="button"
-        accessibilityLabel={accessibilityLabel ?? title}
-        accessibilityState={{ disabled: isDisabled }}
-        style={[
-          showShadow ? animatedSurface : undefined,
-          styles.surface,
-          {
-            backgroundColor: surfaceBg,
-            borderColor,
-            paddingVertical: s.py,
-            paddingHorizontal: s.px,
-          },
-        ]}
-      >
-        {content}
-      </AnimatedPressable>
-    </View>
+      {content}
+    </BrutalSurface>
   );
 }
 
@@ -200,26 +145,7 @@ export default function Button({
 
 const styles = StyleSheet.create({
   root: {
-    position: 'relative',
     alignSelf: 'flex-start',
-  },
-  surface: {
-    position: 'relative',
-    zIndex: 2,
-    borderWidth: borderWidths.heavy,
-    borderRadius: 0,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  shadowBacking: {
-    ...StyleSheet.absoluteFillObject,
-    top: SHADOW_OFFSET,
-    left: SHADOW_OFFSET,
-    right: -SHADOW_OFFSET,
-    bottom: -SHADOW_OFFSET,
-    zIndex: 1,
-    borderRadius: 0,
   },
   contentRow: {
     flexDirection: 'row',

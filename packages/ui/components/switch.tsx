@@ -11,6 +11,7 @@ import Animated, {
 // Notice typography and spacing are imported here
 import { colors, borderWidths, spacing, typography } from '../lib/colors';
 import { cn } from '../lib/utils';
+import BrutalSurface from './brutal_surface';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -107,14 +108,14 @@ export default function Switch({
       {...props}
     >
       <AnimatedView style={[styles.thumbContainer, animatedThumbStyle]}>
-        {/* Shadow is hidden in disabled state per brutalism rules */}
-        {!disabled && <View style={styles.thumbShadow} />}
-        
-        <View 
-          style={cn(
-            styles.thumbSurface,
-            disabled && styles.thumbSurfaceDisabled
-          )} 
+        {/* Purely decorative — the track (not the thumb) owns onPress, so this
+            never wires up press physics. Shadow is hidden in disabled state
+            per brutalism rules. */}
+        <BrutalSurface
+          pressable={false}
+          hasShadow={!disabled}
+          offset={SHADOW_OFFSET}
+          surfaceStyle={cn(styles.thumbSurface, disabled && styles.thumbSurfaceDisabled)}
         />
       </AnimatedView>
     </AnimatedPressable>
@@ -143,27 +144,12 @@ const styles = StyleSheet.create({
     width: THUMB_SIZE + SHADOW_OFFSET,
     height: THUMB_SIZE + SHADOW_OFFSET,
   },
-  thumbShadow: {
-    position: 'absolute',
-    top: SHADOW_OFFSET,
-    left: SHADOW_OFFSET,
-    width: THUMB_SIZE,
-    height: THUMB_SIZE,
-    backgroundColor: colors.light.shadow,
-    borderColor: colors.light.border,
-    borderWidth: borderWidths.heavy,
-    zIndex: 1,
-    borderRadius: 0,
-  },
   thumbSurface: {
-    position: 'relative',
-    zIndex: 2,
     width: THUMB_SIZE,
     height: THUMB_SIZE,
     backgroundColor: colors.light.background,
     borderColor: colors.light.border,
     borderWidth: borderWidths.heavy,
-    borderRadius: 0,
   },
   thumbSurfaceDisabled: {
     backgroundColor: colors.light.muted,

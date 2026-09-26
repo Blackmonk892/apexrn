@@ -183,19 +183,19 @@ export function DatePickerContent({ style, ...props }: ViewProps) {
     // Uses the Sheet overlay, forcing a bottom rise
     <SheetContent PointHeight={420} style={style} {...props}>
       <View style={styles.headerRow}>
-        <Button 
-          variant="outline" 
-          label="<" 
-          onPress={handlePrevMonth} 
+        <Button
+          variant="outline"
+          title="<"
+          onPress={handlePrevMonth}
           style={styles.navButton}
         />
         <Text style={styles.headerTitle}>
           {currentDate.toLocaleString('default', { month: 'long', year: 'numeric' }).toUpperCase()}
         </Text>
-        <Button 
-          variant="outline" 
-          label=">" 
-          onPress={handleNextMonth} 
+        <Button
+          variant="outline"
+          title=">"
+          onPress={handleNextMonth}
           style={styles.navButton}
         />
       </View>
@@ -215,7 +215,7 @@ export function DatePickerContent({ style, ...props }: ViewProps) {
       </View>
 
       <View style={styles.footer}>
-        <Button label="CONFIRM" onPress={handleClose} style={styles.confirmButton} />
+        <Button title="CONFIRM" onPress={handleClose} style={styles.confirmButton} />
       </View>
     </SheetContent>
   );

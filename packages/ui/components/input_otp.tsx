@@ -1,22 +1,11 @@
-import React, { useRef, useState, forwardRef, useImperativeHandle } from 'react';
-import { 
-  Pressable, 
-  StyleSheet, 
-  Text, 
-  TextInput, 
-  TextInputProps, 
-  View 
-} from 'react-native';
-import Animated, { 
-  useAnimatedStyle, 
-  useSharedValue, 
-  withTiming, 
-  Easing 
-} from 'react-native-reanimated';
+import React, { useRef, useState, useEffect, forwardRef, useImperativeHandle } from 'react';
+import { Pressable, StyleSheet, Text, TextInput, TextInputProps, View } from 'react-native';
+import { useAnimatedStyle, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
 
 // Notice typography and spacing are imported here
 import { colors, borderWidths, spacing, typography } from '../lib/colors';
 import { cn } from '../lib/utils';
+import BrutalSurface from './brutal_surface';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -49,10 +38,64 @@ const SHADOW_OFFSET = 4;
 const BLOCK_SIZE = 56;
 
 // ---------------------------------------------------------------------------
+// OTPBlock — one component instance per digit, so each owns its own hooks.
+// This is what resolves the Step 1 hooks-in-a-loop deferral: the previous
+// implementation called useSharedValue/useAnimatedStyle inside Array.from(...)
+// and inside a renderBlocks() loop, which broke Rules of Hooks the moment
+// `length` changed between renders. A real component per block sidesteps
+// that entirely — React tracks each block's hooks independently, and
+// mounting/unmounting a block when `length` changes is safe by construction.
+// ---------------------------------------------------------------------------
+interface OTPBlockProps {
+  char?: string;
+  isActive: boolean;
+  disabled: boolean;
+}
+
+function OTPBlock({ char, isActive, disabled }: OTPBlockProps) {
+  const focusProgress = useSharedValue(isActive ? 1 : 0);
+
+  useEffect(() => {
+    focusProgress.value = withTiming(isActive ? 1 : 0, {
+      duration: isActive ? 100 : 80,
+      easing: isActive ? Easing.out(Easing.quad) : Easing.in(Easing.quad),
+    });
+  }, [isActive, focusProgress]);
+
+  // Shadow only reveals on the active block, not every resting block.
+  const animatedShadowStyle = useAnimatedStyle(() => ({
+    opacity: focusProgress.value,
+  }));
+
+  // Border width snaps on the active block.
+  const animatedSurfaceStyle = useAnimatedStyle(() => ({
+    borderWidth: focusProgress.value === 1 ? borderWidths.heavy : borderWidths.standard,
+  }));
+
+  return (
+    <BrutalSurface
+      style={styles.blockContainer}
+      surfaceStyle={[styles.surface, disabled && styles.surfaceDisabled, animatedSurfaceStyle]}
+      shadowStyle={animatedShadowStyle}
+      offset={SHADOW_OFFSET}
+      pressable={false}
+      hasShadow={!disabled}
+    >
+      <Text style={cn(styles.blockText, disabled && styles.textDisabled)}>
+        {char || ''}
+      </Text>
+
+      {/* Custom Brutalism cursor indicator on the active block */}
+      {isActive && char === undefined && (
+        <View style={styles.cursor} />
+      )}
+    </BrutalSurface>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-
 const InputOTP = forwardRef<TextInput, InputOTPProps>(({
   length = 4,
   onChangeText,
@@ -66,34 +109,15 @@ const InputOTP = forwardRef<TextInput, InputOTPProps>(({
   useImperativeHandle(ref, () => inputRef.current as TextInput);
 
   const [isFocused, setIsFocused] = useState(false);
-  
-  // Track focus progression individually for each block to snap shadow/heavy border
-  const focusProgress = Array.from({ length }, () => useSharedValue(0));
 
   const handleFocus = () => {
     if (disabled) return;
     setIsFocused(true);
-    
-    // Snap the active/last unfilled block to focused state
-    const activeIndex = Math.min(value.length, length - 1);
-    focusProgress.forEach((progress, index) => {
-      progress.value = withTiming(index === activeIndex ? 1 : 0, { 
-        duration: 100, 
-        easing: Easing.out(Easing.quad) 
-      });
-    });
   };
 
   const handleBlur = () => {
     if (disabled) return;
     setIsFocused(false);
-    // Collapse all shadows when losing focus
-    focusProgress.forEach((progress) => {
-      progress.value = withTiming(0, { 
-        duration: 80, 
-        easing: Easing.in(Easing.quad) 
-      });
-    });
   };
 
   const handlePressContainer = () => {
@@ -101,55 +125,7 @@ const InputOTP = forwardRef<TextInput, InputOTPProps>(({
     inputRef.current?.focus();
   };
 
-  // Renders the individual block cells
-  const renderBlocks = () => {
-    const blocks = [];
-    for (let i = 0; i < length; i++) {
-      const char = value[i];
-      const isActiveBlock = isFocused && i === Math.min(value.length, length - 1);
-      
-      // Animated wrapper for individual block shadows
-      const animatedShadowStyle = useAnimatedStyle(() => {
-        return {
-          opacity: focusProgress[i]?.value || 0,
-        };
-      });
-
-      // Border width snaps on active block
-      const animatedSurfaceStyle = useAnimatedStyle(() => {
-        return {
-          borderWidth: focusProgress[i]?.value.value === 1 ? borderWidths.heavy : borderWidths.standard,
-        };
-      });
-
-      blocks.push(
-        <View key={i} style={styles.blockContainer}>
-          {!disabled && (
-            <Animated.View style={[styles.shadow, animatedShadowStyle]} />
-          )}
-          
-          <Animated.View 
-            style={cn(
-              styles.surface,
-              isActiveBlock && styles.surfaceFocused,
-              disabled && styles.surfaceDisabled,
-              animatedSurfaceStyle
-            )}
-          >
-            <Text style={cn(styles.blockText, disabled && styles.textDisabled)}>
-              {char || ''}
-            </Text>
-            
-            {/* Custom Brutalism cursor indicator on the active block */}
-            {isActiveBlock && char === undefined && (
-              <View style={styles.cursor} />
-            )}
-          </Animated.View>
-        </View>
-      );
-    }
-    return blocks;
-  };
+  const activeIndex = Math.min(value.length, length - 1);
 
   return (
     <View style={cn(styles.root, style)}>
@@ -169,14 +145,21 @@ const InputOTP = forwardRef<TextInput, InputOTPProps>(({
         accessibilityLabel="One-time password input"
         {...props}
       />
-      
+
       {/* Separated Visual Blocks */}
-      <Pressable 
-        onPress={handlePressContainer} 
+      <Pressable
+        onPress={handlePressContainer}
         style={styles.blocksRow}
         accessibilityRole="keyboardkey"
       >
-        {renderBlocks()}
+        {Array.from({ length }, (_, i) => (
+          <OTPBlock
+            key={i}
+            char={value[i]}
+            isActive={isFocused && i === activeIndex}
+            disabled={disabled}
+          />
+        ))}
       </Pressable>
     </View>
   );
@@ -210,37 +193,13 @@ const styles = StyleSheet.create({
   blockContainer: {
     width: BLOCK_SIZE,
     height: BLOCK_SIZE,
-    position: 'relative',
-    // Reserve space for 4px shadow offset
-    marginBottom: SHADOW_OFFSET,
-    marginRight: SHADOW_OFFSET,
-  },
-  shadow: {
-    position: 'absolute',
-    top: SHADOW_OFFSET,
-    left: SHADOW_OFFSET,
-    right: -SHADOW_OFFSET,
-    bottom: -SHADOW_OFFSET,
-    backgroundColor: colors.light.shadow,
-    borderColor: colors.light.border,
-    borderWidth: borderWidths.heavy, // Shadow takes on heavy border footprint
-    zIndex: 1,
-    borderRadius: 0,
   },
   surface: {
-    position: 'relative',
-    zIndex: 2,
     width: BLOCK_SIZE,
     height: BLOCK_SIZE,
     backgroundColor: colors.light.background,
-    borderColor: colors.light.border,
-    borderWidth: borderWidths.standard, // Flat resting border
-    borderRadius: 0,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  surfaceFocused: {
-    borderWidth: borderWidths.heavy, // Snaps to heavy border on focus
   },
   surfaceDisabled: {
     backgroundColor: colors.light.muted,

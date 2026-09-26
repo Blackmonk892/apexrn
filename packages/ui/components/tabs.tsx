@@ -19,6 +19,7 @@ import Animated, {
 // Notice typography and spacing are imported here
 import { colors, borderWidths, spacing, typography } from '../lib/colors';
 import { cn } from '../lib/utils';
+import BrutalSurface from './brutal_surface';
 
 // ---------------------------------------------------------------------------
 // Types & Context
@@ -152,16 +153,21 @@ export function TabsList({ children, style, ...props }: ViewProps) {
 
   return (
     <TabsListContext.Provider value={{ registerLayout }}>
-      <View style={cn(styles.listWrapper, style)} accessibilityRole="tablist" {...props}>
-        <View style={styles.listShadow} />
-        <View style={styles.listSurface}>
-          {/* The solid black block that translates behind the text.
-            We only render it if width > 0 to prevent a 1px artifact on mount.
-          */}
-          <Animated.View style={[styles.indicator, animatedIndicatorStyle]} />
-          {children}
-        </View>
-      </View>
+      <BrutalSurface
+        style={[styles.listWrapper, style]}
+        surfaceStyle={styles.listSurface}
+        offset={SHADOW_OFFSET}
+        borderWidth="heavy"
+        pressable={false}
+        accessibilityRole="tablist"
+        {...props}
+      >
+        {/* The solid black block that translates behind the text.
+          We only render it if width > 0 to prevent a 1px artifact on mount.
+        */}
+        <Animated.View style={[styles.indicator, animatedIndicatorStyle]} />
+        {children}
+      </BrutalSurface>
     </TabsListContext.Provider>
   );
 }
@@ -233,32 +239,14 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
   },
   listWrapper: {
-    position: 'relative',
     width: '100%',
-    // Reserve space so the hard shadow doesn't clip
+    // `style` is applied after BrutalSurface's own offset-based margin, so it
+    // must restate the shadow clearance (SHADOW_OFFSET) alongside the extra gap.
     marginBottom: SHADOW_OFFSET + spacing.md,
-    marginRight: SHADOW_OFFSET,
-  },
-  listShadow: {
-    position: 'absolute',
-    top: SHADOW_OFFSET,
-    left: SHADOW_OFFSET,
-    right: -SHADOW_OFFSET,
-    bottom: -SHADOW_OFFSET,
-    backgroundColor: colors.light.shadow,
-    borderColor: colors.light.border,
-    borderWidth: borderWidths.heavy,
-    zIndex: 1,
-    borderRadius: 0,
   },
   listSurface: {
-    position: 'relative',
-    zIndex: 2,
     flexDirection: 'row',
     backgroundColor: colors.light.background,
-    borderColor: colors.light.border,
-    borderWidth: borderWidths.heavy,
-    borderRadius: 0,
   },
   indicator: {
     position: 'absolute',
