@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Image, StyleSheet, Text, View, ViewProps } from 'react-native';
 
 import { typography } from '../lib/colors';
@@ -52,7 +52,7 @@ const TYPOGRAPHY_SIZES = {
 // ---------------------------------------------------------------------------
 export default function Avatar({
   src,
-  initials = '?',
+  initials,
   size = 'md',
   withShadow = false,
   style,
@@ -63,8 +63,13 @@ export default function Avatar({
   const dimension = SIZES[size];
   const fontSize = TYPOGRAPHY_SIZES[size];
 
+  // A new src gets a fresh load attempt instead of sticking on the fallback.
+  useEffect(() => {
+    setImageFailed(false);
+  }, [src]);
+
   const showFallback = !src || imageFailed;
-  const displayInitials = initials.substring(0, 2).toUpperCase();
+  const displayInitials = (initials || '?').substring(0, 2).toUpperCase();
 
   return (
     <BrutalSurface
@@ -76,7 +81,7 @@ export default function Avatar({
       pressable={false}
       hasShadow={withShadow}
       accessibilityRole="image"
-      accessibilityLabel={`Avatar for ${initials}`}
+      accessibilityLabel={showFallback ? `Avatar for ${displayInitials}` : 'Avatar image'}
       {...props}
     >
       {showFallback ? (
@@ -89,6 +94,7 @@ export default function Avatar({
         <Image
           source={{ uri: src }}
           style={styles.image}
+          accessible={false}
           onError={() => setImageFailed(true)}
         />
       )}

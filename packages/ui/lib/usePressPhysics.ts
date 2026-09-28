@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import {
   useAnimatedStyle,
   useSharedValue,
@@ -10,7 +10,7 @@ import * as Haptics from 'expo-haptics';
 // Types
 // ---------------------------------------------------------------------------
 
-export interface PressPhysicsConfig {
+export interface UsePressPhysicsOptions {
   /** How far the surface travels into its shadow, in px (e.g. 2/4/6/8). */
   offset: number;
   /** Skips the animation entirely (still returns stable handlers/styles). */
@@ -20,6 +20,9 @@ export interface PressPhysicsConfig {
   /** Adds a subtle squash (scaleX/scaleY) on press for a compression feel. @default true */
   squash?: boolean;
 }
+
+/** @deprecated Use `UsePressPhysicsOptions` instead. Kept for backwards compatibility. */
+export type PressPhysicsConfig = UsePressPhysicsOptions;
 
 // ---------------------------------------------------------------------------
 // Tuning
@@ -35,8 +38,16 @@ export function usePressPhysics({
   disabled = false,
   haptics = true,
   squash = true,
-}: PressPhysicsConfig) {
+}: UsePressPhysicsOptions) {
   const pressed = useSharedValue(0);
+
+  // Reset a stuck press when the surface becomes non-interactive mid-gesture
+  // (e.g. disabled toggles while a finger is down, or an interrupted scroll).
+  useEffect(() => {
+    if (disabled) {
+      pressed.value = withSpring(0, SPRING_CONFIG);
+    }
+  }, [disabled, pressed]);
 
   const handlePressIn = useCallback(() => {
     if (disabled) return;
@@ -79,5 +90,7 @@ export function usePressPhysics({
     animatedShadowStyle,
     handlePressIn,
     handlePressOut,
+    /** Alias for press-cancel paths (e.g. gesture interruptions). */
+    handlePressCancel: handlePressOut,
   };
 }

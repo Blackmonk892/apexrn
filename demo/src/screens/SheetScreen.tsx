@@ -21,10 +21,10 @@ export default function SheetScreen({ onBack }: { onBack: () => void }) {
         
         <Sheet open={sheet1Open} onOpenChange={setSheet1Open}>
           {({ handleDismiss }) => (
-            <SheetContent PointHeight={300}>
+            <SheetContent sheetHeight={300}>
               <View style={styles.sheetBody}>
-                <Text style={styles.sheetTitle}>MENU</Text>
-                <Text style={styles.sheetText}>Swipe down or press the button to close.</Text>
+                <Text style={[styles.sheetTitle, { color: textColor }]}>MENU</Text>
+                <Text style={[styles.sheetText, { color: textColor }]}>Swipe down or press the button to close.</Text>
                 <Button title="Close Sheet" onPress={handleDismiss} style={{ marginTop: 24 }} />
               </View>
             </SheetContent>
@@ -38,9 +38,9 @@ export default function SheetScreen({ onBack }: { onBack: () => void }) {
         
         <Sheet open={sheet2Open} onOpenChange={setSheet2Open}>
           {({ handleDismiss }) => (
-            <SheetContent PointHeight={500}>
+            <SheetContent sheetHeight={500}>
               <View style={styles.sheetBody}>
-                <Text style={styles.sheetTitle}>EDIT PROFILE</Text>
+                <Text style={[styles.sheetTitle, { color: textColor }]}>EDIT PROFILE</Text>
                 <View style={{ gap: 16, marginTop: 24 }}>
                   <Input placeholder="Username" />
                   <Input placeholder="Email Address" />
@@ -60,6 +60,6 @@ const styles = StyleSheet.create({
   section: { marginBottom: 36, zIndex: 1 },
   label: { fontSize: 12, fontWeight: '700', marginBottom: 16, letterSpacing: 1 },
   sheetBody: { flex: 1, padding: 16 },
-  sheetTitle: { fontSize: 24, fontWeight: '900', color: '#000', marginBottom: 8 },
-  sheetText: { fontSize: 16, color: '#333' }
+  sheetTitle: { fontSize: 24, fontWeight: '900', marginBottom: 8 },
+  sheetText: { fontSize: 16 }
 });

@@ -60,30 +60,39 @@ export const colors: { light: ColorScheme; dark: ColorScheme } = {
     success: '#66BB6A',
     successForeground: '#000000',
     border: '#FFFFFF',
-    shadow: '#000000',
+    shadow: '#FFFFFF',
   },
 };
 
-export const spacing = {
-  xs: moderateScale(4),
-  sm: moderateScale(8),
-  md: moderateScale(12),
-  lg: moderateScale(16),
-  xl: moderateScale(24),
-  '2xl': moderateScale(32),
-  '3xl': moderateScale(48),
-} as const;
+/**
+ * Spacing tokens. Implemented as getters so every access reads the *current*
+ * window dimensions (rotation / foldables / split-screen safe) instead of a
+ * stale import-time snapshot. Access API is unchanged (`spacing.md`).
+ */
+export const spacing: Record<'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl', number> = {
+  get xs() { return moderateScale(4); },
+  get sm() { return moderateScale(8); },
+  get md() { return moderateScale(12); },
+  get lg() { return moderateScale(16); },
+  get xl() { return moderateScale(24); },
+  get '2xl'() { return moderateScale(32); },
+  get '3xl'() { return moderateScale(48); },
+};
 
-export const typography = {
-  xs: normalize(12),
-  sm: normalize(14),
-  md: normalize(16),
-  lg: normalize(18),
-  xl: normalize(20),
-  '2xl': normalize(24),
-  '3xl': normalize(32),
-  '4xl': normalize(40),
-} as const;
+/**
+ * Typography tokens. Live getters for the same reason as `spacing`, plus
+ * `normalize` clamps runaway growth on tablets and respects font-scale.
+ */
+export const typography: Record<'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl', number> = {
+  get xs() { return normalize(12); },
+  get sm() { return normalize(14); },
+  get md() { return normalize(16); },
+  get lg() { return normalize(18); },
+  get xl() { return normalize(20); },
+  get '2xl'() { return normalize(24); },
+  get '3xl'() { return normalize(32); },
+  get '4xl'() { return normalize(40); },
+};
 
 export const borderWidths = {
   standard: 2,

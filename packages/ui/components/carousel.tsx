@@ -1,12 +1,12 @@
-import React, { useState, useRef } from 'react';
-import { 
-  FlatList, 
-  StyleSheet, 
-  View, 
-  ViewProps, 
-  NativeSyntheticEvent, 
+import { useRef, useState, type ReactNode } from 'react';
+import {
+  FlatList,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+  ViewProps,
+  NativeSyntheticEvent,
   NativeScrollEvent,
-  Dimensions
 } from 'react-native';
 
 import { borderWidths, spacing } from '../lib/colors';
@@ -16,15 +16,19 @@ import { cn } from '../lib/utils';
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
-export interface CarouselProps extends ViewProps {
+export interface CarouselProps<T = unknown> extends ViewProps {
   /**
    * Array of data items to render in the carousel.
    */
-  data: any[];
+  data: T[];
   /**
    * Render function for carousel items.
    */
-  renderItem: ({ item, index }: { item: any; index: number }) => React.ReactNode;
+  renderItem: ({ item, index }: { item: T; index: number }) => ReactNode;
+  /**
+   * Stable key for each item. Falls back to the index when omitted.
+   */
+  keyExtractor?: (item: T, index: number) => string;
   /**
    * Toggles the indicator dots below the carousel.
    * @default false
@@ -39,72 +43,93 @@ export interface CarouselProps extends ViewProps {
    * @default spacing.md
    */
   gap?: number;
+  /**
+   * Callback fired when the settled (visible) item changes.
+   */
+  onActiveIndexChange?: (index: number) => void;
 }
-
-// ---------------------------------------------------------------------------
-// Design tokens
-// ---------------------------------------------------------------------------
-const SHADOW_OFFSET = 4;
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-export default function Carousel({
+export default function Carousel<T>({
   data,
   renderItem,
+  keyExtractor,
   showIndicators = false,
-  itemWidth = SCREEN_WIDTH * 0.8,
+  itemWidth: itemWidthProp,
   gap = spacing.md,
+  onActiveIndexChange,
   style,
   ...props
-}: CarouselProps) {
+}: CarouselProps<T>) {
   const { colors } = useTheme();
+  // Live dimensions: item width follows rotation / split-screen instead of
+  // a stale import-time snapshot.
+  const { width: windowWidth } = useWindowDimensions();
+  const itemWidth = itemWidthProp ?? windowWidth * 0.8;
   const [activeIndex, setActiveIndex] = useState(0);
-  const flatListRef = useRef<FlatList>(null);
+  const flatListRef = useRef<FlatList<T>>(null);
 
-  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const contentOffsetX = event.nativeEvent.contentOffset.x;
-    const index = Math.round(contentOffsetX / (itemWidth + gap));
-    if (index !== activeIndex && index >= 0 && index < data.length) {
+  const settleIndex = (contentOffsetX: number) => {
+    const index = Math.max(0, Math.min(Math.round(contentOffsetX / (itemWidth + gap)), data.length - 1));
+    if (index !== activeIndex) {
       setActiveIndex(index);
+      onActiveIndexChange?.(index);
     }
   };
 
+  const handleMomentumScrollEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    settleIndex(event.nativeEvent.contentOffset.x);
+  };
+
   return (
-    <View style={cn(styles.container, style)} {...props}>
+    <View
+      style={cn(styles.container, style)}
+      accessibilityRole="adjustable"
+      accessibilityLabel={`Carousel, item ${Math.min(activeIndex + 1, Math.max(data.length, 1))} of ${data.length}`}
+      {...props}
+    >
       <FlatList
         ref={flatListRef}
         data={data}
         horizontal
         showsHorizontalScrollIndicator={false}
-        pagingEnabled
+        // `pagingEnabled` overrides `snapToInterval` on iOS — snap alone
+        // gives the peek-and-settle physics this carousel is designed for.
         snapToInterval={itemWidth + gap}
+        snapToAlignment="start"
         decelerationRate="fast"
+        disableIntervalMomentum
         contentContainerStyle={[
           styles.contentContainer,
           { paddingHorizontal: spacing.xl, gap }
         ]}
-        keyExtractor={(_, index) => index.toString()}
+        keyExtractor={(item, index) => keyExtractor?.(item, index) ?? index.toString()}
         renderItem={({ item, index }) => (
           <View style={{ width: itemWidth }}>
             {renderItem({ item, index })}
           </View>
         )}
-        onScroll={handleScroll}
-        scrollEventThrottle={16}
+        onMomentumScrollEnd={handleMomentumScrollEnd}
       />
 
       {showIndicators && data.length > 1 && (
-        <View style={styles.indicatorsContainer} accessibilityRole="adjustable">
-          {data.map((_, index) => (
-            <View 
-              key={index} 
+        // Dots are decorative: the outer label announces position so
+        // screen readers don't hear N unlabeled dots.
+        <View
+          style={styles.indicatorsContainer}
+          accessible={false}
+          importantForAccessibility="no-hide-descendants"
+        >
+          {data.map((item, index) => (
+            <View
+              key={keyExtractor?.(item, index) ?? index}
               style={[
                 styles.dot,
                 { backgroundColor: colors.muted, borderColor: colors.border },
                 index === activeIndex && { backgroundColor: colors.foreground }
-              ]} 
+              ]}
             />
           ))}
         </View>
@@ -120,11 +145,11 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
     flexDirection: 'column',
-    marginBottom: SHADOW_OFFSET,
+    marginBottom: spacing.sm,
   },
   contentContainer: {
     alignItems: 'center',
-    paddingVertical: SHADOW_OFFSET * 2,
+    paddingVertical: spacing.sm,
   },
   indicatorsContainer: {
     flexDirection: 'row',

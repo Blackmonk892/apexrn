@@ -1,9 +1,10 @@
-import React from 'react';
+import type { ReactNode } from 'react';
 import { StyleSheet, Text, View, ViewProps } from 'react-native';
 
 import { borderWidths, spacing, typography } from '../lib/colors';
 import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
+import BrutalSurface from './brutal_surface';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -23,9 +24,10 @@ export interface AlertProps extends ViewProps {
    */
   description?: string;
   /**
-   * Optional icon to display on the left side.
+   * Optional icon to display on the left side. Decorative — hidden from
+   * screen readers (the title/description carry the announcement).
    */
-  icon?: React.ReactNode;
+  icon?: ReactNode;
 }
 
 // ---------------------------------------------------------------------------
@@ -55,43 +57,43 @@ export default function Alert({
   };
 
   const activeColor = variantColors[variant];
+  const announcement = description ? `${title}. ${description}` : title;
 
   return (
-    <View
+    <BrutalSurface
       style={cn(styles.container, style)}
+      surfaceStyle={[
+        styles.surface,
+        {
+          backgroundColor: colors.background,
+          borderColor: colors.border,
+          borderLeftColor: activeColor,
+        },
+      ]}
+      offset={SHADOW_OFFSET}
+      borderWidth="heavy"
+      pressable={false}
       accessibilityRole="alert"
+      accessibilityLabel={announcement}
       {...props}
     >
-      <View style={[styles.shadow, { backgroundColor: colors.shadow, borderColor: colors.border }]} />
-      
-      <View 
-        style={[
-          styles.surface, 
-          { 
-            backgroundColor: colors.background, 
-            borderColor: colors.border,
-            borderLeftColor: activeColor 
-          }
-        ]}
-      >
-        {icon && (
-          <View style={styles.iconContainer}>
-            {icon}
-          </View>
-        )}
-        
-        <View style={styles.contentContainer}>
-          <Text style={[styles.title, { color: colors.foreground }]} numberOfLines={2}>
-            {title}
-          </Text>
-          {description ? (
-            <Text style={[styles.description, { color: colors.foreground }]}>
-              {description}
-            </Text>
-          ) : null}
+      {icon && (
+        <View style={styles.iconContainer} accessible={false} importantForAccessibility="no-hide-descendants">
+          {icon}
         </View>
+      )}
+
+      <View style={styles.contentContainer}>
+        <Text style={[styles.title, { color: colors.foreground }]} numberOfLines={2}>
+          {title}
+        </Text>
+        {description ? (
+          <Text style={[styles.description, { color: colors.mutedForeground }]}>
+            {description}
+          </Text>
+        ) : null}
       </View>
-    </View>
+    </BrutalSurface>
   );
 }
 
@@ -100,24 +102,9 @@ export default function Alert({
 // ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
   container: {
-    position: 'relative',
     width: '100%',
-    marginBottom: SHADOW_OFFSET,
-    marginRight: SHADOW_OFFSET,
-  },
-  shadow: {
-    position: 'absolute',
-    top: SHADOW_OFFSET,
-    left: SHADOW_OFFSET,
-    right: -SHADOW_OFFSET,
-    bottom: -SHADOW_OFFSET,
-    borderWidth: borderWidths.heavy,
-    zIndex: 1,
-    borderRadius: 0,
   },
   surface: {
-    position: 'relative',
-    zIndex: 2,
     flexDirection: 'row',
     alignItems: 'flex-start',
     borderWidth: borderWidths.heavy,

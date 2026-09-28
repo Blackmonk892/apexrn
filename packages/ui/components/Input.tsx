@@ -1,15 +1,17 @@
-import React, { forwardRef, useState } from 'react';
+import { forwardRef, useEffect, useState, type ReactNode } from 'react';
 import {
+  Pressable,
   StyleProp,
   StyleSheet,
   TextInput,
   TextInputProps,
   TextStyle,
   View,
+  ViewStyle,
 } from 'react-native';
 import { useAnimatedStyle, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
 
-import { borderWidths, spacing, typography } from '../lib/colors';
+import { spacing, typography } from '../lib/colors';
 import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
 import BrutalSurface from './brutal_surface';
@@ -21,11 +23,16 @@ export interface InputProps extends TextInputProps {
   /**
    * Optional icon to display on the left side of the input.
    */
-  leadingIcon?: React.ReactNode;
+  leadingIcon?: ReactNode;
   /**
    * Optional icon to display on the right side of the input.
    */
-  trailingIcon?: React.ReactNode;
+  trailingIcon?: ReactNode;
+  /**
+   * Makes the trailing icon tappable. When provided, the trailing icon is
+   * wrapped in a Pressable with button semantics.
+   */
+  onTrailingIconPress?: () => void;
   /**
    * Disables the input, applying muted styles and preventing interactions.
    * @default false
@@ -35,6 +42,11 @@ export interface InputProps extends TextInputProps {
    * Style overrides for the underlying TextInput.
    */
   inputStyle?: StyleProp<TextStyle>;
+  /**
+   * Style overrides for the brutalist surface (borders, background).
+   * Use this — not `style` — for border overrides such as error states.
+   */
+  surfaceStyle?: StyleProp<ViewStyle>;
 }
 
 // ---------------------------------------------------------------------------
@@ -48,8 +60,10 @@ const SHADOW_OFFSET = 4;
 const Input = forwardRef<TextInput, InputProps>(({
   leadingIcon,
   trailingIcon,
+  onTrailingIconPress,
   disabled = false,
   inputStyle,
+  surfaceStyle,
   style,
   onFocus,
   onBlur,
@@ -60,7 +74,18 @@ const Input = forwardRef<TextInput, InputProps>(({
   const [isFocused, setIsFocused] = useState(false);
   const focusProgress = useSharedValue(0);
 
-  const handleFocus = (e: any) => {
+  // Disabling mid-focus must not leave the focused styling stuck on.
+  useEffect(() => {
+    if (disabled) {
+      setIsFocused(false);
+      focusProgress.value = withTiming(0, {
+        duration: 80,
+        easing: Easing.in(Easing.quad),
+      });
+    }
+  }, [disabled, focusProgress]);
+
+  const handleFocus: NonNullable<TextInputProps['onFocus']> = (e) => {
     if (disabled) return;
     setIsFocused(true);
     focusProgress.value = withTiming(1, {
@@ -70,7 +95,7 @@ const Input = forwardRef<TextInput, InputProps>(({
     onFocus?.(e);
   };
 
-  const handleBlur = (e: any) => {
+  const handleBlur: NonNullable<TextInputProps['onBlur']> = (e) => {
     if (disabled) return;
     setIsFocused(false);
     focusProgress.value = withTiming(0, {
@@ -94,7 +119,7 @@ const Input = forwardRef<TextInput, InputProps>(({
         borderWidth={isFocused ? 'heavy' : 'standard'}
         backgroundColor={disabled ? colors.muted : colors.background}
         borderColor={disabled ? colors.mutedForeground : colors.border}
-        surfaceStyle={styles.surface}
+        surfaceStyle={[styles.surface, surfaceStyle]}
       >
         {leadingIcon && (
           <View style={cn(styles.iconContainer, styles.leadingIcon)}>
@@ -119,9 +144,21 @@ const Input = forwardRef<TextInput, InputProps>(({
         />
 
         {trailingIcon && (
-          <View style={cn(styles.iconContainer, styles.trailingIcon)}>
-            {trailingIcon}
-          </View>
+          onTrailingIconPress && !disabled ? (
+            <Pressable
+              onPress={onTrailingIconPress}
+              style={cn(styles.iconContainer, styles.trailingIcon)}
+              accessibilityRole="button"
+              accessibilityLabel="Input action"
+              hitSlop={8}
+            >
+              {trailingIcon}
+            </Pressable>
+          ) : (
+            <View style={cn(styles.iconContainer, styles.trailingIcon)}>
+              {trailingIcon}
+            </View>
+          )
         )}
       </BrutalSurface>
     </View>
@@ -148,8 +185,6 @@ const styles = StyleSheet.create({
     fontSize: typography.md,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
-    padding: 0,
-    margin: 0,
   },
   iconContainer: {
     justifyContent: 'center',

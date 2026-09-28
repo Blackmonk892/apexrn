@@ -1,5 +1,11 @@
-import React, { useEffect } from 'react';
-import { PressableProps, StyleSheet, View } from 'react-native';
+import { useEffect } from 'react';
+import {
+  PressableProps,
+  StyleProp,
+  StyleSheet,
+  View,
+  ViewStyle,
+} from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -16,7 +22,7 @@ import BrutalSurface from './brutal_surface';
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
-export interface CheckboxProps extends Omit<PressableProps, 'onPress' | 'onPressIn' | 'onPressOut'> {
+export interface CheckboxProps extends Omit<PressableProps, 'onPress' | 'onPressIn' | 'onPressOut' | 'style'> {
   /**
    * The controlled checked state of the checkbox.
    */
@@ -30,6 +36,16 @@ export interface CheckboxProps extends Omit<PressableProps, 'onPress' | 'onPress
    * @default false
    */
   disabled?: boolean;
+  /**
+   * Container style override. Note: function styles are not supported here
+   * (the style targets the outer wrapper, not the Pressable directly).
+   */
+  style?: StyleProp<ViewStyle>;
+  /**
+   * Expands the touch target beyond the 24px visual box.
+   * @default 10 (≈44px total target)
+   */
+  hitSlop?: PressableProps['hitSlop'];
 }
 
 // ---------------------------------------------------------------------------
@@ -48,6 +64,7 @@ export default function Checkbox({
   onCheckedChange,
   disabled = false,
   style,
+  hitSlop = 10,
   ...props
 }: CheckboxProps) {
   const { colors } = useTheme();
@@ -92,6 +109,7 @@ export default function Checkbox({
       borderWidth="heavy"
       hasShadow={!disabled}
       disabled={disabled}
+      hitSlop={hitSlop}
       onPress={handlePress}
       accessibilityRole="checkbox"
       accessibilityState={{ checked, disabled }}

@@ -1,5 +1,13 @@
-import React, { ReactNode } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View, ViewStyle } from 'react-native';
+import type { ReactNode } from 'react';
+import {
+  ActivityIndicator,
+  GestureResponderEvent,
+  StyleProp,
+  StyleSheet,
+  Text,
+  View,
+  ViewStyle,
+} from 'react-native';
 
 import { spacing, typography } from '../lib/colors';
 import { useTheme } from '../lib/theme';
@@ -17,7 +25,7 @@ export interface ButtonProps {
   /** Button label text. */
   title: string;
   /** Press handler. */
-  onPress?: () => void;
+  onPress?: (e: GestureResponderEvent) => void;
   /** Visual variant. @default 'default' */
   variant?: Variant;
   size?: Size;
@@ -30,9 +38,11 @@ export interface ButtonProps {
   /** Which side the icon sits on. @default 'left' */
   iconPosition?: 'left' | 'right';
   /** Container style override. */
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
   /** Accessibility label (falls back to title). */
   accessibilityLabel?: string;
+  /** Accessibility hint. */
+  accessibilityHint?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -62,6 +72,7 @@ export default function Button({
   iconPosition = 'left',
   style,
   accessibilityLabel,
+  accessibilityHint,
 }: ButtonProps) {
   const { colors } = useTheme();
 
@@ -134,6 +145,7 @@ export default function Button({
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? title}
+      accessibilityHint={accessibilityHint}
       accessibilityState={{ disabled: isDisabled }}
     >
       {content}

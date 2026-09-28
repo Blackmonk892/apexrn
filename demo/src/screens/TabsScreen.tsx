@@ -21,12 +21,12 @@ export default function TabsScreen({ onBack }: { onBack: () => void }) {
             <TabsTrigger value="two">Settings</TabsTrigger>
           </TabsList>
           <TabsContent value="one">
-            <View style={[styles.contentBox, { backgroundColor: isDark ? '#111' : '#FFF' }]}>
+            <View style={[styles.contentBox, { backgroundColor: isDark ? '#1A1A1A' : '#FFF', borderColor: textColor }]}>
               <Text style={{ color: textColor }}>This is your profile content block.</Text>
             </View>
           </TabsContent>
           <TabsContent value="two">
-            <View style={[styles.contentBox, { backgroundColor: isDark ? '#111' : '#FFF' }]}>
+            <View style={[styles.contentBox, { backgroundColor: isDark ? '#1A1A1A' : '#FFF', borderColor: textColor }]}>
               <Text style={{ color: textColor }}>Manage your settings here.</Text>
             </View>
           </TabsContent>
@@ -42,17 +42,17 @@ export default function TabsScreen({ onBack }: { onBack: () => void }) {
             <TabsTrigger value="admin" disabled>Admin</TabsTrigger>
           </TabsList>
           <TabsContent value="account">
-            <View style={[styles.contentBox, { backgroundColor: isDark ? '#111' : '#FFF' }]}>
+            <View style={[styles.contentBox, { backgroundColor: isDark ? '#1A1A1A' : '#FFF', borderColor: textColor }]}>
               <Text style={{ color: textColor }}>Account overview.</Text>
             </View>
           </TabsContent>
           <TabsContent value="billing">
-            <View style={[styles.contentBox, { backgroundColor: isDark ? '#111' : '#FFF' }]}>
+            <View style={[styles.contentBox, { backgroundColor: isDark ? '#1A1A1A' : '#FFF', borderColor: textColor }]}>
               <Text style={{ color: textColor }}>Billing details.</Text>
             </View>
           </TabsContent>
           <TabsContent value="admin">
-            <View style={[styles.contentBox, { backgroundColor: isDark ? '#111' : '#FFF' }]}>
+            <View style={[styles.contentBox, { backgroundColor: isDark ? '#1A1A1A' : '#FFF', borderColor: textColor }]}>
               <Text style={{ color: textColor }}>You cannot see this.</Text>
             </View>
           </TabsContent>
@@ -68,7 +68,6 @@ const styles = StyleSheet.create({
   contentBox: {
     padding: 24,
     borderWidth: 2,
-    borderColor: '#000',
     marginTop: 16,
   },
 });

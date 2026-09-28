@@ -1,13 +1,15 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { 
-  Pressable, 
-  StyleSheet, 
-  Text, 
-  View, 
-  ViewProps, 
+import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
+import {
+  Pressable,
+  StyleProp,
+  StyleSheet,
+  Text,
+  View,
+  ViewProps,
   PressableProps,
   LayoutChangeEvent,
-  LayoutRectangle
+  LayoutRectangle,
+  ViewStyle,
 } from 'react-native';
 import Animated, { 
   useAnimatedStyle, 
@@ -62,10 +64,10 @@ export interface TabsProps extends ViewProps {
    * Callback fired when a tab is selected.
    */
   onValueChange: (value: string) => void;
-  children?: React.ReactNode;
+  children?: ReactNode;
 }
 
-export interface TabsTriggerProps extends Omit<PressableProps, 'onPress'> {
+export interface TabsTriggerProps extends Omit<PressableProps, 'onPress' | 'style'> {
   /**
    * The value of the tab. Must match a TabsContent value.
    */
@@ -75,7 +77,11 @@ export interface TabsTriggerProps extends Omit<PressableProps, 'onPress'> {
    * @default false
    */
   disabled?: boolean;
-  children?: React.ReactNode;
+  children?: ReactNode;
+  /**
+   * Container style override. Function styles are not supported here.
+   */
+  style?: StyleProp<ViewStyle>;
 }
 
 export interface TabsContentProps extends ViewProps {
@@ -83,7 +89,12 @@ export interface TabsContentProps extends ViewProps {
    * The value that activates this content block.
    */
   value: string;
-  children?: React.ReactNode;
+  children?: ReactNode;
+  /**
+   * Keep inactive tab content mounted (preserves input/scroll state) while
+   * hiding it visually and from assistive tech. @default false
+   */
+  keepMounted?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -112,7 +123,8 @@ export function TabsList({ children, style, ...props }: ViewProps) {
   
   const translateX = useSharedValue(0);
   const indicatorWidth = useSharedValue(0);
-  const isFirstRender = useSharedValue(true);
+  // Plain ref: StrictMode-safe, no worklet involvement.
+  const isFirstRender = useRef(true);
 
   const registerLayout = useCallback((tabValue: string, layout: LayoutRectangle) => {
     setLayouts((prev) => {
@@ -125,12 +137,12 @@ export function TabsList({ children, style, ...props }: ViewProps) {
 
   useEffect(() => {
     const activeLayout = layouts[value];
-    
+
     if (activeLayout) {
-      if (isFirstRender.value) {
+      if (isFirstRender.current) {
         translateX.value = activeLayout.x;
         indicatorWidth.value = activeLayout.width;
-        isFirstRender.value = false;
+        isFirstRender.current = false;
       } else {
         translateX.value = withTiming(activeLayout.x, { 
           duration: 150, 
@@ -209,16 +221,20 @@ export function TabsTrigger({ value, disabled = false, children, style, ...props
   );
 }
 
-export function TabsContent({ value, children, style, ...props }: TabsContentProps) {
+export function TabsContent({ value, children, keepMounted = false, style, ...props }: TabsContentProps) {
   const { value: selectedValue } = useTabsContext();
-  
-  if (selectedValue !== value) {
+  const isActive = selectedValue === value;
+
+  if (!isActive && !keepMounted) {
     return null;
   }
 
   return (
-    <View 
-      style={cn(styles.content, style)} 
+    <View
+      style={cn(styles.content, style, !isActive && styles.hidden)}
+      pointerEvents={isActive ? 'auto' : 'none'}
+      accessibilityElementsHidden={!isActive}
+      importantForAccessibility={isActive ? 'auto' : 'no-hide-descendants'}
       {...props}
     >
       {children}
@@ -266,5 +282,10 @@ const styles = StyleSheet.create({
   },
   content: {
     width: '100%',
+  },
+  hidden: {
+    height: 0,
+    overflow: 'hidden',
+    opacity: 0,
   },
 });

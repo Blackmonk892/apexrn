@@ -1,5 +1,25 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
-import { Pressable, StyleSheet, Text, View, ViewProps } from 'react-native';
+import {
+  Children,
+  Fragment,
+  createContext,
+  isValidElement,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+  type ReactElement,
+  type ReactNode,
+} from 'react';
+import {
+  Pressable,
+  StyleProp,
+  StyleSheet,
+  Text,
+  TextInputProps,
+  View,
+  ViewProps,
+  ViewStyle,
+} from 'react-native';
 
 import { borderWidths, spacing, typography } from '../lib/colors';
 import { useTheme } from '../lib/theme';
@@ -38,14 +58,29 @@ export interface DatePickerProps {
    * Callback fired when a date is selected.
    */
   onChange: (date: Date) => void;
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
-export interface DatePickerTriggerProps extends ViewProps {
+export interface DatePickerTriggerProps extends Omit<TextInputProps, 'value' | 'editable' | 'onPress' | 'style'> {
   /**
    * Placeholder text displayed when no date is chosen.
    */
   placeholder?: string;
+  /**
+   * Style for the pressable wrapper.
+   */
+  style?: StyleProp<ViewStyle>;
+}
+
+/**
+ * Formats a date in the *local* timezone (YYYY-MM-DD). `toISOString` is UTC
+ * and shows the wrong day for timezones behind UTC.
+ */
+export function formatLocalDate(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -72,16 +107,31 @@ export function DatePicker({ value, onChange, children }: DatePickerProps) {
     onChange(date);
   }, [onChange]);
 
-  const triggerChildren: React.ReactNode[] = [];
-  const contentChildren: React.ReactNode[] = [];
+  const triggerChildren: ReactNode[] = [];
+  const contentChildren: ReactNode[] = [];
 
-  React.Children.forEach(children, (child) => {
-    if (React.isValidElement(child) && (child.type === DatePickerContent || (child.type as any)?.name === 'DatePickerContent')) {
-      contentChildren.push(child);
-    } else {
-      triggerChildren.push(child);
-    }
-  });
+  const visit = (node: ReactNode) => {
+    Children.forEach(node, (child) => {
+      if (!isValidElement(child)) {
+        return;
+      }
+      if (child.type === Fragment) {
+        visit((child as ReactElement<{ children?: ReactNode }>).props.children);
+        return;
+      }
+      const type = child.type as { displayName?: string; name?: string };
+      if (
+        child.type === DatePickerContent ||
+        type?.displayName === 'DatePickerContent' ||
+        type?.name === 'DatePickerContent'
+      ) {
+        contentChildren.push(child);
+      } else {
+        triggerChildren.push(child);
+      }
+    });
+  };
+  visit(children);
 
   return (
     <DatePickerContext.Provider value={{ selectedDate: value, onDateChange, isOpen, setIsOpen }}>
@@ -93,44 +143,53 @@ export function DatePicker({ value, onChange, children }: DatePickerProps) {
   );
 }
 
-export function DatePickerTrigger({ placeholder, style, ...props }: DatePickerTriggerProps) {
-  const { selectedDate, setIsOpen } = useDatePickerContext();
+export function DatePickerTrigger({ placeholder, style, onFocus, onBlur, ...props }: DatePickerTriggerProps) {
+  const { selectedDate, isOpen, setIsOpen } = useDatePickerContext();
 
   const handlePress = () => {
     setIsOpen(true);
   };
 
-  const formattedValue = selectedDate 
-    ? selectedDate.toISOString().split('T')[0] 
-    : '';
-
-  const { onBlur, onFocus, ...inputProps } = props as any;
+  const formattedValue = selectedDate ? formatLocalDate(selectedDate) : '';
 
   return (
-    <Pressable 
-      onPress={handlePress} 
-      style={cn(styles.triggerWrapper, style)}
+    <Pressable
+      onPress={handlePress}
+      onFocus={onFocus}
+      onBlur={onBlur}
+      style={[styles.triggerWrapper, style]}
       accessibilityRole="combobox"
-      accessibilityState={{ expanded: false }}
+      accessibilityState={{ expanded: isOpen }}
       accessibilityLabel={`Date Picker: ${selectedDate ? formattedValue : 'Select a date'}`}
     >
       <Input
-        editable={false} 
+        editable={false}
         value={formattedValue}
         placeholder={placeholder}
         pointerEvents="none"
         style={styles.inputReset}
-        {...inputProps}
+        {...props}
       />
     </Pressable>
   );
 }
 
 export function DatePickerContent({ style, ...props }: ViewProps) {
-  const { selectedDate, onDateChange, setIsOpen } = useDatePickerContext();
+  const { selectedDate, onDateChange, isOpen, setIsOpen } = useDatePickerContext();
   const { colors } = useTheme();
-  
-  const [currentDate, setCurrentDate] = useState(new Date());
+
+  const [currentDate, setCurrentDate] = useState(() => {
+    const base = selectedDate ?? new Date();
+    return new Date(base.getFullYear(), base.getMonth(), 1);
+  });
+
+  // Reopening the calendar returns to the selected month instead of
+  // resetting to today.
+  useEffect(() => {
+    if (isOpen && selectedDate) {
+      setCurrentDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1));
+    }
+  }, [isOpen, selectedDate]);
   
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -164,7 +223,7 @@ export function DatePickerContent({ style, ...props }: ViewProps) {
             styles.cellSurface,
             isSelected && [styles.cellSelected, { backgroundColor: colors.primary, borderColor: colors.border }]
           )}
-          accessibilityRole="adjustable"
+          accessibilityRole="button"
           accessibilityLabel={`${day} ${month + 1} ${year}`}
           accessibilityState={{ selected: !!isSelected }}
         >
@@ -190,11 +249,12 @@ export function DatePickerContent({ style, ...props }: ViewProps) {
   };
 
   return (
-    <SheetContent PointHeight={420} style={style} {...props}>
+    <SheetContent sheetHeight={420} style={style} {...props}>
       <View style={styles.headerRow}>
         <Button
           variant="outline"
           title="<"
+          accessibilityLabel="Previous month"
           onPress={handlePrevMonth}
           style={styles.navButton}
         />
@@ -204,6 +264,7 @@ export function DatePickerContent({ style, ...props }: ViewProps) {
         <Button
           variant="outline"
           title=">"
+          accessibilityLabel="Next month"
           onPress={handleNextMonth}
           style={styles.navButton}
         />
@@ -227,6 +288,7 @@ export function DatePickerContent({ style, ...props }: ViewProps) {
     </SheetContent>
   );
 }
+DatePickerContent.displayName = 'DatePickerContent';
 
 // ---------------------------------------------------------------------------
 // Styles

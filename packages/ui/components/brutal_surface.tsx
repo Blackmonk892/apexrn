@@ -1,13 +1,15 @@
-import React, { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import {
   Pressable,
-  PressableProps,
-  StyleProp,
+  type GestureResponderEvent,
+  type PressableProps,
+  type StyleProp,
   StyleSheet,
   View,
-  ViewStyle,
+  type ViewProps,
+  type ViewStyle,
 } from 'react-native';
-import Animated from 'react-native-reanimated';
+import Animated, { type AnimatedStyle } from 'react-native-reanimated';
 
 import { borderWidths } from '../lib/colors';
 import { useTheme } from '../lib/theme';
@@ -26,7 +28,7 @@ export interface BrutalSurfaceProps
   pressable?: boolean;
   /** Whether the hard shadow backing renders at all. @default true */
   hasShadow?: boolean;
-  /** Matches PressableProps' disabled. */
+  /** Matches PressableProps' disabled (nullable to match React Native types). */
   disabled?: boolean | null;
   /** Skip the haptic tick on press-in without disabling the animation. @default true */
   haptics?: boolean;
@@ -38,9 +40,9 @@ export interface BrutalSurfaceProps
   /** Style for the outer wrapper. */
   style?: StyleProp<ViewStyle>;
   /** Style for the foreground surface itself. */
-  surfaceStyle?: StyleProp<ViewStyle> | any;
+  surfaceStyle?: StyleProp<ViewStyle | AnimatedStyle<ViewStyle>>;
   /** Extra style for the shadow layer. */
-  shadowStyle?: StyleProp<ViewStyle> | any;
+  shadowStyle?: StyleProp<ViewStyle | AnimatedStyle<ViewStyle>>;
 }
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -74,11 +76,21 @@ export default function BrutalSurface({
   const { animatedSurfaceStyle, animatedShadowStyle, handlePressIn, handlePressOut } =
     usePressPhysics({ offset, disabled: !isInteractive, haptics });
 
-  const surfaceContent = [
+  const surfaceContent: StyleProp<ViewStyle | AnimatedStyle<ViewStyle>> = [
     styles.surface,
     { backgroundColor: bg, borderColor: bc, borderWidth: bw, borderRadius },
     surfaceStyle,
   ];
+
+  const handleInnerPressIn = (e: GestureResponderEvent) => {
+    handlePressIn();
+    onPressIn?.(e);
+  };
+
+  const handleInnerPressOut = (e: GestureResponderEvent) => {
+    handlePressOut();
+    onPressOut?.(e);
+  };
 
   return (
     <View
@@ -110,24 +122,57 @@ export default function BrutalSurface({
 
       {pressable ? (
         <AnimatedPressable
-          onPressIn={(e: any) => {
-            handlePressIn();
-            onPressIn?.(e);
-          }}
-          onPressOut={(e: any) => {
-            handlePressOut();
-            onPressOut?.(e);
-          }}
-          disabled={!!disabled}
+          onPressIn={handleInnerPressIn}
+          onPressOut={handleInnerPressOut}
+          disabled={disabled ?? undefined}
           style={[styles.surfaceWrap, surfaceContent, isInteractive && animatedSurfaceStyle]}
           {...pressableProps}
         >
           {children}
         </AnimatedPressable>
       ) : (
-        <View style={[styles.surfaceWrap, surfaceContent]}>{children}</View>
+        <NonInteractiveSurface
+          surfaceContent={surfaceContent}
+          pressableProps={pressableProps}
+        >
+          {children}
+        </NonInteractiveSurface>
       )}
     </View>
+  );
+}
+
+/**
+ * Non-interactive rendering path. Forwards view-safe props (a11y, testID,
+ * layout) that would otherwise be dropped, while stripping press-only
+ * handlers that a plain `View` cannot act on.
+ */
+function NonInteractiveSurface({
+  children,
+  surfaceContent,
+  pressableProps,
+}: {
+  children: ReactNode;
+  surfaceContent: StyleProp<ViewStyle | AnimatedStyle<ViewStyle>>;
+  pressableProps: Omit<PressableProps, 'style' | 'children'>;
+}) {
+  const {
+    onPress: _onPress,
+    onLongPress: _onLongPress,
+    onPressIn: _onPressIn,
+    onPressOut: _onPressOut,
+    ...viewProps
+  } = pressableProps;
+  void _onPress;
+  void _onLongPress;
+  void _onPressIn;
+  void _onPressOut;
+  // Animated.View (not plain View) so animated styles passed via
+  // surfaceStyle still resolve on non-interactive surfaces.
+  return (
+    <Animated.View style={[styles.surfaceWrap, surfaceContent]} {...(viewProps as ViewProps)}>
+      {children}
+    </Animated.View>
   );
 }
 
@@ -141,11 +186,13 @@ const styles = StyleSheet.create({
   shadow: {
     position: 'absolute',
     zIndex: 1,
+    elevation: 0,
     borderRadius: 0,
   },
   surfaceWrap: {
     position: 'relative',
     zIndex: 2,
+    elevation: 2,
   },
   surface: {
     borderRadius: 0,

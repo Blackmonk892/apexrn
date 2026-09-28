@@ -1,4 +1,3 @@
-import React from 'react';
 import { StyleSheet, View, ViewProps } from 'react-native';
 
 import { borderWidths } from '../lib/colors';
@@ -14,7 +13,6 @@ export interface SeparatorProps extends ViewProps {
    * @default 'horizontal'
    */
   orientation?: 'horizontal' | 'vertical';
-  style?: any;
 }
 
 // ---------------------------------------------------------------------------
@@ -52,7 +50,7 @@ const styles = StyleSheet.create({
     height: borderWidths.standard,
   },
   vertical: {
-    height: '100%',
+    alignSelf: 'stretch',
     width: borderWidths.standard,
   },
 });

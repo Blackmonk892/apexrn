@@ -1,7 +1,8 @@
 // Theme & Provider
 export { ApexRNProvider, useTheme, type ThemeMode, type ThemeContextType } from './lib/theme';
 export { colors, spacing, typography, borderWidths, shadowOffset, type ColorScheme } from './lib/colors';
-export { usePressPhysics, type UsePressPhysicsOptions } from './lib/usePressPhysics';
+export { scale, verticalScale, moderateScale, normalize, screenWidth, screenHeight } from './lib/metrics';
+export { usePressPhysics, type UsePressPhysicsOptions, type PressPhysicsConfig } from './lib/usePressPhysics';
 export { cn } from './lib/utils';
 
 // Components
@@ -20,7 +21,7 @@ export { default as FAB, type FABProps } from './components/floating_action_butt
 export { default as InputOTP, type InputOTPProps } from './components/input_otp';
 export { default as Label, type LabelProps } from './components/label';
 export { default as Progress, type ProgressProps } from './components/progress';
-export { default as RadioGroup, RadioGroupItem, type RadioGroupProps, type RadioGroupItemProps } from './components/radiogroup';
+export { RadioGroup, RadioGroupItem, type RadioGroupProps, type RadioGroupItemProps } from './components/radiogroup';
 export { default as Separator, type SeparatorProps } from './components/separator';
 export { default as Skeleton, type SkeletonProps } from './components/skeleton';
 export { default as Slider, type SliderProps } from './components/slider';
@@ -34,6 +35,6 @@ export { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, Dialog
 export { Sheet, SheetContent, type SheetProps, type SheetContentProps } from './components/sheet';
 export { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, type DropdownMenuProps, type DropdownMenuItemProps } from './components/dropdown_menu';
 export { Select, SelectTrigger, SelectContent, SelectItem, type SelectProps, type SelectTriggerProps, type SelectContentProps, type SelectItemProps } from './components/select';
-export { DatePicker, DatePickerTrigger, DatePickerContent, type DatePickerProps, type DatePickerTriggerProps } from './components/datepicker';
+export { DatePicker, DatePickerTrigger, DatePickerContent, formatLocalDate, type DatePickerProps, type DatePickerTriggerProps } from './components/datepicker';
 export { Accordion, AccordionItem, AccordionTrigger, AccordionContent, type AccordionProps, type AccordionItemProps, type AccordionTriggerProps } from './components/accordion';
 export { Tabs, TabsList, TabsTrigger, TabsContent, type TabsProps, type TabsTriggerProps, type TabsContentProps } from './components/tabs';

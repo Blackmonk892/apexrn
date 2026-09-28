@@ -16,4 +16,11 @@ config.resolver.nodeModulesPaths = [
   path.resolve(workspaceRoot, 'node_modules'),
 ];
 
+// 4. Resolve `@ui` at the Metro level too (not just via babel), so bundles
+// don't depend on babel cache state to find the workspace package.
+config.resolver.extraNodeModules = {
+  ...config.resolver.extraNodeModules,
+  '@ui': path.resolve(workspaceRoot, 'packages/ui'),
+};
+
 module.exports = config;

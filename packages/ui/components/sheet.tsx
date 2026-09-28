@@ -1,5 +1,13 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
-import { Dimensions, Modal, Pressable, StyleSheet, View, ViewProps } from 'react-native';
+import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
+import {
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  StyleSheet,
+  View,
+  ViewProps,
+} from 'react-native';
 import Animated, { 
   useAnimatedStyle, 
   useSharedValue, 
@@ -11,7 +19,6 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
 import { borderWidths, spacing } from '../lib/colors';
 import { useTheme } from '../lib/theme';
-import { cn } from '../lib/utils';
 
 // ---------------------------------------------------------------------------
 // Types & Context
@@ -41,7 +48,7 @@ export interface SheetProps {
    * Callback fired when the sheet closes (e.g., swiped down or backdrop pressed).
    */
   onOpenChange: (open: boolean) => void;
-  children: React.ReactNode | ((props: { open: boolean; handleDismiss: () => void }) => React.ReactNode);
+  children: ReactNode | ((props: { open: boolean; handleDismiss: () => void }) => ReactNode);
 }
 
 export interface SheetContentProps extends ViewProps {
@@ -49,8 +56,12 @@ export interface SheetContentProps extends ViewProps {
    * The height the sheet snaps to when pulled up.
    * @default 400
    */
+  sheetHeight?: number;
+  /**
+   * @deprecated Use `sheetHeight` instead. Kept for backwards compatibility.
+   */
   PointHeight?: number;
-  children?: React.ReactNode;
+  children?: ReactNode;
 }
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -69,6 +80,9 @@ export function Sheet({ open, onOpenChange, children }: SheetProps) {
   }, [onOpenChange]);
 
   const onDismissAnimationFinished = useCallback(() => {
+    // Unmount even if the parent ignored `onOpenChange(false)`: otherwise an
+    // invisible overlay keeps intercepting touches. If `open` is still true
+    // the effect above remounts and re-runs the open animation.
     setIsModalVisible(false);
   }, []);
 
@@ -83,6 +97,7 @@ export function Sheet({ open, onOpenChange, children }: SheetProps) {
         transparent
         animationType="none"
         onRequestClose={close}
+        accessibilityViewIsModal
       >
         {childrenRender}
       </Modal>
@@ -90,17 +105,19 @@ export function Sheet({ open, onOpenChange, children }: SheetProps) {
   );
 }
 
-export function SheetContent({ 
-  PointHeight = 400, 
-  children, 
-  style, 
-  ...props 
+export function SheetContent({
+  sheetHeight,
+  PointHeight,
+  children,
+  style,
+  ...props
 }: SheetContentProps) {
   const { open, close, onDismissAnimationFinished } = useSheetContext();
   const { colors } = useTheme();
-  
-  // TranslateY: 0 is open/docked, PointHeight is fully closed/hidden
-  const translateY = useSharedValue(PointHeight);
+  const resolvedHeight = sheetHeight ?? PointHeight ?? 400;
+
+  // TranslateY: 0 is open/docked, resolvedHeight is fully closed/hidden
+  const translateY = useSharedValue(resolvedHeight);
   const backdropOpacity = useSharedValue(0);
   const contextY = useSharedValue(0);
 
@@ -120,9 +137,9 @@ export function SheetContent({
     } else {
       if (isClosingRef.current) return;
       isClosingRef.current = true;
-      translateY.value = withTiming(PointHeight, { 
-        duration: 200, 
-        easing: Easing.in(Easing.quad) 
+      translateY.value = withTiming(resolvedHeight, {
+        duration: 200,
+        easing: Easing.in(Easing.quad)
       }, (finished) => {
         if (finished) {
           runOnJS(onDismissAnimationFinished)();
@@ -130,12 +147,12 @@ export function SheetContent({
       });
       backdropOpacity.value = withTiming(0, { duration: 200 });
     }
-  }, [open, PointHeight, translateY, backdropOpacity, onDismissAnimationFinished]);
+  }, [open, resolvedHeight, translateY, backdropOpacity, onDismissAnimationFinished]);
 
   const triggerClose = () => {
     if (isClosingRef.current) return;
     isClosingRef.current = true;
-    translateY.value = withTiming(PointHeight, { 
+    translateY.value = withTiming(resolvedHeight, {
       duration: 200, 
       easing: Easing.in(Easing.quad) 
     }, (finished) => {
@@ -148,20 +165,24 @@ export function SheetContent({
   };
 
   const pan = Gesture.Pan()
+    // Vertical-only dismiss: horizontal swipes / TextInput touches inside
+    // the sheet don't compete with the dismiss gesture.
+    .activeOffsetY([-10, 10])
+    .failOffsetX([-10, 10])
     .onStart(() => {
       contextY.value = translateY.value;
     })
     .onUpdate((event) => {
       const nextY = Math.max(-20, contextY.value + event.translationY);
-      translateY.value = Math.min(nextY, PointHeight);
+      translateY.value = Math.min(nextY, resolvedHeight);
     })
     .onEnd((event) => {
-      if (translateY.value > PointHeight / 3 || event.velocityY > 500) {
+      if (translateY.value > resolvedHeight / 3 || event.velocityY > 500) {
         runOnJS(triggerClose)();
       } else {
-        translateY.value = withTiming(0, { 
-          duration: 150, 
-          easing: Easing.out(Easing.quad) 
+        translateY.value = withTiming(0, {
+          duration: 150,
+          easing: Easing.out(Easing.quad)
         });
       }
     });
@@ -175,40 +196,48 @@ export function SheetContent({
   }));
 
   return (
-    <View style={styles.wrapper}>
+    // Keeps tall sheets with inputs usable when the keyboard opens.
+    <KeyboardAvoidingView
+      style={styles.wrapper}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
       {/* Backdrop */}
-      <AnimatedPressable 
-        style={[styles.backdrop, animatedBackdropStyle]} 
+      <AnimatedPressable
+        style={[styles.backdrop, animatedBackdropStyle]}
         onPress={triggerClose}
         accessibilityRole="button"
         accessibilityLabel="Dismiss Sheet"
       />
-      
+
       <GestureDetector gesture={pan}>
-        <Animated.View 
+        <Animated.View
           style={[
-            styles.sheet, 
-            { 
-              height: PointHeight,
+            styles.sheet,
+            {
+              height: resolvedHeight,
               backgroundColor: colors.background,
               borderColor: colors.border,
-            }, 
+            },
+            style,
             animatedSheetStyle,
-            style
           ]}
           {...props}
         >
-          {/* Top drag handle */}
-          <View style={styles.handleContainer}>
+          {/* Top drag handle (decorative) */}
+          <View
+            style={styles.handleContainer}
+            accessible={false}
+            importantForAccessibility="no-hide-descendants"
+          >
             <View style={[styles.handleBar, { backgroundColor: colors.foreground }]} />
           </View>
-          
+
           <View style={styles.content}>
             {children}
           </View>
         </Animated.View>
       </GestureDetector>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

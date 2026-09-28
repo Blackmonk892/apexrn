@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { StyleSheet, Text, View, ViewProps } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -66,6 +66,13 @@ export default function Toast({
   const { colors } = useTheme();
   const translateY = useSharedValue(-150);
 
+  // Ref-stabilized so a re-created `onDismiss` identity doesn't restart
+  // the auto-dismiss timer on every parent render.
+  const onDismissRef = useRef(onDismiss);
+  useEffect(() => {
+    onDismissRef.current = onDismiss;
+  }, [onDismiss]);
+
   const variants = {
     default: {
       surface: { backgroundColor: colors.foreground },
@@ -89,11 +96,11 @@ export default function Toast({
       { duration: 250, easing: Easing.in(Easing.quad) },
       (finished) => {
         if (finished) {
-          runOnJS(onDismiss)();
+          runOnJS(() => onDismissRef.current())();
         }
       }
     );
-  }, [translateY, onDismiss]);
+  }, [translateY]);
 
   useEffect(() => {
     let timeout: ReturnType<typeof setTimeout>;
@@ -125,16 +132,21 @@ export default function Toast({
 
   return (
     <Animated.View
-      style={[styles.absoluteWrapper, animatedStyle, style]}
+      style={[styles.absoluteWrapper, style, animatedStyle]}
       pointerEvents={visible ? 'auto' : 'none'}
       accessibilityRole="alert"
       accessibilityLiveRegion="assertive"
+      accessibilityElementsHidden={!visible}
+      importantForAccessibility={visible ? 'auto' : 'no-hide-descendants'}
       {...props}
     >
       <BrutalSurface
         offset={SHADOW_OFFSET}
         borderWidth="heavy"
         onPress={hideToast}
+        accessibilityRole="button"
+        accessibilityLabel={`Dismiss notification: ${title}`}
+        accessibilityHint="Hides this notification"
         surfaceStyle={cn(styles.surface, activeVariant.surface)}
       >
         <View style={styles.contentContainer}>
@@ -142,7 +154,7 @@ export default function Toast({
             {title}
           </Text>
           {description ? (
-            <Text style={cn(styles.description, activeVariant.text)}>
+            <Text style={cn(styles.description, activeVariant.text)} numberOfLines={3}>
               {description}
             </Text>
           ) : null}

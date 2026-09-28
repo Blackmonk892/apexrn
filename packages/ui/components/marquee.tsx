@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, ViewProps, LayoutChangeEvent } from 'react-native';
-import Animated, { 
-  useAnimatedStyle, 
-  useSharedValue, 
-  withTiming, 
-  withRepeat, 
-  Easing 
+import Animated, {
+  cancelAnimation,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+  withRepeat,
+  Easing
 } from 'react-native-reanimated';
 
 import { borderWidths, spacing, typography } from '../lib/colors';
@@ -50,16 +51,25 @@ export default function Marquee({
 }: MarqueeProps) {
   const { colors } = useTheme();
   const [textWidth, setTextWidth] = useState(0);
+  const [containerWidth, setContainerWidth] = useState(0);
   const translateX = useSharedValue(0);
 
   const content = `${text}${divider}`;
-  const repetitions = [0, 1, 2, 3, 4];
+  // Enough copies to cover the container with no gap, clamped to avoid
+  // over-rendering very long strings on small screens.
+  const repetitions =
+    textWidth > 0 && containerWidth > 0
+      ? Math.max(2, Math.min(Math.ceil(containerWidth / textWidth) + 1, 8))
+      : 5;
+
+  const validSpeed = Number.isFinite(speed) && speed > 0 ? speed : 0;
 
   useEffect(() => {
-    if (textWidth > 0 && !disabled) {
-      const duration = (textWidth / speed) * 1000;
+    cancelAnimation(translateX);
+    if (textWidth > 0 && !disabled && validSpeed > 0 && text.length > 0) {
+      const duration = (textWidth / validSpeed) * 1000;
       translateX.value = 0;
-      
+
       translateX.value = withRepeat(
         withTiming(-textWidth, {
           duration,
@@ -68,10 +78,10 @@ export default function Marquee({
         -1,
         false
       );
-    } else if (disabled) {
+    } else {
       translateX.value = 0;
     }
-  }, [textWidth, speed, disabled, translateX]);
+  }, [textWidth, containerWidth, validSpeed, disabled, content, text, translateX]);
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -79,10 +89,17 @@ export default function Marquee({
     };
   });
 
-  const handleLayout = (event: LayoutChangeEvent) => {
+  const handleTextLayout = (event: LayoutChangeEvent) => {
     const width = event.nativeEvent.layout.width;
     if (width > 0 && width !== textWidth) {
       setTextWidth(width);
+    }
+  };
+
+  const handleContainerLayout = (event: LayoutChangeEvent) => {
+    const width = event.nativeEvent.layout.width;
+    if (width > 0 && width !== containerWidth) {
+      setContainerWidth(width);
     }
   };
 
@@ -94,12 +111,19 @@ export default function Marquee({
         disabled && { backgroundColor: colors.muted, borderColor: colors.mutedForeground },
         style
       )}
+      onLayout={handleContainerLayout}
       accessibilityRole="text"
       accessibilityLabel={text}
       {...props}
     >
-      <Animated.View style={[styles.track, animatedStyle]}>
-        <View onLayout={handleLayout} style={styles.textWrapper}>
+      {/* The repeated track is decorative: the outer label carries the
+          announcement so screen readers don't read the text 5×. */}
+      <Animated.View
+        style={[styles.track, animatedStyle]}
+        accessible={false}
+        importantForAccessibility="no-hide-descendants"
+      >
+        <View onLayout={handleTextLayout} style={styles.textWrapper}>
           <Text
             style={cn(
               styles.text,
@@ -113,8 +137,8 @@ export default function Marquee({
         </View>
 
         {textWidth > 0 &&
-          repetitions.slice(1).map((key) => (
-            <View key={key} style={styles.textWrapper}>
+          Array.from({ length: repetitions - 1 }, (_, i) => (
+            <View key={i} style={styles.textWrapper}>
               <Text
                 style={cn(
                   styles.text,

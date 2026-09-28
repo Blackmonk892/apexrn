@@ -1,11 +1,22 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { 
-  Modal, 
-  Pressable, 
-  StyleSheet, 
-  Text, 
-  View, 
-  ViewProps, 
+import {
+  cloneElement,
+  createContext,
+  isValidElement,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  type ReactElement,
+  type ReactNode,
+} from 'react';
+import {
+  GestureResponderEvent,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  ViewProps,
   PressableProps,
   TextProps
 } from 'react-native';
@@ -50,7 +61,7 @@ export interface DialogProps {
    * Callback fired when the open state changes.
    */
   onOpenChange?: (open: boolean) => void;
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 export interface DialogContentProps extends ViewProps {
@@ -58,7 +69,7 @@ export interface DialogContentProps extends ViewProps {
    * Callback fired when the backdrop is pressed.
    */
   onInteractOutside?: () => void;
-  children?: React.ReactNode;
+  children?: ReactNode;
 }
 
 // ---------------------------------------------------------------------------
@@ -90,26 +101,36 @@ export function Dialog({ open: controlledOpen, onOpenChange, children }: DialogP
   );
 }
 
-export function DialogTrigger({ 
-  children, 
-  onPress, 
+export function DialogTrigger({
+  children,
+  onPress,
   asChild,
-  ...props 
+  ...props
 }: PressableProps & { asChild?: boolean }) {
   const { setOpen } = useDialogContext();
 
-  const handlePress = (e: any) => {
+  const handlePress = (e: GestureResponderEvent) => {
     setOpen(true);
     onPress?.(e);
   };
 
-  if (asChild && React.isValidElement(children)) {
-    return React.cloneElement(children, {
-      ...props,
-      onPress: handlePress,
-    } as any);
+  if (asChild && isValidElement(children)) {
+    // Chain the child's own onPress instead of dropping it, and only
+    // inject press handling (never blindly spread PressableProps into an
+    // arbitrary child whose props may not accept them).
+    const child = children as ReactElement<{
+      onPress?: (e: GestureResponderEvent) => void;
+    }>;
+    return cloneElement(child, {
+      onPress: (e: GestureResponderEvent) => {
+        child.props.onPress?.(e);
+        handlePress(e);
+      },
+    });
   }
 
+  // `onPress` is destructured above, so spreading `props` here cannot
+  // clobber the open handler.
   return (
     <Pressable onPress={handlePress} {...props}>
       {children}
@@ -134,21 +155,23 @@ export function DialogContent({
   useEffect(() => {
     if (open) {
       setIsVisible(true);
-      progress.value = withTiming(1, { 
-        duration: 150, 
-        easing: Easing.out(Easing.quad) 
+      progress.value = withTiming(1, {
+        duration: 150,
+        easing: Easing.out(Easing.quad)
       });
     } else if (isVisible) {
-      progress.value = withTiming(0, { 
-        duration: 100, 
-        easing: Easing.in(Easing.quad) 
+      progress.value = withTiming(0, {
+        duration: 100,
+        easing: Easing.in(Easing.quad)
       }, (finished) => {
         if (finished) {
           runOnJS(setIsVisible)(false);
         }
       });
     }
-  }, [open, isVisible, progress]);
+    // Deps intentionally `[open]` only: including `isVisible` would restart
+    // the open animation when `setIsVisible(true)` re-renders.
+  }, [open]);
 
   const handleBackdropPress = () => {
     if (onInteractOutside) {
@@ -175,17 +198,18 @@ export function DialogContent({
       visible={isVisible}
       animationType="none"
       onRequestClose={() => setOpen(false)}
+      accessibilityViewIsModal
     >
       <View style={styles.modalContainer}>
-        <AnimatedPressable 
-          style={[styles.backdrop, backdropAnimatedStyle]} 
+        <AnimatedPressable
+          style={[styles.backdrop, backdropAnimatedStyle]}
           onPress={handleBackdropPress}
           accessibilityRole="button"
           accessibilityLabel="Close Dialog"
         />
-        
+
         <Animated.View
-          style={[contentAnimatedStyle, style]}
+          style={[styles.contentPositioner, style, contentAnimatedStyle]}
           {...props}
         >
           <BrutalSurface
@@ -247,6 +271,12 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     zIndex: 0,
+  },
+  contentPositioner: {
+    width: '100%',
+    alignItems: 'center',
+    zIndex: 1,
+    elevation: 1,
   },
   dialogWrapper: {
     width: '100%',

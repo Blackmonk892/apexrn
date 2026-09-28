@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { 
   Pressable, 
   StyleSheet, 
@@ -65,9 +65,15 @@ export interface AccordionProps extends ViewProps {
    */
   value?: string | string[];
   /**
-   * Callback fired when the open state changes.
+   * Initial open value(s) for uncontrolled usage.
    */
-  onValueChange?: (value: any) => void;
+  defaultValue?: string | string[];
+  /**
+   * Callback fired when the open state changes. Receives a single string in
+   * `'single'` mode (empty string when all items are closed) or a string
+   * array in `'multiple'` mode.
+   */
+  onValueChange?: (value: string | string[]) => void;
 }
 
 export interface AccordionItemProps extends ViewProps {
@@ -77,25 +83,37 @@ export interface AccordionItemProps extends ViewProps {
   value: string;
 }
 
-export interface AccordionTriggerProps extends Omit<PressableProps, 'onPress'> {
+export interface AccordionTriggerProps extends Omit<PressableProps, 'onPress' | 'children'> {
   /**
    * Disables the trigger.
    * @default false
    */
   disabled?: boolean;
+  /**
+   * Trigger content. Plain strings/numbers render in the default heading
+   * style; anything else renders as-is (function-as-child is not supported).
+   */
+  children?: ReactNode;
 }
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-export function Accordion({ 
-  type = 'single', 
-  value, 
-  onValueChange, 
-  children, 
-  style, 
-  ...props 
+export function Accordion({
+  type = 'single',
+  value,
+  defaultValue,
+  onValueChange,
+  children,
+  style,
+  ...props
 }: AccordionProps) {
-  const [internalValues, setInternalValues] = useState<string[]>([]);
+  const [internalValues, setInternalValues] = useState<string[]>(() =>
+    defaultValue === undefined
+      ? []
+      : Array.isArray(defaultValue)
+        ? defaultValue
+        : [defaultValue],
+  );
 
   const isControlled = value !== undefined;
   
@@ -205,12 +223,16 @@ export function AccordionTrigger({ disabled = false, children, style, ...props }
       accessibilityState={{ expanded: isOpen, disabled }}
       {...props}
     >
-      <Text 
-        style={cn(styles.triggerText, { color: disabled ? colors.mutedForeground : colors.foreground })}
-        numberOfLines={1}
-      >
-        {children as any}
-      </Text>
+      {typeof children === 'string' || typeof children === 'number' ? (
+        <Text
+          style={cn(styles.triggerText, { color: disabled ? colors.mutedForeground : colors.foreground })}
+          numberOfLines={1}
+        >
+          {children}
+        </Text>
+      ) : (
+        children
+      )}
       
       <Animated.View style={[styles.chevronContainer, animatedChevronStyle]}>
         <Svg 
@@ -257,9 +279,12 @@ export function AccordionContent({ children, style, ...props }: ViewProps) {
   }));
 
   return (
-    <Animated.View 
-      style={[styles.contentWrapper, animatedHeightStyle]} 
+    <Animated.View
+      style={[styles.contentWrapper, animatedHeightStyle]}
       pointerEvents={isOpen ? 'auto' : 'none'}
+      accessible={!isOpen ? false : undefined}
+      accessibilityElementsHidden={!isOpen}
+      importantForAccessibility={isOpen ? 'auto' : 'no-hide-descendants'}
     >
       <View 
         onLayout={handleLayout} 

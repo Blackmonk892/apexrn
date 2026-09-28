@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import { useColorScheme as useRNColorScheme } from 'react-native';
 import { colors, ColorScheme } from './colors';
 
@@ -35,21 +35,30 @@ export function ApexRNProvider({
   const activeColors = colors[resolvedScheme];
   const isDark = resolvedScheme === 'dark';
 
-  const toggleTheme = () => {
-    setMode((prev) => (prev === 'dark' ? 'light' : 'dark'));
-  };
+  const toggleTheme = useCallback(() => {
+    // Resolve against the *effective* scheme so toggling from 'system'
+    // flips the theme the user actually sees instead of always landing dark.
+    setMode((prev) => {
+      const effective: 'light' | 'dark' =
+        prev === 'system' ? resolvedScheme : prev;
+      return effective === 'dark' ? 'light' : 'dark';
+    });
+  }, [resolvedScheme]);
+
+  const value = useMemo<ThemeContextType>(
+    () => ({
+      mode,
+      colorScheme: resolvedScheme,
+      colors: activeColors,
+      setMode,
+      toggleTheme,
+      isDark,
+    }),
+    [mode, resolvedScheme, activeColors, toggleTheme, isDark],
+  );
 
   return (
-    <ThemeContext.Provider
-      value={{
-        mode,
-        colorScheme: resolvedScheme,
-        colors: activeColors,
-        setMode,
-        toggleTheme,
-        isDark,
-      }}
-    >
+    <ThemeContext.Provider value={value}>
       {children}
     </ThemeContext.Provider>
   );

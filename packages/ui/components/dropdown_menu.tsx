@@ -1,13 +1,25 @@
-import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
-import { 
-  Modal, 
-  Pressable, 
-  StyleSheet, 
-  View, 
-  ViewProps, 
+import {
+  cloneElement,
+  createContext,
+  isValidElement,
+  useContext,
+  useState,
+  useCallback,
+  useRef,
+  useEffect,
+  type ReactElement,
+  type ReactNode,
+} from 'react';
+import {
+  GestureResponderEvent,
+  Modal,
+  Pressable,
+  StyleSheet,
+  View,
+  ViewProps,
   PressableProps,
   LayoutRectangle,
-  Dimensions
+  useWindowDimensions,
 } from 'react-native';
 import Animated, { 
   useAnimatedStyle, 
@@ -46,14 +58,14 @@ function useDropdownContext() {
 export interface DropdownMenuProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 export interface DropdownMenuItemProps extends Omit<PressableProps, 'style'> {
   label: string;
   description?: string;
-  leading?: React.ReactNode;
-  trailing?: React.ReactNode;
+  leading?: ReactNode;
+  trailing?: ReactNode;
 }
 
 // ---------------------------------------------------------------------------
@@ -84,36 +96,60 @@ export function DropdownMenu({ open, onOpenChange, children }: DropdownMenuProps
   );
 }
 
-export function DropdownMenuTrigger({ children, asChild, ...props }: PressableProps & { asChild?: boolean }) {
+export function DropdownMenuTrigger({ children, onPress, asChild, ...props }: PressableProps & { asChild?: boolean }) {
   const { isOpen, setIsOpen, setTriggerLayout } = useDropdownContext();
   const triggerRef = useRef<View>(null);
 
-  const handlePress = () => {
-    if (isOpen) {
-      setIsOpen(false);
-      return;
-    }
-
-    if (triggerRef.current) {
-      triggerRef.current.measure((x, y, width, height, pageX, pageY) => {
+  const openFromMeasurement = useCallback(() => {
+    // measure() is async: capture the node first so a null ref falls back
+    // to the default position instead of throwing.
+    const node = triggerRef.current;
+    if (node) {
+      node.measure((_x, _y, width, height, pageX, pageY) => {
         setTriggerLayout({ x: pageX, y: pageY, width, height });
         setIsOpen(true);
       });
     } else {
       setIsOpen(true);
     }
+  }, [setIsOpen, setTriggerLayout]);
+
+  const handlePress = (e: GestureResponderEvent) => {
+    onPress?.(e);
+    if (isOpen) {
+      setIsOpen(false);
+      return;
+    }
+    openFromMeasurement();
   };
 
-  if (asChild && React.isValidElement(children)) {
-    return React.cloneElement(children, {
-      ref: triggerRef,
-      onPress: handlePress,
-      ...props,
-    } as any);
+  if (asChild && isValidElement(children)) {
+    // Never inject `ref` into an arbitrary child (e.g. `Button` is a
+    // function component without forwardRef — the ref would be null and
+    // measurement would silently fall back). Instead measure this wrapper.
+    const child = children as ReactElement<{
+      onPress?: (e: GestureResponderEvent) => void;
+    }>;
+    return (
+      <View ref={triggerRef} collapsable={false}>
+        {cloneElement(child, {
+          onPress: (e: GestureResponderEvent) => {
+            child.props.onPress?.(e);
+            handlePress(e);
+          },
+        })}
+      </View>
+    );
   }
 
   return (
-    <Pressable ref={triggerRef} onPress={handlePress} {...props}>
+    <Pressable
+      ref={triggerRef}
+      accessibilityRole="button"
+      accessibilityState={{ expanded: isOpen }}
+      {...props}
+      onPress={handlePress}
+    >
       {children}
     </Pressable>
   );
@@ -153,18 +189,25 @@ export function DropdownMenuContent({ children, style, ...props }: ViewProps) {
     ],
   }));
 
-  const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+  const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useWindowDimensions();
 
-  // Position calculation anchored to trigger
-  const topPosition = triggerLayout 
-    ? (triggerLayout.y + triggerLayout.height + spacing.xs > SCREEN_HEIGHT - 200 
-        ? Math.max(10, triggerLayout.y - 150)
-        : triggerLayout.y + triggerLayout.height + spacing.xs)
+  // Position anchored to the trigger, clamped on-screen with room for the
+  // shadow offset. Falls back to a visible default when unmeasured.
+  const MENU_WIDTH = 200;
+  const MENU_MAX_HEIGHT = 320;
+  const topPosition = triggerLayout
+    ? Math.max(
+        spacing.sm,
+        Math.min(
+          triggerLayout.y + triggerLayout.height + spacing.xs,
+          SCREEN_HEIGHT - MENU_MAX_HEIGHT - spacing.lg,
+        ),
+      )
     : 100;
 
-  const leftPosition = triggerLayout 
-    ? Math.min(Math.max(spacing.md, triggerLayout.x), SCREEN_WIDTH - 220)
-    : 20;
+  const leftPosition = triggerLayout
+    ? Math.max(spacing.sm, Math.min(triggerLayout.x, SCREEN_WIDTH - MENU_WIDTH - spacing.sm))
+    : spacing.lg;
 
   return (
     <Modal
@@ -172,6 +215,7 @@ export function DropdownMenuContent({ children, style, ...props }: ViewProps) {
       transparent
       animationType="none"
       onRequestClose={handleClose}
+      accessibilityViewIsModal
     >
       <View style={styles.portalOverlay}>
         <AnimatedPressable
@@ -183,11 +227,17 @@ export function DropdownMenuContent({ children, style, ...props }: ViewProps) {
 
         <Animated.View
           style={[
-            styles.menuWrapper, 
-            { top: topPosition, left: leftPosition },
+            styles.menuWrapper,
+            style,
+            {
+              top: topPosition,
+              left: leftPosition,
+              width: MENU_WIDTH,
+              maxHeight: MENU_MAX_HEIGHT,
+            },
             animatedStyle,
-            style
           ]}
+          accessibilityRole="menu"
           {...props}
         >
           <View style={[styles.shadow, { backgroundColor: colors.shadow, borderColor: colors.border }]} />
@@ -213,7 +263,7 @@ export function DropdownMenuItem({
   const { close } = useDropdownContext();
   const { colors } = useTheme();
 
-  const handlePress = (e: any) => {
+  const handlePress = (e: GestureResponderEvent) => {
     onPress?.(e);
     close();
   };
@@ -227,6 +277,7 @@ export function DropdownMenuItem({
       disabled={!!disabled}
       onPress={handlePress}
       style={[styles.menuItem, { borderColor: colors.border }]}
+      accessibilityRole="menuitem"
       {...props}
     />
   );
@@ -246,7 +297,6 @@ const styles = StyleSheet.create({
   },
   menuWrapper: {
     position: 'absolute',
-    width: 200,
     marginBottom: SHADOW_OFFSET,
     marginRight: SHADOW_OFFSET,
     zIndex: 1,

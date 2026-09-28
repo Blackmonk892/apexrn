@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { StyleSheet, View, ViewProps } from 'react-native';
+import { useEffect } from 'react';
+import { StyleSheet, ViewProps } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
 
 import { useTheme } from '../lib/theme';
@@ -43,7 +43,11 @@ export default function Progress({
   ...props
 }: ProgressProps) {
   const { colors } = useTheme();
-  const safeValue = Math.min(Math.max((value / max) * 100, 0), 100);
+  const clampedMax = Number.isFinite(max) && max > 0 ? max : 100;
+  const clampedValue = Number.isFinite(value)
+    ? Math.min(Math.max(value, 0), clampedMax)
+    : 0;
+  const safeValue = (clampedValue / clampedMax) * 100;
   const progress = useSharedValue(0);
 
   useEffect(() => {
@@ -68,7 +72,7 @@ export default function Progress({
       pressable={false}
       hasShadow={withShadow}
       accessibilityRole="progressbar"
-      accessibilityValue={{ min: 0, max, now: value }}
+      accessibilityValue={{ min: 0, max: clampedMax, now: clampedValue }}
       {...props}
     >
       <Animated.View style={[styles.fill, { backgroundColor: colors.foreground }, animatedFillStyle]} />

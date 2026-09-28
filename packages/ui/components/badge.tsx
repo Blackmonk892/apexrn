@@ -1,4 +1,4 @@
-import React from 'react';
+import type { ReactNode } from 'react';
 import { StyleSheet, Text, ViewProps } from 'react-native';
 
 import { spacing, typography } from '../lib/colors';
@@ -21,9 +21,14 @@ export interface BadgeProps extends ViewProps {
    */
   withShadow?: boolean;
   /**
-   * The text to display inside the badge.
+   * The text to display inside the badge. `children` takes precedence when
+   * both are provided.
    */
-  label: string;
+  label?: string;
+  /**
+   * Custom badge content. Falls back to `label` when omitted.
+   */
+  children?: ReactNode;
 }
 
 // ---------------------------------------------------------------------------
@@ -38,6 +43,7 @@ export default function Badge({
   variant = 'default',
   withShadow = false,
   label,
+  children,
   style,
   ...props
 }: BadgeProps) {
@@ -63,6 +69,8 @@ export default function Badge({
   };
 
   const activeVariant = VARIANTS[variant];
+  const content = children ?? label ?? '';
+  const announcement = typeof content === 'string' ? content : label ?? 'badge';
 
   return (
     <BrutalSurface
@@ -73,12 +81,16 @@ export default function Badge({
       pressable={false}
       hasShadow={withShadow}
       accessibilityRole="text"
-      accessibilityLabel={`Badge: ${label}`}
+      accessibilityLabel={`Badge: ${announcement}`}
       {...props}
     >
-      <Text style={cn(styles.label, activeVariant.text)} numberOfLines={1}>
-        {label}
-      </Text>
+      {typeof content === 'string' ? (
+        <Text style={cn(styles.label, activeVariant.text)} numberOfLines={1} ellipsizeMode="tail">
+          {content}
+        </Text>
+      ) : (
+        content
+      )}
     </BrutalSurface>
   );
 }

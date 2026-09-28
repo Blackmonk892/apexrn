@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { BackHandler } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { ThemeProvider } from './src/context/ThemeContext';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { ThemeProvider, useShowcaseTheme } from './src/context/ThemeContext';
 import HomeScreen from './src/screens/HomeScreen';
 import ButtonScreen from './src/screens/ButtonScreen';
 import CardScreen from './src/screens/CardScreen';
@@ -40,7 +42,32 @@ import InputOTPScreen from './src/screens/InputOTPScreen';
 import TextareaScreen from './src/screens/TextareaScreen';
 
 export default function App() {
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <ThemeProvider>
+          <AppShell />
+        </ThemeProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
+  );
+}
+
+function AppShell() {
+  const { isDark } = useShowcaseTheme();
   const [currentScreen, setCurrentScreen] = useState<string>('home');
+
+  // Android hardware back navigates home instead of exiting the demo.
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (currentScreen !== 'home') {
+        setCurrentScreen('home');
+        return true;
+      }
+      return false;
+    });
+    return () => sub.remove();
+  }, [currentScreen]);
 
   // Simple state router rendering one screen per component
   const renderScreen = () => {
@@ -87,11 +114,9 @@ export default function App() {
   };
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <ThemeProvider>
-        <StatusBar style="auto" />
-        {renderScreen()}
-      </ThemeProvider>
-    </GestureHandlerRootView>
+    <>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+      {renderScreen()}
+    </>
   );
 }

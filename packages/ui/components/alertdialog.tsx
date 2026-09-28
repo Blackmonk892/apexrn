@@ -1,23 +1,20 @@
-import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native';
-// Reanimated is imported to fulfill the strict file structure requirement
-import Animated, { useAnimatedStyle, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
+import { useState, type ReactNode } from 'react';
+import { StyleSheet, View } from 'react-native';
 
 // ⚠️ IMPORTANT: Importing existing ApexRN components for composition!
-import { 
-  Dialog, 
-  DialogTrigger, 
-  DialogContent, 
-  DialogHeader, 
-  DialogFooter, 
-  DialogTitle, 
-  DialogDescription 
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription
 } from './dialog';
 import Button from './button';
 
 // Notice typography and spacing are imported here
-import { colors, borderWidths, spacing, typography } from '../lib/colors';
-import { cn } from '../lib/utils';
+import { spacing } from '../lib/colors';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -60,19 +57,12 @@ export interface AlertDialogProps {
   /**
    * The component that triggers the alert dialog to open.
    */
-  children?: React.ReactNode;
+  children?: ReactNode;
 }
-
-// ---------------------------------------------------------------------------
-// Design tokens
-// ---------------------------------------------------------------------------
-// Maintained for strict template compliance
-const SHADOW_OFFSET = 4;
 
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export default function AlertDialog({
   open,
@@ -119,8 +109,12 @@ export default function AlertDialog({
           {children}
         </DialogTrigger>
       )}
-      
-      <DialogContent onInteractOutside={handleInteractOutside}>
+
+      <DialogContent
+        onInteractOutside={handleInteractOutside}
+        accessibilityRole="alert"
+        accessibilityLabel={description ? `${title}. ${description}` : title}
+      >
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           {description ? (
@@ -164,7 +158,8 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   buttonWrapper: {
-    // Allows buttons to size naturally but prevents them from shrinking too much
-    minWidth: 100,
+    // Grow to share the row, but wrap below `minWidth` on small screens.
+    flexGrow: 1,
+    flexBasis: 100,
   }
 });

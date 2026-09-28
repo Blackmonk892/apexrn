@@ -1,5 +1,13 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, ViewProps, LayoutChangeEvent } from 'react-native';
+import { useEffect, useState } from 'react';
+import {
+  AccessibilityActionEvent,
+  StyleProp,
+  StyleSheet,
+  View,
+  ViewProps,
+  ViewStyle,
+  LayoutChangeEvent,
+} from 'react-native';
 import Animated, { 
   useAnimatedStyle, 
   useSharedValue, 
@@ -46,7 +54,7 @@ export interface SliderProps extends Omit<ViewProps, 'style'> {
    * @default false
    */
   disabled?: boolean;
-  style?: any;
+  style?: StyleProp<ViewStyle>;
 }
 
 // ---------------------------------------------------------------------------
@@ -71,16 +79,39 @@ export default function Slider({
 }: SliderProps) {
   const { colors } = useTheme();
   const [trackWidth, setTrackWidth] = useState(0);
-  const maxTravel = Math.max(0, trackWidth - THUMB_WIDTH);
-  
+  // Reserve the thumb's shadow offset so the thumb never overflows the track.
+  const maxTravel = Math.max(0, trackWidth - THUMB_WIDTH - SHADOW_OFFSET);
+
+  // Sanitized domain: degenerate configs (max <= min, non-finite, step <= 0)
+  // collapse to a harmless no-op instead of producing NaN values.
+  const range = max - min;
+  const validRange = Number.isFinite(range) && range > 0 ? range : 0;
+  const validStep = Number.isFinite(step) && step > 0 ? step : 0;
+
+  const clampToDomain = (raw: number) => {
+    if (!Number.isFinite(raw) || validRange <= 0) return min;
+    const clamped = Math.max(min, Math.min(raw, max));
+    if (validStep <= 0) return clamped;
+    return Math.max(min, Math.min(Math.round(clamped / validStep) * validStep, max));
+  };
+
+  const ratioFor = (v: number) =>
+    validRange > 0 ? (Math.max(min, Math.min(v, max)) - min) / validRange : 0;
+
   const translateX = useSharedValue(0);
-  const offset = useSharedValue(0);
-  
+  const gestureOffset = useSharedValue(0);
+  const maxTravelSV = useSharedValue(0);
+  const isDraggingSV = useSharedValue(false);
+
+  // Keep the worklet-visible travel distance in sync across rotation/resize.
   useEffect(() => {
-    if (trackWidth > 0) {
-      const clampedValue = Math.max(min, Math.min(value, max));
-      const ratio = (clampedValue - min) / (max - min);
-      translateX.value = withTiming(ratio * maxTravel, {
+    maxTravelSV.value = maxTravel;
+  }, [maxTravel, maxTravelSV]);
+
+  useEffect(() => {
+    // Don't fight an in-flight drag when the parent echoes values back.
+    if (trackWidth > 0 && !isDraggingSV.value) {
+      translateX.value = withTiming(ratioFor(value) * maxTravel, {
         duration: 150,
         easing: Easing.out(Easing.quad),
       });
@@ -92,31 +123,66 @@ export default function Slider({
   };
 
   const pan = Gesture.Pan()
-    .enabled(!disabled && trackWidth > 0)
+    .enabled(!disabled && trackWidth > 0 && validRange > 0)
     .onStart(() => {
-      offset.value = translateX.value;
+      isDraggingSV.value = true;
+      gestureOffset.value = translateX.value;
     })
     .onUpdate((event) => {
-      let nextX = offset.value + event.translationX;
-      nextX = Math.max(0, Math.min(nextX, maxTravel));
+      const travel = maxTravelSV.value;
+      let nextX = gestureOffset.value + event.translationX;
+      nextX = Math.max(0, Math.min(nextX, travel));
       translateX.value = nextX;
     })
     .onEnd(() => {
-      const currentRatio = translateX.value / maxTravel;
-      const rawValue = min + currentRatio * (max - min);
-      
-      const snappedValue = Math.round(rawValue / step) * step;
-      const finalValue = Math.max(min, Math.min(snappedValue, max));
-      
-      const finalRatio = (finalValue - min) / (max - min);
-      
-      translateX.value = withTiming(finalRatio * maxTravel, { 
+      isDraggingSV.value = false;
+      const travel = maxTravelSV.value;
+      if (travel <= 0 || validRange <= 0) return;
+      // Inline math: worklets cannot call the JS closures above.
+      const currentRatio = translateX.value / travel;
+      const rawValue = min + currentRatio * validRange;
+      let finalValue = Math.max(min, Math.min(rawValue, max));
+      if (validStep > 0) {
+        finalValue = Math.max(min, Math.min(Math.round(finalValue / validStep) * validStep, max));
+      }
+      const finalRatio = (finalValue - min) / validRange;
+
+      translateX.value = withTiming(finalRatio * travel, {
         duration: 100,
-        easing: Easing.out(Easing.quad) 
+        easing: Easing.out(Easing.quad)
       });
-      
+
       runOnJS(onValueChange)(finalValue);
     });
+
+  const tap = Gesture.Tap()
+    .enabled(!disabled && trackWidth > 0 && validRange > 0)
+    .onEnd((event) => {
+      const travel = maxTravelSV.value;
+      if (travel <= 0 || validRange <= 0) return;
+      // Tap-to-seek: center the thumb on the tap point (inline worklet math).
+      const x = Math.max(0, Math.min(event.x - THUMB_WIDTH / 2, travel));
+      translateX.value = withTiming(x, {
+        duration: 100,
+        easing: Easing.out(Easing.quad),
+      });
+      const rawValue = min + (x / travel) * validRange;
+      let finalValue = Math.max(min, Math.min(rawValue, max));
+      if (validStep > 0) {
+        finalValue = Math.max(min, Math.min(Math.round(finalValue / validStep) * validStep, max));
+      }
+      runOnJS(onValueChange)(finalValue);
+    });
+
+  const composedGestures = Gesture.Race(pan, tap);
+
+  const handleAccessibilityAction = (event: AccessibilityActionEvent) => {
+    if (disabled || validRange <= 0) return;
+    const delta = validStep > 0 ? validStep : validRange / 20;
+    const next =
+      event.nativeEvent.actionName === 'increment' ? value + delta : value - delta;
+    onValueChange(clampToDomain(next));
+  };
 
   const animatedThumbStyle = useAnimatedStyle(() => {
     return {
@@ -125,23 +191,25 @@ export default function Slider({
   });
 
   return (
-    <View 
-      style={cn(styles.container, style)} 
-      onLayout={handleLayout}
-      accessibilityRole="adjustable"
-      accessibilityValue={{ min, max, now: value }}
-      accessibilityState={{ disabled }}
-      {...props}
-    >
-      <View 
-        style={cn(
-          styles.trackLine,
-          { backgroundColor: colors.border },
-          disabled && { backgroundColor: colors.mutedForeground }
-        )} 
-      />
+    <GestureDetector gesture={composedGestures}>
+      <View
+        style={cn(styles.container, style)}
+        onLayout={handleLayout}
+        accessibilityRole="adjustable"
+        accessibilityValue={{ min, max, now: clampToDomain(value) }}
+        accessibilityState={{ disabled }}
+        accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
+        onAccessibilityAction={handleAccessibilityAction}
+        {...props}
+      >
+        <View
+          style={cn(
+            styles.trackLine,
+            { backgroundColor: colors.border },
+            disabled && { backgroundColor: colors.mutedForeground }
+          )}
+        />
 
-      <GestureDetector gesture={pan}>
         <Animated.View style={[styles.thumbWrapper, animatedThumbStyle]}>
           <BrutalSurface
             pressable={false}
@@ -153,8 +221,8 @@ export default function Slider({
             surfaceStyle={styles.thumbSurface}
           />
         </Animated.View>
-      </GestureDetector>
-    </View>
+      </View>
+    </GestureDetector>
   );
 }
 

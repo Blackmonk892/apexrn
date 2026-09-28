@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Layout from '../components/Layout';
 import { useShowcaseTheme } from '../context/ThemeContext';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@ui/components/dropdown_menu';
@@ -33,9 +33,9 @@ export default function DropdownScreen({ onBack }: { onBack: () => void }) {
         <Text style={[styles.label, { color: textColor }]}>CUSTOM TRIGGER (AVATAR)</Text>
         <DropdownMenu open={open2} onOpenChange={setOpen2}>
           <DropdownMenuTrigger asChild>
-            <View style={{ alignSelf: 'flex-start' }}>
+            <Pressable style={{ alignSelf: 'flex-start' }} accessibilityRole="button" accessibilityLabel="Open profile menu">
               <Avatar initials="JD" size="lg" withShadow />
-            </View>
+            </Pressable>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
             <DropdownMenuItem label="View Profile" />

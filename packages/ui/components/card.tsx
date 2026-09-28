@@ -1,5 +1,5 @@
-import React, { ReactNode } from 'react';
-import { StyleSheet, View, ViewStyle } from 'react-native';
+import type { ReactNode } from 'react';
+import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 
 import { borderWidths, spacing } from '../lib/colors';
 import { useTheme } from '../lib/theme';
@@ -19,19 +19,21 @@ export interface CardProps {
   /** If provided, the card becomes pressable with the press animation. */
   onPress?: () => void;
   /** Container style override. */
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
   /** Accessibility label (for pressable cards). */
   accessibilityLabel?: string;
+  /** Accessibility hint (for pressable cards). */
+  accessibilityHint?: string;
 }
 
 export interface CardHeaderProps {
   children: ReactNode;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
 }
 
 export interface CardFooterProps {
   children: ReactNode;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
 }
 
 // ---------------------------------------------------------------------------
@@ -72,6 +74,7 @@ export default function Card({
   onPress,
   style,
   accessibilityLabel,
+  accessibilityHint,
 }: CardProps) {
   const { colors } = useTheme();
 
@@ -102,6 +105,7 @@ export default function Card({
       onPress={onPress}
       accessibilityRole={isPressable ? 'button' : undefined}
       accessibilityLabel={accessibilityLabel}
+      accessibilityHint={isPressable ? accessibilityHint : undefined}
     >
       <View style={styles.content}>
         {children}

@@ -3,7 +3,7 @@ import { ApexRNProvider, useTheme as useApexTheme, ThemeMode } from '@ui/lib/the
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   return (
-    <ApexRNProvider defaultMode="light">
+    <ApexRNProvider defaultMode="system">
       {children}
     </ApexRNProvider>
   );

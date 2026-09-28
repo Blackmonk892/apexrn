@@ -1,5 +1,13 @@
-import React, { createContext, useContext, useEffect } from 'react';
-import { Pressable, StyleSheet, View, ViewProps, PressableProps } from 'react-native';
+import { createContext, useContext, useEffect, type ReactNode } from 'react';
+import {
+  Pressable,
+  PressableProps,
+  StyleProp,
+  StyleSheet,
+  View,
+  ViewProps,
+  ViewStyle,
+} from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -29,11 +37,10 @@ export interface RadioGroupProps extends ViewProps {
    * @default false
    */
   disabled?: boolean;
-  children?: React.ReactNode;
-  style?: any;
+  children?: ReactNode;
 }
 
-export interface RadioGroupItemProps extends Omit<PressableProps, 'onPress' | 'value'> {
+export interface RadioGroupItemProps extends Omit<PressableProps, 'onPress' | 'style'> {
   /**
    * The value of this specific radio item.
    */
@@ -43,6 +50,15 @@ export interface RadioGroupItemProps extends Omit<PressableProps, 'onPress' | 'v
    * @default false
    */
   disabled?: boolean;
+  /**
+   * Container style override. Function styles are not supported here.
+   */
+  style?: StyleProp<ViewStyle>;
+  /**
+   * Expands the touch target beyond the 24px visual circle.
+   * @default 12 (≈48px total target)
+   */
+  hitSlop?: PressableProps['hitSlop'];
 }
 
 interface RadioContextValue {
@@ -86,18 +102,25 @@ export function RadioGroup({
   );
 }
 
-export function RadioGroupItem({
-  value,
-  disabled = false,
-  style,
-  ...props
-}: RadioGroupItemProps) {
+export function RadioGroupItem(props: RadioGroupItemProps) {
   const context = useContext(RadioContext);
-  const { colors } = useTheme();
-  
+
   if (!context) {
     throw new Error('RadioGroupItem must be used within a RadioGroup');
   }
+
+  return <RadioGroupItemInner {...props} context={context} />;
+}
+
+function RadioGroupItemInner({
+  value,
+  disabled = false,
+  hitSlop = 12,
+  style,
+  context,
+  ...props
+}: RadioGroupItemProps & { context: RadioContextValue }) {
+  const { colors } = useTheme();
 
   const isSelected = context.value === value;
   const isDisabled = context.disabled || disabled;
@@ -142,7 +165,9 @@ export function RadioGroupItem({
       ]}
       accessibilityRole="radio"
       accessibilityState={{ checked: isSelected, disabled: isDisabled }}
+      accessibilityLabel={props.accessibilityLabel ?? `Option ${value}`}
       disabled={isDisabled}
+      hitSlop={hitSlop}
       {...props}
     >
       <AnimatedView
@@ -179,3 +204,5 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
 });
+
+export default RadioGroup;

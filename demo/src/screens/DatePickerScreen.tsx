@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Layout from '../components/Layout';
 import { useShowcaseTheme } from '../context/ThemeContext';
-import { DatePicker, DatePickerTrigger, DatePickerContent } from '@ui/components/datepicker';
+import { DatePicker, DatePickerTrigger, DatePickerContent, formatLocalDate } from '@ui/components/datepicker';
 
 export default function DatePickerScreen({ onBack }: { onBack: () => void }) {
   const { isDark } = useShowcaseTheme();
@@ -19,7 +19,7 @@ export default function DatePickerScreen({ onBack }: { onBack: () => void }) {
           <DatePickerContent />
         </DatePicker>
         <Text style={{ color: textColor, marginTop: 12 }}>
-          Selected Date: {date ? date.toISOString().split('T')[0] : 'None'}
+          Selected Date: {date ? formatLocalDate(date) : 'None'}
         </Text>
       </View>
     </Layout>

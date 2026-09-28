@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Layout from '../components/Layout';
 import { useShowcaseTheme } from '../context/ThemeContext';
@@ -8,6 +8,8 @@ import Button from '@ui/components/button';
 export default function DialogScreen({ onBack }: { onBack: () => void }) {
   const { isDark } = useShowcaseTheme();
   const textColor = isDark ? '#FFF' : '#000';
+
+  const [actionsOpen, setActionsOpen] = useState(false);
 
   return (
     <Layout title="DIALOG COMPONENT" onBack={onBack}>
@@ -28,7 +30,7 @@ export default function DialogScreen({ onBack }: { onBack: () => void }) {
 
       <View style={styles.section}>
         <Text style={[styles.label, { color: textColor }]}>WITH ACTIONS (FOOTER)</Text>
-        <Dialog>
+        <Dialog open={actionsOpen} onOpenChange={setActionsOpen}>
           <DialogTrigger asChild>
             <Button title="Open Action Dialog" variant="outline" />
           </DialogTrigger>
@@ -38,8 +40,8 @@ export default function DialogScreen({ onBack }: { onBack: () => void }) {
               <DialogDescription>Are you sure you want to delete this file? This action cannot be undone.</DialogDescription>
             </DialogHeader>
             <DialogFooter>
-              <Button title="CANCEL" variant="outline" />
-              <Button title="DELETE" variant="primary" />
+              <Button title="CANCEL" variant="outline" onPress={() => setActionsOpen(false)} />
+              <Button title="DELETE" variant="primary" onPress={() => setActionsOpen(false)} />
             </DialogFooter>
           </DialogContent>
         </Dialog>

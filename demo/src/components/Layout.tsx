@@ -1,5 +1,6 @@
 import React from 'react';
-import { StyleSheet, View, Text, ScrollView, Pressable } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useShowcaseTheme } from '../context/ThemeContext';
 
 interface LayoutProps {
@@ -13,28 +14,42 @@ export default function Layout({ title, children, onBack }: LayoutProps) {
   const currentStyles = isDark ? darkStyles : lightStyles;
 
   return (
-    <View style={[styles.root, currentStyles.root]}>
+    <SafeAreaView style={[styles.root, currentStyles.root]} edges={['top', 'bottom']}>
       {/* Top Header Bar */}
       <View style={[styles.header, currentStyles.header]}>
         <View style={styles.headerLeft}>
           {onBack && (
-            <Pressable onPress={onBack} style={styles.backButton}>
+            <Pressable
+              onPress={onBack}
+              style={styles.backButton}
+              accessibilityRole="button"
+              accessibilityLabel="Go back"
+              accessibilityHint="Returns to the component list"
+            >
               <Text style={currentStyles.text}>← BACK</Text>
             </Pressable>
           )}
           <Text style={[styles.headerTitle, currentStyles.text]}>{title}</Text>
         </View>
-        
+
         {/* Universal Switcher Button */}
-        <Pressable onPress={toggleTheme} style={styles.themeToggle}>
+        <Pressable
+          onPress={toggleTheme}
+          style={styles.themeToggle}
+          accessibilityRole="button"
+          accessibilityLabel={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
+        >
           <Text style={styles.toggleText}>{isDark ? '☀️ LIGHT' : '🌙 DARK'}</Text>
         </Pressable>
       </View>
 
-      <ScrollView contentContainerStyle={styles.container}>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
+      >
         {children}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -45,7 +60,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingTop: 60,
+    paddingTop: 12,
     paddingBottom: 16,
     borderBottomWidth: 3,
   },
@@ -76,7 +91,7 @@ const lightStyles = StyleSheet.create({
 });
 
 const darkStyles = StyleSheet.create({
-  root: { backgroundColor: '#121212' },
-  header: { backgroundColor: '#1E1E1E', borderBottomColor: '#FFFFFF' },
+  root: { backgroundColor: '#1A1A1A' },
+  header: { backgroundColor: '#2A2A2A', borderBottomColor: '#FFFFFF' },
   text: { color: '#FFFFFF' },
 });

@@ -1,5 +1,23 @@
-import React, { createContext, useContext, useState } from 'react';
-import { Pressable, StyleSheet, View, ViewProps } from 'react-native';
+import {
+  Children,
+  Fragment,
+  createContext,
+  isValidElement,
+  useContext,
+  useState,
+  type ReactElement,
+  type ReactNode,
+} from 'react';
+import {
+  Pressable,
+  ScrollView,
+  StyleProp,
+  StyleSheet,
+  TextInputProps,
+  View,
+  ViewProps,
+  ViewStyle,
+} from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
 import { borderWidths, spacing } from '../lib/colors';
@@ -16,6 +34,7 @@ import ListItem from './listitem';
 interface SelectContextState {
   value?: string;
   onValueChange: (value: string) => void;
+  open: boolean;
   setOpen: (open: boolean) => void;
 }
 
@@ -38,14 +57,18 @@ export interface SelectProps {
    * Callback fired when an option is selected.
    */
   onValueChange: (value: string) => void;
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
-export interface SelectTriggerProps extends ViewProps {
+export interface SelectTriggerProps extends Omit<TextInputProps, 'value' | 'editable' | 'onPress' | 'style'> {
   /**
    * Placeholder text to display when no value is selected.
    */
   placeholder?: string;
+  /**
+   * Style for the pressable wrapper.
+   */
+  style?: StyleProp<ViewStyle>;
 }
 
 export interface SelectContentProps extends ViewProps {
@@ -66,22 +89,48 @@ export interface SelectItemProps {
 // Components
 // ---------------------------------------------------------------------------
 
+/**
+ * Splits `children` into trigger vs. content slots. Matches by component
+ * identity, `displayName`, and function name (survives minification-safe
+ * renames less well, hence all three), and recurses into fragments.
+ */
+function splitSelectChildren(children: ReactNode) {
+  const triggerChildren: ReactNode[] = [];
+  const contentChildren: ReactNode[] = [];
+
+  const visit = (node: ReactNode) => {
+    Children.forEach(node, (child) => {
+      if (!isValidElement(child)) {
+        return;
+      }
+      if (child.type === Fragment) {
+        visit((child as ReactElement<{ children?: ReactNode }>).props.children);
+        return;
+      }
+      const type = child.type as { displayName?: string; name?: string };
+      if (
+        child.type === SelectContent ||
+        type?.displayName === 'SelectContent' ||
+        type?.name === 'SelectContent'
+      ) {
+        contentChildren.push(child);
+      } else {
+        triggerChildren.push(child);
+      }
+    });
+  };
+
+  visit(children);
+  return { triggerChildren, contentChildren };
+}
+
 export function Select({ value, onValueChange, children }: SelectProps) {
   const [open, setOpen] = useState(false);
 
-  const triggerChildren: React.ReactNode[] = [];
-  const contentChildren: React.ReactNode[] = [];
-
-  React.Children.forEach(children, (child) => {
-    if (React.isValidElement(child) && (child.type === SelectContent || (child.type as any)?.name === 'SelectContent')) {
-      contentChildren.push(child);
-    } else {
-      triggerChildren.push(child);
-    }
-  });
+  const { triggerChildren, contentChildren } = splitSelectChildren(children);
 
   return (
-    <SelectContext.Provider value={{ value, onValueChange, setOpen }}>
+    <SelectContext.Provider value={{ value, onValueChange, open, setOpen }}>
       {triggerChildren}
       <Sheet open={open} onOpenChange={setOpen}>
         {() => contentChildren}
@@ -90,8 +139,8 @@ export function Select({ value, onValueChange, children }: SelectProps) {
   );
 }
 
-export function SelectTrigger({ placeholder, style, ...props }: SelectTriggerProps) {
-  const { value, setOpen } = useSelectContext();
+export function SelectTrigger({ placeholder, style, onFocus, onBlur, ...props }: SelectTriggerProps) {
+  const { value, open, setOpen } = useSelectContext();
   const { colors } = useTheme();
 
   const handlePress = () => {
@@ -100,14 +149,14 @@ export function SelectTrigger({ placeholder, style, ...props }: SelectTriggerPro
 
   const trailingChevron = (
     <View style={styles.chevronContainer}>
-      <Svg 
-        width="16" 
-        height="16" 
-        viewBox="0 0 24 24" 
-        fill="none" 
-        stroke={colors.foreground} 
-        strokeWidth="4" 
-        strokeLinecap="square" 
+      <Svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke={colors.foreground}
+        strokeWidth="3"
+        strokeLinecap="square"
         strokeLinejoin="miter"
       >
         <Path d="M6 9l6 6 6-6" />
@@ -115,23 +164,24 @@ export function SelectTrigger({ placeholder, style, ...props }: SelectTriggerPro
     </View>
   );
 
-  const { onBlur, onFocus, ...inputProps } = props as any;
-
   return (
-    <Pressable 
-      onPress={handlePress} 
-      style={cn(styles.triggerWrapper, style)}
+    <Pressable
+      onPress={handlePress}
+      onFocus={onFocus}
+      onBlur={onBlur}
+      style={[styles.triggerWrapper, style]}
       accessibilityRole="combobox"
-      accessibilityState={{ expanded: false }}
+      accessibilityState={{ expanded: open }}
+      accessibilityLabel={value ? `Selected: ${value}` : (placeholder ?? 'Select an option')}
     >
       <Input
-        editable={false} 
+        editable={false}
         value={value || ''}
         placeholder={placeholder}
         pointerEvents="none"
         trailingIcon={trailingChevron}
         style={styles.inputReset}
-        {...inputProps}
+        {...props}
       />
     </Pressable>
   );
@@ -139,13 +189,14 @@ export function SelectTrigger({ placeholder, style, ...props }: SelectTriggerPro
 
 export function SelectContent({ sheetHeight = 350, children, style, ...props }: SelectContentProps) {
   return (
-    <SheetContent PointHeight={sheetHeight} style={style} {...props}>
-      <View style={styles.listContainer}>
+    <SheetContent sheetHeight={sheetHeight} style={style} {...props}>
+      <ScrollView style={styles.listScroll} contentContainerStyle={styles.listContainer}>
         {children}
-      </View>
+      </ScrollView>
     </SheetContent>
   );
 }
+SelectContent.displayName = 'SelectContent';
 
 export function SelectItem({ label, value }: SelectItemProps) {
   const { value: selectedValue, onValueChange, setOpen } = useSelectContext();
@@ -162,12 +213,12 @@ export function SelectItem({ label, value }: SelectItemProps) {
       title={label}
       onPress={handleSelect}
       style={cn(
-        styles.item, 
+        styles.item,
         { borderColor: colors.border },
         isSelected && { backgroundColor: colors.muted }
       )}
       accessibilityRole="menuitem"
-      accessibilityState={{ checked: isSelected }}
+      accessibilityState={{ selected: isSelected }}
     />
   );
 }
@@ -189,8 +240,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   listContainer: {
-    flex: 1,
+    flexGrow: 1,
     flexDirection: 'column',
+  },
+  listScroll: {
+    flex: 1,
+    width: '100%',
   },
   item: {
     borderBottomWidth: borderWidths.standard,

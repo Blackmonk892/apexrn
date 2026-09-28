@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { Pressable, StyleSheet, View, PressableProps } from 'react-native';
+import { useEffect } from 'react';
+import { Pressable, PressableProps, StyleSheet, View } from 'react-native';
 import Animated, { 
   useAnimatedStyle, 
   useSharedValue, 
@@ -10,7 +10,6 @@ import Animated, {
 
 import { borderWidths } from '../lib/colors';
 import { useTheme } from '../lib/theme';
-import { cn } from '../lib/utils';
 import BrutalSurface from './brutal_surface';
 
 // ---------------------------------------------------------------------------
@@ -38,8 +37,10 @@ export interface SwitchProps extends Omit<PressableProps, 'onPress' | 'onPressIn
 const SHADOW_OFFSET = 2;
 const TRACK_WIDTH = 56;
 const TRACK_HEIGHT = 32;
+const TRACK_PADDING = 2;
 const THUMB_SIZE = 24;
-const THUMB_TRAVEL_DISTANCE = 24;
+// Track inner width minus padding and thumb: 56 - 2*2 - 24 = 28.
+const THUMB_TRAVEL_DISTANCE = TRACK_WIDTH - TRACK_PADDING * 2 - THUMB_SIZE;
 
 // ---------------------------------------------------------------------------
 // Component
@@ -52,6 +53,7 @@ export default function Switch({
   onCheckedChange,
   disabled = false,
   style,
+  hitSlop = 8,
   ...props
 }: SwitchProps) {
   const { colors } = useTheme();
@@ -93,13 +95,16 @@ export default function Switch({
       style={[
         styles.track,
         { borderColor: colors.border },
-        disabled && { backgroundColor: colors.muted, borderColor: colors.mutedForeground },
         animatedTrackStyle,
+        // Disabled styling wins over the animated track color so a
+        // disabled-ON switch doesn't render a primary track + muted thumb.
+        disabled && { backgroundColor: colors.muted, borderColor: colors.mutedForeground },
         style,
       ]}
       accessibilityRole="switch"
       accessibilityState={{ checked, disabled }}
       disabled={disabled}
+      hitSlop={hitSlop}
       {...props}
     >
       <AnimatedView style={[styles.thumbContainer, animatedThumbStyle]}>
@@ -126,7 +131,7 @@ const styles = StyleSheet.create({
     borderWidth: borderWidths.standard,
     borderRadius: 0,
     justifyContent: 'center',
-    paddingHorizontal: 2,
+    paddingHorizontal: TRACK_PADDING,
   },
   thumbContainer: {
     position: 'relative',

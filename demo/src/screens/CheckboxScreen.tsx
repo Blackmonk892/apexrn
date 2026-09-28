@@ -16,7 +16,7 @@ export default function CheckboxScreen({ onBack }: { onBack: () => void }) {
       <View style={styles.section}>
         <Text style={[styles.label, { color: textColor }]}>DEFAULT (UNCHECKED)</Text>
         <View style={styles.row}>
-          <Checkbox checked={checked1} onCheckedChange={setChecked1} />
+          <Checkbox checked={checked1} onCheckedChange={setChecked1} accessibilityLabel="Accept terms and conditions" />
           <Text style={[styles.rowText, { color: textColor }]}>Accept terms and conditions</Text>
         </View>
       </View>
@@ -24,7 +24,7 @@ export default function CheckboxScreen({ onBack }: { onBack: () => void }) {
       <View style={styles.section}>
         <Text style={[styles.label, { color: textColor }]}>DEFAULT (CHECKED)</Text>
         <View style={styles.row}>
-          <Checkbox checked={checked2} onCheckedChange={setChecked2} />
+          <Checkbox checked={checked2} onCheckedChange={setChecked2} accessibilityLabel="Subscribe to newsletter" />
           <Text style={[styles.rowText, { color: textColor }]}>Subscribe to newsletter</Text>
         </View>
       </View>
@@ -32,7 +32,7 @@ export default function CheckboxScreen({ onBack }: { onBack: () => void }) {
       <View style={styles.section}>
         <Text style={[styles.label, { color: textColor }]}>DISABLED (UNCHECKED)</Text>
         <View style={styles.row}>
-          <Checkbox checked={false} onCheckedChange={() => {}} disabled />
+          <Checkbox checked={false} onCheckedChange={() => {}} disabled accessibilityLabel="Unavailable option" />
           <Text style={[styles.rowText, { color: isDark ? '#666' : '#999' }]}>Unavailable option</Text>
         </View>
       </View>
@@ -40,7 +40,7 @@ export default function CheckboxScreen({ onBack }: { onBack: () => void }) {
       <View style={styles.section}>
         <Text style={[styles.label, { color: textColor }]}>DISABLED (CHECKED)</Text>
         <View style={styles.row}>
-          <Checkbox checked={true} onCheckedChange={() => {}} disabled />
+          <Checkbox checked={true} onCheckedChange={() => {}} disabled accessibilityLabel="Mandatory option" />
           <Text style={[styles.rowText, { color: isDark ? '#666' : '#999' }]}>Mandatory option</Text>
         </View>
       </View>

@@ -1,5 +1,14 @@
-import React from 'react';
-import { Pressable, PressableProps, StyleSheet, Text, View } from 'react-native';
+import type { ReactNode } from 'react';
+import {
+  GestureResponderEvent,
+  Pressable,
+  PressableProps,
+  StyleProp,
+  StyleSheet,
+  Text,
+  View,
+  ViewStyle,
+} from 'react-native';
 import Animated, { useAnimatedStyle, interpolateColor } from 'react-native-reanimated';
 
 import { borderWidths, spacing, typography } from '../lib/colors';
@@ -22,17 +31,17 @@ export interface ListItemProps extends Omit<PressableProps, 'style'> {
   /**
    * Optional React node to display on the leading (left) edge.
    */
-  leading?: React.ReactNode;
+  leading?: ReactNode;
   /**
    * Optional React node to display on the trailing (right) edge.
    */
-  trailing?: React.ReactNode;
+  trailing?: ReactNode;
   /**
    * Disables the list item.
    * @default false
    */
   disabled?: boolean;
-  style?: any;
+  style?: StyleProp<ViewStyle>;
 }
 
 // ---------------------------------------------------------------------------
@@ -47,6 +56,7 @@ export default function ListItem({
   trailing,
   disabled = false,
   style,
+  onPress,
   onPressIn,
   onPressOut,
   ...props
@@ -59,12 +69,12 @@ export default function ListItem({
     haptics: false,
   });
 
-  const handlePressInInternal = (e: any) => {
+  const handlePressInInternal = (e: GestureResponderEvent) => {
     handlePressIn();
     onPressIn?.(e);
   };
 
-  const handlePressOutInternal = (e: any) => {
+  const handlePressOutInternal = (e: GestureResponderEvent) => {
     handlePressOut();
     onPressOut?.(e);
   };
@@ -79,19 +89,24 @@ export default function ListItem({
     };
   });
 
+  const isPressable = typeof onPress === 'function';
+
   return (
     <AnimatedPressable
+      onPress={onPress}
       onPressIn={handlePressInInternal}
       onPressOut={handlePressOutInternal}
       disabled={disabled}
       style={[
         styles.container,
         { borderColor: colors.border },
-        disabled && { backgroundColor: colors.muted },
         animatedBackgroundStyle,
+        // Disabled styling wins over the press animation so a disabled
+        // item never renders the enabled background.
+        disabled && { backgroundColor: colors.muted },
         style,
       ]}
-      accessibilityRole="button"
+      accessibilityRole={isPressable ? 'button' : 'none'}
       accessibilityState={{ disabled }}
       {...props}
     >
