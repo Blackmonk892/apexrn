@@ -2,5 +2,10 @@
   "name": "apexrn",
   "private": true,
   "version": "0.0.1",
-  "license": "MIT"
+  "license": "MIT",
+  "scripts": {
+    "registry:build": "node registry/build.mjs",
+    "cli:test": "node registry/build.mjs && npm test --prefix packages/cli",
+    "tokens:check": "node registry/check-contrast.mjs"
+  }
 }

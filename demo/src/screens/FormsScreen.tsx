@@ -1,16 +1,11 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Layout from '../components/Layout';
-import { useShowcaseTheme } from '../context/ThemeContext';
-import Input from '@ui/components/input';
-import Checkbox from '@ui/components/checkbox';
-import { RadioGroup, RadioGroupItem } from '@ui/components/radiogroup';
-import Switch from '@ui/components/switch';
-import Slider from '@ui/components/slider';
+import { Input, Checkbox, RadioGroup, RadioGroupItem, Switch, Slider, useTheme } from '@apexrn/ui';
 
 export default function FormsScreen({ onBack }: { onBack: () => void }) {
-  const { isDark } = useShowcaseTheme();
-  const textColor = isDark ? '#FFF' : '#000';
+  const { colors } = useTheme();
+  const textColor = colors.foreground;
   const [checked, setChecked] = useState(false);
   const [radioValue, setRadioValue] = useState('1');
   const [switchOn, setSwitchOn] = useState(false);

@@ -28,7 +28,7 @@ export interface SkeletonProps extends ViewProps {
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-export default function Skeleton({
+export function Skeleton({
   paused = false,
   style,
   ...props
@@ -110,3 +110,5 @@ const styles = StyleSheet.create({
     borderRadius: 0,
   },
 });
+
+export default Skeleton;

@@ -53,7 +53,7 @@ export interface CarouselProps<T = unknown> extends ViewProps {
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-export default function Carousel<T>({
+export function Carousel<T>({
   data,
   renderItem,
   keyExtractor,
@@ -177,3 +177,5 @@ const styles = StyleSheet.create({
     borderRadius: 0,
   },
 });
+
+export default Carousel;

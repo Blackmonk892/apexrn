@@ -1,16 +1,11 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Layout from '../components/Layout';
-import { useShowcaseTheme } from '../context/ThemeContext';
-import Avatar from '@ui/components/avatar';
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@ui/components/accordion';
-import Carousel from '@ui/components/carousel';
-import Marquee from '@ui/components/marquee';
-import ListItem from '@ui/components/listitem';
+import { Avatar, Accordion, AccordionItem, AccordionTrigger, AccordionContent, Carousel, Marquee, ListItem, useTheme } from '@apexrn/ui';
 
 export default function DisplayScreen({ onBack }: { onBack: () => void }) {
-  const { isDark } = useShowcaseTheme();
-  const textColor = isDark ? '#FFF' : '#000';
+  const { colors } = useTheme();
+  const textColor = colors.foreground;
 
   const carouselData = [
     { id: 1, color: '#FF5733' },
@@ -32,13 +27,13 @@ export default function DisplayScreen({ onBack }: { onBack: () => void }) {
         <AccordionItem value="item-1">
           <AccordionTrigger>What is Brutalism?</AccordionTrigger>
           <AccordionContent>
-            <Text style={{ color: '#000' }}>It is a style with an emphasis on materials, textures and construction, producing highly expressive forms.</Text>
+            <Text style={{ color: textColor }}>It is a style with an emphasis on materials, textures and construction, producing highly expressive forms.</Text>
           </AccordionContent>
         </AccordionItem>
         <AccordionItem value="item-2">
           <AccordionTrigger>Is it accessible?</AccordionTrigger>
           <AccordionContent>
-            <Text style={{ color: '#000' }}>Yes. It adheres to contrast and standard ARIA roles.</Text>
+            <Text style={{ color: textColor }}>Yes. It adheres to contrast and standard ARIA roles.</Text>
           </AccordionContent>
         </AccordionItem>
       </Accordion>
@@ -48,7 +43,7 @@ export default function DisplayScreen({ onBack }: { onBack: () => void }) {
         data={carouselData} 
         showIndicators 
         renderItem={({ item }) => (
-          <View style={[styles.carouselCard, { backgroundColor: item.color }]}>
+          <View style={[styles.carouselCard, { backgroundColor: item.color, borderColor: colors.border }]}>
             <Text style={styles.carouselText}>CARD {item.id}</Text>
           </View>
         )} 
@@ -67,6 +62,6 @@ export default function DisplayScreen({ onBack }: { onBack: () => void }) {
 const styles = StyleSheet.create({
   label: { fontSize: 12, fontWeight: '700', marginTop: 24, marginBottom: 12, letterSpacing: 1 },
   row: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 16 },
-  carouselCard: { height: 150, justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: '#000' },
+  carouselCard: { height: 150, justifyContent: 'center', alignItems: 'center', borderWidth: 2 },
   carouselText: { fontSize: 24, fontWeight: '900', color: '#FFF', textShadowColor: '#000', textShadowOffset: { width: 2, height: 2 }, textShadowRadius: 0 }
 });

@@ -42,7 +42,7 @@ export interface MarqueeProps extends ViewProps {
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-export default function Marquee({
+export function Marquee({
   text,
   speed = 60,
   divider = '   •   ',
@@ -184,3 +184,5 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
   },
 });
+
+export default Marquee;

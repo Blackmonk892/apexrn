@@ -23,7 +23,7 @@ import { spacing } from '../lib/colors';
 import { useTheme } from '../lib/theme';
 
 import Input from './input';
-import ListItem from './listitem';
+import ListItem from './list-item';
 import { Sheet, SheetContent } from './sheet';
 
 // ---------------------------------------------------------------------------

@@ -1,17 +1,11 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Layout from '../components/Layout';
-import { useShowcaseTheme } from '../context/ThemeContext';
-import Button from '@ui/components/button';
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@ui/components/dialog';
-import { Sheet, SheetContent } from '@ui/components/sheet';
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@ui/components/dropdown_menu';
-import { Select, SelectTrigger, SelectContent, SelectItem } from '@ui/components/select';
-import { DatePicker, DatePickerTrigger, DatePickerContent } from '@ui/components/datepicker';
+import { Button, Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, Sheet, SheetContent, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, Select, SelectTrigger, SelectContent, SelectItem, DatePicker, DatePickerTrigger, DatePickerContent, useTheme } from '@apexrn/ui';
 
 export default function OverlayScreen({ onBack }: { onBack: () => void }) {
-  const { isDark } = useShowcaseTheme();
-  const textColor = isDark ? '#FFF' : '#000';
+  const { colors } = useTheme();
+  const textColor = colors.foreground;
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -75,7 +69,7 @@ export default function OverlayScreen({ onBack }: { onBack: () => void }) {
       </View>
 
       <Text style={[styles.label, { color: textColor }]}>DATE PICKER</Text>
-      <DatePicker value={date} onChange={setDate}>
+      <DatePicker value={date} onValueChange={setDate}>
         <DatePickerTrigger placeholder="Select a date" />
         <DatePickerContent />
       </DatePicker>

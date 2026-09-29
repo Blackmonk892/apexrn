@@ -1,17 +1,11 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Layout from '../components/Layout';
-import { useShowcaseTheme } from '../context/ThemeContext';
-import Badge from '@ui/components/badge';
-import Progress from '@ui/components/progress';
-import Skeleton from '@ui/components/skeleton';
-import Alert from '@ui/components/alert';
-import Toast from '@ui/components/toast';
-import Button from '@ui/components/button';
+import { Badge, Progress, Skeleton, Alert, Toast, Button, useTheme } from '@apexrn/ui';
 
 export default function FeedbackScreen({ onBack }: { onBack: () => void }) {
-  const { isDark } = useShowcaseTheme();
-  const textColor = isDark ? '#FFF' : '#000';
+  const { colors } = useTheme();
+  const textColor = colors.foreground;
   const [toastVisible, setToastVisible] = useState(false);
 
   return (

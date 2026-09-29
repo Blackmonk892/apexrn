@@ -18,7 +18,7 @@ export interface SeparatorProps extends ViewProps {
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-export default function Separator({ 
+export function Separator({ 
   orientation = 'horizontal', 
   style, 
   ...props 
@@ -52,3 +52,5 @@ const styles = StyleSheet.create({
     width: borderWidths.standard,
   },
 });
+
+export default Separator;

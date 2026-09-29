@@ -57,7 +57,7 @@ export interface DatePickerProps {
   /**
    * Callback fired when a date is selected.
    */
-  onChange?: (date: Date) => void;
+  onValueChange?: (date: Date) => void;
   /**
    * The controlled open state of the calendar sheet. Omit to let DatePicker manage it.
    */
@@ -123,7 +123,7 @@ const GRID_ROWS = 6;
 export function DatePicker({
   value: valueProp,
   defaultValue = null,
-  onChange,
+  onValueChange,
   open: openProp,
   defaultOpen = false,
   onOpenChange,
@@ -137,8 +137,8 @@ export function DatePicker({
 
   const onDateChange = useCallback((date: Date) => {
     if (valueProp === undefined) setInternalDate(date);
-    onChange?.(date);
-  }, [valueProp, onChange]);
+    onValueChange?.(date);
+  }, [valueProp, onValueChange]);
 
   const setIsOpen = useCallback((next: boolean) => {
     if (openProp === undefined) setInternalOpen(next);

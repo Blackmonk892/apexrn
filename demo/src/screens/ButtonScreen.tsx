@@ -31,7 +31,7 @@ export default function ButtonScreen({ onBack }: { onBack: () => void }) {
       <Section title="Variants">
         <View style={styles.row}>
           {VARIANTS.map((v) => (
-            <Button key={v} title={v} variant={v} onPress={() => setPresses((n) => n + 1)} />
+            <Button key={v} variant={v} onPress={() => setPresses((n) => n + 1)}>{v}</Button>
           ))}
         </View>
         <Caption>{`Presses: ${presses}`}</Caption>

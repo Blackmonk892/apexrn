@@ -12,7 +12,7 @@ import Animated, { interpolateColor, useAnimatedStyle } from 'react-native-reani
 
 import { borderWidths, spacing, touchTarget, typography } from '../lib/colors';
 import { useTheme } from '../lib/theme';
-import { usePressPhysics } from '../lib/usePressPhysics';
+import { usePressPhysics } from '../lib/use-press-physics';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -47,7 +47,7 @@ export interface ListItemProps extends Omit<PressableProps, 'style'> {
 // ---------------------------------------------------------------------------
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-export default function ListItem({
+export function ListItem({
   title,
   description,
   leading,
@@ -179,3 +179,5 @@ const styles = StyleSheet.create({
   },
   description: {},
 });
+
+export default ListItem;

@@ -2,7 +2,7 @@ import { PressableProps, StyleProp, StyleSheet, Text, ViewStyle } from 'react-na
 
 import { shadowOffset, spacing, typography } from '../lib/colors';
 import { useTheme } from '../lib/theme';
-import BrutalSurface from './brutal_surface';
+import BrutalSurface from './brutal-surface';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -38,7 +38,7 @@ const FAB_SIZE = 56;
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-export default function FAB({
+export function FAB({
   label,
   children,
   disabled = false,
@@ -111,3 +111,5 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
   },
 });
+
+export default FAB;

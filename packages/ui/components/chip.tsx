@@ -12,7 +12,7 @@ import {
 import { borderWidths, spacing, touchTarget, typography } from '../lib/colors';
 import { CheckIcon, CloseIcon } from '../lib/icons';
 import { useTheme } from '../lib/theme';
-import BrutalSurface from './brutal_surface';
+import BrutalSurface from './brutal-surface';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -53,7 +53,7 @@ const CHIP_HEIGHT = 36;
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-export default function Chip({
+export function Chip({
   label,
   selected: selectedProp,
   defaultSelected,
@@ -212,3 +212,5 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
   },
 });
+
+export default Chip;

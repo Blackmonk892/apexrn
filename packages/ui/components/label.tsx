@@ -20,7 +20,7 @@ export interface LabelProps extends TextProps {
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-export default function Label({
+export function Label({
   disabled = false,
   style,
   children,
@@ -56,3 +56,5 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
   },
 });
+
+export default Label;

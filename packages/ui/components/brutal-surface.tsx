@@ -13,7 +13,7 @@ import Animated, { type AnimatedStyle } from 'react-native-reanimated';
 
 import { borderWidths } from '../lib/colors';
 import { useTheme } from '../lib/theme';
-import { usePressPhysics } from '../lib/usePressPhysics';
+import { usePressPhysics } from '../lib/use-press-physics';
 
 type BorderWidthKey = keyof typeof borderWidths;
 
@@ -49,7 +49,7 @@ const PRESS_ONLY_PROPS = ['onPress', 'onLongPress', 'onPressIn', 'onPressOut'] a
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-export default function BrutalSurface({
+export function BrutalSurface({
   children,
   offset = 4,
   borderWidth = 'heavy',
@@ -192,3 +192,5 @@ const styles = StyleSheet.create({
     borderRadius: 0,
   },
 });
+
+export default BrutalSurface;

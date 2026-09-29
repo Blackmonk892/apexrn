@@ -1,6 +1,6 @@
 import React from 'react';
 import { Platform } from 'react-native';
-import { ApexRNProvider, useTheme as useApexTheme, ThemeMode } from '@ui/lib/theme';
+import { ApexRNProvider, useTheme as useApexTheme, ThemeMode } from '@apexrn/ui';
 
 function initialMode(): ThemeMode {
   if (Platform.OS === 'web' && typeof window !== 'undefined') {

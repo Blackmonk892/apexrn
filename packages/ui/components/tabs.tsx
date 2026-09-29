@@ -22,7 +22,7 @@ import Animated, {
 import { borderWidths, spacing, touchTarget, typography } from '../lib/colors';
 import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
-import BrutalSurface from './brutal_surface';
+import BrutalSurface from './brutal-surface';
 
 // ---------------------------------------------------------------------------
 // Types & Context

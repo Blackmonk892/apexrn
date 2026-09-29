@@ -19,7 +19,7 @@ import {
 import { spacing, typography } from '../lib/colors';
 import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
-import BrutalSurface from './brutal_surface';
+import BrutalSurface from './brutal-surface';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -238,6 +238,7 @@ const InputOTP = forwardRef<TextInput, InputOTPProps>(({
 });
 
 InputOTP.displayName = 'InputOTP';
+export { InputOTP };
 export default InputOTP;
 
 // ---------------------------------------------------------------------------

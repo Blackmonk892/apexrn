@@ -11,7 +11,7 @@ import Animated, {
 
 import { borderWidths } from '../lib/colors';
 import { useTheme } from '../lib/theme';
-import BrutalSurface from './brutal_surface';
+import BrutalSurface from './brutal-surface';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -57,7 +57,7 @@ const THUMB_TRAVEL_DISTANCE =
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const AnimatedView = Animated.createAnimatedComponent(View);
 
-export default function Switch({
+export function Switch({
   checked: checkedProp,
   defaultChecked = false,
   onCheckedChange,
@@ -149,3 +149,5 @@ const styles = StyleSheet.create({
     height: THUMB_SIZE,
   },
 });
+
+export default Switch;

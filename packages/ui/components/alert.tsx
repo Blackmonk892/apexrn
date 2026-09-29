@@ -4,7 +4,7 @@ import { StyleSheet, Text, View, ViewProps } from 'react-native';
 import { borderWidths, spacing, typography } from '../lib/colors';
 import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
-import BrutalSurface from './brutal_surface';
+import BrutalSurface from './brutal-surface';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -48,7 +48,7 @@ const SEVERITY = {
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-export default function Alert({
+export function Alert({
   variant = 'default',
   title,
   description,
@@ -166,3 +166,5 @@ const styles = StyleSheet.create({
   },
   description: {},
 });
+
+export default Alert;

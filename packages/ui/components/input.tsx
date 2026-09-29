@@ -20,7 +20,7 @@ import {
 import { controlHeight, spacing, typography } from '../lib/colors';
 import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
-import BrutalSurface from './brutal_surface';
+import BrutalSurface from './brutal-surface';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -196,6 +196,7 @@ const Input = forwardRef<TextInput, InputProps>(({
 });
 
 Input.displayName = 'Input';
+export { Input };
 export default Input;
 
 // ---------------------------------------------------------------------------

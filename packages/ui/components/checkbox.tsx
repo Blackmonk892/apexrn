@@ -19,7 +19,7 @@ import Svg, { Path } from 'react-native-svg';
 import { touchTarget } from '../lib/colors';
 import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
-import BrutalSurface from './brutal_surface';
+import BrutalSurface from './brutal-surface';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -66,7 +66,7 @@ const CHECKBOX_SIZE = 24;
 // ---------------------------------------------------------------------------
 const AnimatedView = Animated.createAnimatedComponent(View);
 
-export default function Checkbox({
+export function Checkbox({
   checked: checkedProp,
   defaultChecked = false,
   onCheckedChange,
@@ -166,3 +166,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 });
+
+export default Checkbox;

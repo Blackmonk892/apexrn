@@ -43,7 +43,7 @@ export interface SearchBarProps
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-export default function SearchBar({
+export function SearchBar({
   value: valueProp,
   defaultValue = '',
   onValueChange,
@@ -161,3 +161,5 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
   },
 });
+
+export default SearchBar;

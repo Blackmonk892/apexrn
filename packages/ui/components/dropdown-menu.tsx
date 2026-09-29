@@ -35,8 +35,8 @@ import Animated, {
 
 import { borderWidths, spacing } from '../lib/colors';
 import { useTheme } from '../lib/theme';
-import BrutalSurface from './brutal_surface';
-import ListItem from './listitem';
+import BrutalSurface from './brutal-surface';
+import ListItem from './list-item';
 
 // ---------------------------------------------------------------------------
 // Types & Context

@@ -55,6 +55,7 @@ const Textarea = forwardRef<TextInput, TextareaProps>(({
 });
 
 Textarea.displayName = 'Textarea';
+export { Textarea };
 export default Textarea;
 
 // ---------------------------------------------------------------------------

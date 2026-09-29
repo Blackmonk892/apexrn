@@ -12,7 +12,7 @@ import Animated, {
 import { spacing, typography } from '../lib/colors';
 import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
-import BrutalSurface from './brutal_surface';
+import BrutalSurface from './brutal-surface';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -31,11 +31,11 @@ export interface ToastProps extends ViewProps {
    */
   description?: string;
   /**
-   * The visual style of the toast. `destructive` also adds an error glyph
-   * and is announced as an error, so it is never colour-only.
+   * The visual style of the toast. Status variants add a glyph and a spoken
+   * prefix ("Error.", "Success.", "Warning."), so they are never colour-only.
    * @default 'default'
    */
-  variant?: 'default' | 'primary' | 'destructive';
+  variant?: 'default' | 'primary' | 'destructive' | 'success' | 'warning';
   /**
    * Auto-dismiss duration in milliseconds.
    * @default 3000
@@ -55,10 +55,16 @@ const SHADOW_OFFSET = 4;
 const HIDDEN_Y = -150;
 const GLYPH_SIZE = 22;
 
+const STATUS = {
+  destructive: { glyph: '✕', spoken: 'Error. ' },
+  success: { glyph: '✓', spoken: 'Success. ' },
+  warning: { glyph: '!', spoken: 'Warning. ' },
+} as const;
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-export default function Toast({
+export function Toast({
   visible,
   title,
   description,
@@ -96,9 +102,17 @@ export default function Toast({
       surface: { backgroundColor: colors.destructive },
       text: { color: colors.destructiveForeground },
     },
+    success: {
+      surface: { backgroundColor: colors.success },
+      text: { color: colors.successForeground },
+    },
+    warning: {
+      surface: { backgroundColor: colors.warning },
+      text: { color: colors.warningForeground },
+    },
   };
   const activeVariant = variants[variant];
-  const isError = variant === 'destructive';
+  const status = variant in STATUS ? STATUS[variant as keyof typeof STATUS] : null;
 
   const notifyDismissed = useCallback(() => {
     onDismissRef.current();
@@ -141,7 +155,7 @@ export default function Toast({
     transform: [{ translateY: translateY.value }],
   }));
 
-  const label = `${isError ? 'Error. ' : ''}${title}${description ? `. ${description}` : ''}`;
+  const label = `${status?.spoken ?? ''}${title}${description ? `. ${description}` : ''}`;
 
   return (
     <Animated.View
@@ -162,13 +176,13 @@ export default function Toast({
         accessibilityHint="Double tap to dismiss this notification"
         surfaceStyle={cn(styles.surface, { padding: spacing.md }, activeVariant.surface)}
       >
-        {isError ? (
+        {status ? (
           <View
-            style={[styles.glyph, { backgroundColor: colors.destructiveForeground, marginRight: spacing.sm }]}
+            style={[styles.glyph, { backgroundColor: activeVariant.text.color, marginRight: spacing.sm }]}
             importantForAccessibility="no-hide-descendants"
             accessibilityElementsHidden
           >
-            <Text style={[styles.glyphText, { color: colors.destructive }]}>✕</Text>
+            <Text style={[styles.glyphText, { color: activeVariant.surface.backgroundColor }]}>{status.glyph}</Text>
           </View>
         ) : null}
         <View style={[styles.contentContainer, { gap: spacing.xs }]}>
@@ -233,3 +247,5 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
 });
+
+export default Toast;

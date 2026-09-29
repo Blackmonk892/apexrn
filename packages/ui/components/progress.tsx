@@ -9,7 +9,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { useTheme } from '../lib/theme';
-import BrutalSurface from './brutal_surface';
+import BrutalSurface from './brutal-surface';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -41,7 +41,7 @@ const PROGRESS_HEIGHT = 24;
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-export default function Progress({
+export function Progress({
   value = 0,
   max = 100,
   withShadow = false,
@@ -107,3 +107,5 @@ const styles = StyleSheet.create({
     borderRadius: 0,
   },
 });
+
+export default Progress;

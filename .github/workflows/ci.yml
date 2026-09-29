@@ -1,0 +1,38 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  demo:
+    # Linux on purpose: catches filename-case bugs that Windows/macOS hide.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: demo/package-lock.json
+      - run: npm ci
+        working-directory: demo
+      - run: npm run doctor
+        working-directory: demo
+      - run: npm run typecheck
+        working-directory: demo
+      - run: npx expo export --platform web
+        working-directory: demo
+
+  registry-and-cli:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node registry/check-contrast.mjs
+      - run: node registry/build.mjs
+      - run: npm test
+        working-directory: packages/cli

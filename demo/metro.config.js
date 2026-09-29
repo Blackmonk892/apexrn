@@ -12,14 +12,10 @@ config.watchFolders = [uiRoot];
 // so the lib and the demo always share ONE react / reanimated / svg.
 config.resolver.nodeModulesPaths = [path.resolve(projectRoot, 'node_modules')];
 
-// Aliases (extraNodeModules can't map scoped subpaths like @ui/lib/theme).
+// Alias (extraNodeModules can't map scoped subpaths).
 config.resolver.resolveRequest = (context, moduleName, platform) => {
   if (moduleName === '@apexrn/ui') {
     return context.resolveRequest(context, path.join(uiRoot, 'index.ts'), platform);
-  }
-  // Transitional: deep imports used by the old demo screens.
-  if (moduleName.startsWith('@ui/')) {
-    return context.resolveRequest(context, path.join(uiRoot, moduleName.slice(4)), platform);
   }
   return context.resolveRequest(context, moduleName, platform);
 };

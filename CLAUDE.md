@@ -25,6 +25,8 @@ apexrn/
 ├── apexrn-docs.md          # docs of the current (pre-rewrite) lib — partly overclaims, see plan §2.7
 ├── design/                 # AUDIT.md (diagnosis), REFACTOR.md (history)
 ├── packages/ui/            # @apexrn/ui — SOURCE ONLY (components/, lib/, index.ts)
+├── packages/cli/           # `apexrn` CLI (init/add/diff/list), zero deps, node --test
+├── registry/               # build.mjs + meta.json -> registry/public (generated, gitignored)
 ├── demo/                   # Expo app: ALL dependencies live here; hosts the Component Lab
 └── .claude/skills/         # vendored design skills (offline): frontend-design, ui-ux-pro-max
 ```
@@ -56,6 +58,9 @@ Read `apexrn-modify.md` before doing library work. It is the source of truth for
 - **Accessibility is part of the component:** role + state on interactive nodes, ≥44px hit targets (`hitSlop`), decorative subtrees hidden from assistive tech, overlays use `accessibilityViewIsModal` and close on Android back.
 - **Modals + gestures:** any `GestureDetector` rendered inside a React Native `Modal` needs its own `GestureHandlerRootView` inside that Modal (Android renders Modals in a separate window).
 - **Compound components throw a clear error** when used outside their parent; no `displayName`/`name` sniffing to detect slots.
+- **Registry:** components import shared code as `../lib/x` and siblings as `./x` (the CLI rewrites `../lib`). Every new component needs an entry in `registry/meta.json`; `node registry/build.mjs` fails otherwise.
+- **Exports:** every component is a *named* export (`export function Button`); single-component files also keep `export default`. Names must be unique across components (the CLI barrel does `export *`). Value controls use `value`/`defaultValue`/`onValueChange`; overlays `open`/`defaultOpen`/`onOpenChange`; status variants are `destructive | success | warning`.
+- **Contrast:** every foreground/background token pair must be ≥4.5:1 in both themes; `node registry/check-contrast.mjs` enforces it.
 - **File naming:** kebab-case, one spelling per component, no alias re-export files. Comments explain *why*, not what; no "template compliance" leftovers or dead constants.
 - Keep files focused: a component and its sub-parts in one file unless it genuinely exceeds ~300 lines.
 

@@ -4,7 +4,7 @@ import { StyleSheet, Text, ViewProps } from 'react-native';
 import { spacing, typography } from '../lib/colors';
 import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
-import BrutalSurface from './brutal_surface';
+import BrutalSurface from './brutal-surface';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -14,7 +14,7 @@ export interface BadgeProps extends ViewProps {
    * The visual style of the badge.
    * @default 'default'
    */
-  variant?: 'default' | 'primary' | 'outline' | 'accent';
+  variant?: 'default' | 'primary' | 'outline' | 'accent' | 'destructive' | 'success' | 'warning';
   /**
    * Toggles the subtle 2px hard shadow.
    * @default false
@@ -39,7 +39,7 @@ const SHADOW_OFFSET_SUBTLE = 2;
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-export default function Badge({
+export function Badge({
   variant = 'default',
   withShadow = false,
   label,
@@ -67,6 +67,19 @@ export default function Badge({
     accent: {
       surface: { backgroundColor: colors.accent },
       text: { color: colors.accentForeground },
+    },
+    // Status fills. The label text carries the meaning, so colour is never the only signal.
+    destructive: {
+      surface: { backgroundColor: colors.destructive },
+      text: { color: colors.destructiveForeground },
+    },
+    success: {
+      surface: { backgroundColor: colors.success },
+      text: { color: colors.successForeground },
+    },
+    warning: {
+      surface: { backgroundColor: colors.warning },
+      text: { color: colors.warningForeground },
     },
   };
 
@@ -127,3 +140,5 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
   },
 });
+
+export default Badge;

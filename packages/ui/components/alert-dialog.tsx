@@ -74,7 +74,7 @@ export interface AlertDialogProps {
 // Component
 // ---------------------------------------------------------------------------
 
-export default function AlertDialog({
+export function AlertDialog({
   open,
   defaultOpen = false,
   onOpenChange,
@@ -187,3 +187,5 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
   },
 });
+
+export default AlertDialog;

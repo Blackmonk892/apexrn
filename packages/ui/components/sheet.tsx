@@ -43,7 +43,9 @@ function useSheetContext() {
 
 export interface SheetProps {
   /**
-   * Controls the open/closed state of the bottom sheet.
+   * Controls the open/closed state of the bottom sheet. Controlled on purpose:
+   * the Modal owns Sheet's children, so there is nowhere to put a trigger.
+   * Keep `const [open, setOpen] = useState(false)` next to your own button.
    */
   open: boolean;
   /**
@@ -60,10 +62,6 @@ export interface SheetContentProps extends ViewProps {
    * @default 400
    */
   sheetHeight?: number;
-  /**
-   * @deprecated Use `sheetHeight` instead. Kept for backwards compatibility.
-   */
-  PointHeight?: number;
   children?: ReactNode;
 }
 
@@ -120,7 +118,6 @@ export function Sheet({ open, onOpenChange, children }: SheetProps) {
 
 export function SheetContent({
   sheetHeight,
-  PointHeight,
   children,
   style,
   ...props
@@ -129,7 +126,7 @@ export function SheetContent({
   const { colors } = useTheme();
   const reduceMotion = useReducedMotion();
   const { height: windowHeight } = useWindowDimensions();
-  const resolvedHeight = Math.min(sheetHeight ?? PointHeight ?? 400, windowHeight * MAX_HEIGHT_RATIO);
+  const resolvedHeight = Math.min(sheetHeight ?? 400, windowHeight * MAX_HEIGHT_RATIO);
   const ms = (duration: number) => (reduceMotion ? 0 : duration);
 
   // TranslateY: 0 is open/docked, resolvedHeight is fully closed/hidden

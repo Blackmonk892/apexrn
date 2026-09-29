@@ -1,21 +1,13 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { Button, Card, CardFooter, CardHeader, useTheme } from '@apexrn/ui';
+import { StyleSheet, View } from 'react-native';
+import { Button, Card, CardFooter, CardHeader, CardText } from '@apexrn/ui';
 import Layout from '../components/Layout';
 import Section, { Caption } from '../components/Section';
 
 const VARIANTS = ['default', 'primary', 'accent'] as const;
 
 export default function CardScreen({ onBack }: { onBack: () => void }) {
-  const { colors } = useTheme();
   const [taps, setTaps] = useState(0);
-
-  // Card does not tint its children, so each variant pairs with its own foreground.
-  const foreground = {
-    default: colors.foreground,
-    primary: colors.primaryForeground,
-    accent: colors.accentForeground,
-  };
 
   return (
     <Layout title="CARD" onBack={onBack}>
@@ -23,10 +15,8 @@ export default function CardScreen({ onBack }: { onBack: () => void }) {
         <View style={styles.stack}>
           {VARIANTS.map((v) => (
             <Card key={v} variant={v}>
-              <Text style={[styles.title, { color: foreground[v] }]}>{v} card</Text>
-              <Text style={[styles.body, { color: foreground[v] }]}>
-                Thick border, hard shadow, flat fill.
-              </Text>
+              <CardText tone="title">{v} card</CardText>
+              <CardText style={styles.gap}>Thick border, hard shadow, flat fill.</CardText>
             </Card>
           ))}
         </View>
@@ -35,10 +25,10 @@ export default function CardScreen({ onBack }: { onBack: () => void }) {
       <Section title="Composed" note="CardHeader and CardFooter run edge to edge with their own dividers.">
         <Card>
           <CardHeader>
-            <Text style={[styles.title, { color: colors.foreground }]}>Pro plan</Text>
+            <CardText tone="title">Pro plan</CardText>
           </CardHeader>
-          <Text style={[styles.price, { color: colors.foreground }]}>$9 / month</Text>
-          <Text style={[styles.body, { color: colors.mutedForeground }]}>Unlimited projects and priority support.</Text>
+          <CardText tone="title" style={styles.price}>$9 / month</CardText>
+          <CardText tone="muted" style={styles.gap}>Unlimited projects and priority support.</CardText>
           <CardFooter>
             <Button title="Upgrade" variant="primary" />
           </CardFooter>
@@ -47,8 +37,8 @@ export default function CardScreen({ onBack }: { onBack: () => void }) {
 
       <Section title="Pressable" note="Passing onPress turns the card into a button with press physics.">
         <Card variant="accent" onPress={() => setTaps((n) => n + 1)} accessibilityLabel="Open release notes" accessibilityHint="Opens the release notes">
-          <Text style={[styles.title, { color: colors.accentForeground }]}>Release notes</Text>
-          <Text style={[styles.body, { color: colors.accentForeground }]}>See what changed in 2.0.</Text>
+          <CardText tone="title">Release notes</CardText>
+          <CardText style={styles.gap}>See what changed in 2.0.</CardText>
         </Card>
         <Caption>{`Taps: ${taps}`}</Caption>
       </Section>
@@ -56,9 +46,7 @@ export default function CardScreen({ onBack }: { onBack: () => void }) {
       <Section title="Edge cases">
         <View style={styles.narrow}>
           <Card>
-            <Text style={[styles.title, { color: colors.foreground }]}>
-              A card title that is far too long for a narrow container
-            </Text>
+            <CardText tone="title">A card title that is far too long for a narrow container</CardText>
           </Card>
         </View>
         <Caption>Text wraps inside a 220pt container.</Caption>
@@ -69,8 +57,7 @@ export default function CardScreen({ onBack }: { onBack: () => void }) {
 
 const styles = StyleSheet.create({
   stack: { gap: 20, paddingBottom: 4 },
-  title: { fontSize: 18, fontWeight: '900', textTransform: 'uppercase' },
-  body: { fontSize: 14, marginTop: 6 },
-  price: { fontSize: 24, fontWeight: '900' },
+  gap: { marginTop: 6 },
+  price: { fontSize: 24 },
   narrow: { width: 220 },
 });

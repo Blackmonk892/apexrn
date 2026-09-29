@@ -81,3 +81,7 @@ coverage/
 .DS_Store
 Thumbs.db
 *.pem
+# ==========================
+# Generated registry (node registry/build.mjs)
+# ==========================
+registry/public/

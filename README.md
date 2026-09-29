@@ -95,65 +95,59 @@ ApexRN prioritizes:
 </table>
 
 
-* Buttons
-* Cards
-* Inputs
-* Textareas
-* Badges
-* Chips
-* Checkboxes
-* Switches
-* Radio Groups
-* Alerts
-* Dialogs
-* Bottom Sheets
-* Toasts
-* Avatars
-* Progress Indicators
-* Loading States
-* Skeletons
-* Typography
-* Layout utilities
-* Theme Provider
-* Design Tokens
-
-> More components are added regularly.
+**36 components:** Accordion, Alert, Alert Dialog, App Bar, Avatar, Badge, Bottom Nav, Button, Card, Carousel, Checkbox, Chip, Date Picker, Dialog, Drawer, Dropdown Menu, FAB, Input, Input OTP, Label, List Item, Marquee, Progress, Radio Group, Search Bar, Select, Separator, Sheet, Skeleton, Slider, Switch, Tabs, Textarea, Toast, plus the `BrutalSurface` primitive and a light/dark theme with design tokens.
 
 ---
 
 ## Installation
 
-```bash
-npm install apexrn
-```
-
-or
+ApexRN works like shadcn/ui: a CLI **copies component source into your app**. You own the code and edit it freely. There is no runtime package to depend on.
 
 ```bash
-pnpm add apexrn
+# in an Expo project
+npx apexrn init            # writes apexrn.json, copies the theme + tokens
+npx apexrn add button card dialog
 ```
 
-or
+- Dependencies between components (and the shared `lib` files) are added automatically.
+- Peer packages (reanimated, worklets, gesture-handler, svg, haptics) are installed with `npx expo install` so versions match your Expo SDK.
+- `npx apexrn list` shows everything available, `npx apexrn diff button` shows how your copy differs from upstream, and `npx apexrn add button --overwrite` replaces it.
+- Files you already have are never overwritten unless you name them with `--overwrite`; shared files (tokens, `brutal-surface`) are never overwritten as a side effect.
 
-```bash
-bun add apexrn
-```
+Requires Expo (SDK 57 is what the components are tested against) and Node 18+.
 
 ---
 
 ## Basic Usage
 
+Wrap your app once:
+
 ```tsx
-import { Button } from "apexrn";
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { ApexRNProvider } from './src/lib/apexrn/theme';
 
 export default function App() {
   return (
-    <Button onPress={() => console.log("Pressed")}>
-      Hello ApexRN
-    </Button>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ApexRNProvider defaultMode="system">{/* your app */}</ApexRNProvider>
+    </GestureHandlerRootView>
   );
 }
 ```
+
+Then use what you added. The CLI keeps a generated barrel, so one import reaches everything installed:
+
+```tsx
+import { Button, Card, CardText } from './src/components/apexrn';
+
+<Button variant="primary" onPress={() => console.log('Pressed')}>Hello ApexRN</Button>
+```
+
+Want a notification? Wrap the app in `<Toaster>` and call `toast('Saved')` (or `toast.success(...)`, `toast.error(...)`) from anywhere.
+
+**Full usage for every component, with copy-paste examples: [docs/components.md](docs/components.md).**
+
+AppBar, Drawer and BottomNav take safe-area insets as props (`topInset` / `bottomInset`); pass them from `useSafeAreaInsets()`.
 
 ---
 
@@ -178,28 +172,14 @@ ApexRN uses a token-based design system.
 Customize:
 
 * Colors
-* Border Radius
 * Shadows
 * Typography
 * Spacing
 * Animation
-* Component Variants
 
-Example:
+Everything visual lives in one file you own, `lib/apexrn/colors.ts` (colors for light and dark, spacing, typography, border widths, shadow offsets, motion). Edit the tokens and every component follows. Components read colors only through `useTheme().colors`.
 
-```tsx
-<ThemeProvider
-  theme={{
-    colors: {
-      primary: "#FFDD00",
-      background: "#FFFFFF",
-      foreground: "#000000",
-    },
-  }}
->
-  <App />
-</ThemeProvider>
-```
+Use `style` to change a component's outer wrapper; some components expose named props for inner parts (for example `inputStyle`, `surfaceStyle`).
 
 ---
 
@@ -218,18 +198,17 @@ The library embraces:
 
 ---
 
+## Status
+
+Components are verified in Expo Go; a full Android + iOS + screen-reader pass is tracked in `shipping.md`. The registry and CLI are built and tested locally but not published yet.
+
 ## Roadmap
 
-* Component Registry
-* CLI
-* Theme Generator
-* Icon Package
-* Documentation Site
-* Animation Presets
-* Dark Mode
-* Figma Kit
-* More Components
-* Accessibility Improvements
+* Hosted registry and published CLI
+* Documentation site
+* Raw-brutalist theme preset
+* Popover / Tooltip, Segmented control, Stepper, Rating
+* Figma kit
 
 ---
 
@@ -245,7 +224,7 @@ You can help by:
 * Fixing issues
 * Building new features
 
-Please open an issue before making large architectural changes.
+Please open an issue before making large architectural changes. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 

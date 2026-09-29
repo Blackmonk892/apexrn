@@ -3,7 +3,7 @@ import { Image, StyleSheet, Text, View, ViewProps } from 'react-native';
 
 import { shadowOffset, typography } from '../lib/colors';
 import { useTheme } from '../lib/theme';
-import BrutalSurface from './brutal_surface';
+import BrutalSurface from './brutal-surface';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -49,7 +49,7 @@ const SHADOW_OFFSETS = {
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-export default function Avatar({
+export function Avatar({
   src,
   initials,
   size = 'md',
@@ -129,3 +129,5 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
 });
+
+export default Avatar;

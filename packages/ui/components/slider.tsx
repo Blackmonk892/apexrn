@@ -21,7 +21,7 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { borderWidths, spacing, touchTarget } from '../lib/colors';
 import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
-import BrutalSurface from './brutal_surface';
+import BrutalSurface from './brutal-surface';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -79,7 +79,7 @@ const TRACK_HEIGHT = borderWidths.heavy;
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-export default function Slider({
+export function Slider({
   value: valueProp,
   defaultValue,
   onValueChange,
@@ -307,3 +307,5 @@ const styles = StyleSheet.create({
     height: THUMB_HEIGHT,
   },
 });
+
+export default Slider;

@@ -1,17 +1,11 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Layout from '../components/Layout';
-import { useShowcaseTheme } from '../context/ThemeContext';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@ui/components/tabs';
-import Separator from '@ui/components/separator';
-import FAB from '@ui/components/floating_action_button';
-import Label from '@ui/components/label';
-import InputOTP from '@ui/components/input_otp';
-import Textarea from '@ui/components/textarea';
+import { Tabs, TabsList, TabsTrigger, TabsContent, Separator, FAB, Label, InputOTP, Textarea, useTheme } from '@apexrn/ui';
 
 export default function NavigationScreen({ onBack }: { onBack: () => void }) {
-  const { isDark } = useShowcaseTheme();
-  const textColor = isDark ? '#FFF' : '#000';
+  const { colors } = useTheme();
+  const textColor = colors.foreground;
 
   const [tabValue, setTabValue] = useState('tab1');
   const [otp, setOtp] = useState('');

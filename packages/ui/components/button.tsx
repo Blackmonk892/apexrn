@@ -12,7 +12,7 @@ import {
 import { controlHeight, spacing, touchTarget, typography } from '../lib/colors';
 import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
-import BrutalSurface from './brutal_surface';
+import BrutalSurface from './brutal-surface';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -22,8 +22,10 @@ type Variant = 'default' | 'primary' | 'outline' | 'destructive';
 type Size = 'sm' | 'md' | 'lg';
 
 export interface ButtonProps {
-  /** Button label text. */
-  title: string;
+  /** Button label. `<Button>Save</Button>` and `<Button title="Save" />` are equivalent; children win. */
+  children?: ReactNode;
+  /** Label as a prop. Use this or `children`. */
+  title?: string;
   /** Press handler. */
   onPress?: (e: GestureResponderEvent) => void;
   /** Visual variant. @default 'default' */
@@ -40,7 +42,7 @@ export interface ButtonProps {
   iconPosition?: 'left' | 'right';
   /** Outer wrapper style. */
   style?: StyleProp<ViewStyle>;
-  /** Accessibility label (falls back to title). */
+  /** Accessibility label (falls back to the label text). */
   accessibilityLabel?: string;
   /** Accessibility hint. */
   accessibilityHint?: string;
@@ -52,7 +54,8 @@ const SHADOW_OFFSET = 4;
 // Component
 // ---------------------------------------------------------------------------
 
-export default function Button({
+export function Button({
+  children,
   title,
   onPress,
   variant = 'default',
@@ -66,6 +69,7 @@ export default function Button({
   accessibilityHint,
 }: ButtonProps) {
   const { colors } = useTheme();
+  const label = children ?? title;
 
   // Variants as data. Resolved per render so theme changes apply.
   const variants: Record<Variant, { bg: string; fg: string; hasShadow: boolean }> = {
@@ -108,7 +112,7 @@ export default function Button({
       onPress={onPress}
       hitSlop={Math.max(0, Math.ceil((touchTarget - height) / 2))}
       accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel ?? title}
+      accessibilityLabel={accessibilityLabel ?? (typeof label === 'string' || typeof label === 'number' ? String(label) : undefined)}
       accessibilityHint={accessibilityHint}
       accessibilityState={{ disabled: disabled || loading, busy: loading }}
       aria-disabled={disabled || loading}
@@ -125,7 +129,7 @@ export default function Button({
           numberOfLines={1}
           maxFontSizeMultiplier={1.3}
         >
-          {title}
+          {label}
         </Text>
         {icon && iconPosition === 'right' ? (
           <View style={{ marginLeft: spacing.sm }} importantForAccessibility="no-hide-descendants">
@@ -172,3 +176,5 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
 });
+
+export default Button;

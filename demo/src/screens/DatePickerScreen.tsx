@@ -13,7 +13,7 @@ export default function DatePickerScreen({ onBack }: { onBack: () => void }) {
       <Section title="Controlled" note="value + onChange. Pick a day, then confirm. Reopening returns to the selected month.">
         <View>
           <Label>Delivery date</Label>
-          <DatePicker value={date} onChange={setDate}>
+          <DatePicker value={date} onValueChange={setDate}>
             <DatePickerTrigger placeholder="Select a date" />
             <DatePickerContent />
           </DatePicker>
@@ -22,7 +22,7 @@ export default function DatePickerScreen({ onBack }: { onBack: () => void }) {
       </Section>
 
       <Section title="Uncontrolled, preselected" note="defaultValue opens on that month.">
-        <DatePicker defaultValue={new Date(2026, 1, 28)} onChange={(d) => setPicked(formatLocalDate(d))}>
+        <DatePicker defaultValue={new Date(2026, 1, 28)} onValueChange={(d) => setPicked(formatLocalDate(d))}>
           <DatePickerTrigger placeholder="Select a date" />
           <DatePickerContent />
         </DatePicker>

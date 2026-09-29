@@ -4,7 +4,7 @@ import { Badge, BrutalSurface, useTheme } from '@apexrn/ui';
 import Layout from '../components/Layout';
 import Section, { Caption } from '../components/Section';
 
-const VARIANTS = ['default', 'primary', 'outline', 'accent'] as const;
+const VARIANTS = ['default', 'primary', 'outline', 'accent', 'destructive', 'success', 'warning'] as const;
 
 export default function BadgeScreen({ onBack }: { onBack: () => void }) {
   const { colors } = useTheme();
