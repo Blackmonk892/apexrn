@@ -200,6 +200,8 @@ The library embraces:
 
 ## Status
 
+See [docs/releasing.md](docs/releasing.md) for exactly what is verified, what is not, and the steps to a 0.1.0 release.
+
 Components are verified in Expo Go; a full Android + iOS + screen-reader pass is tracked in `shipping.md`. The registry and CLI are built and tested locally but not published yet.
 
 ## Roadmap

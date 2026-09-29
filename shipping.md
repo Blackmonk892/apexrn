@@ -2,9 +2,11 @@
 
 Goal: ship `@apexrn/ui` the way shadcn/ui ships: a CLI that **copies component source into the user's app** (`npx apexrn add button`), backed by a static registry. Optional second path: an npm package.
 
+**Release readiness summary and exact steps: [docs/releasing.md](docs/releasing.md).** Verdict as of 2026-09-30: ready to test for release, not ready to ship.
+
 Ship-prep update: phases 2 (renames), 4 (registry), 5 (CLI, tested locally) and the docs/licence files of 7 are done. NOT done and NOT published: device verification (phase 1), component tests, hosted registry, npm publish, e2e on a real `create-expo-app` on macOS/Linux.
 
-Status as of 2026-09-29: 36 components (31 reworked + AppBar, Drawer, BottomNav, SearchBar, Chip) plus `lib/icons`. Everything is web-checked only. Nothing is committed.
+Status as of 2026-09-29: 36 components (31 reworked + AppBar, Drawer, BottomNav, SearchBar, Chip) plus `lib/icons`. Components were tested by hand in Expo Go (OS not recorded) and the new variants were checked on web; Android + iOS are not both verified. Nothing is committed.
 
 Legend: `[ ]` todo, `[x]` done. Do the phases in order; each phase blocks the next.
 

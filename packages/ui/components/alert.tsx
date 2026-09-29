@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, Text, View, ViewProps } from 'react-native';
 
-import { borderWidths, spacing, typography } from '../lib/colors';
+import { spacing, typography } from '../lib/colors';
 import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
 import BrutalSurface from './brutal-surface';
@@ -34,7 +34,6 @@ export interface AlertProps extends ViewProps {
 // Design tokens
 // ---------------------------------------------------------------------------
 const SHADOW_OFFSET = 4;
-const LEFT_BORDER_WIDTH = 8;
 const GLYPH_SIZE = 22;
 
 // Severity is never colour-only: each variant has its own glyph and spoken prefix.
@@ -58,34 +57,25 @@ export function Alert({
 }: AlertProps) {
   const { colors } = useTheme();
 
-  const variantColors = {
-    default: colors.foreground,
-    destructive: colors.destructive,
-    warning: colors.warning,
-    success: colors.success,
+  // Same recipe as Toast and Badge: status variants are a flat fill with its
+  // matching foreground; default stays the plain surface. No side stripe, so
+  // the box reads as one block like Button and Card.
+  const tones = {
+    default: { bg: colors.background, fg: colors.foreground },
+    destructive: { bg: colors.destructive, fg: colors.destructiveForeground },
+    warning: { bg: colors.warning, fg: colors.warningForeground },
+    success: { bg: colors.success, fg: colors.successForeground },
   };
-
-  const activeColor = variantColors[variant];
+  const { bg, fg } = tones[variant];
   const severity = SEVERITY[variant];
   const announcement = `${severity.spoken}${description ? `${title}. ${description}` : title}`;
-  const glyphForeground = {
-    default: colors.background,
-    destructive: colors.destructiveForeground,
-    warning: colors.warningForeground,
-    success: colors.successForeground,
-  }[variant];
 
   return (
     <BrutalSurface
       style={cn(styles.container, style)}
       surfaceStyle={[
         styles.surface,
-        {
-          padding: spacing.md,
-          backgroundColor: colors.background,
-          borderColor: colors.border,
-          borderLeftColor: activeColor,
-        },
+        { padding: spacing.md, backgroundColor: bg, borderColor: colors.border },
       ]}
       offset={SHADOW_OFFSET}
       borderWidth="heavy"
@@ -100,15 +90,15 @@ export function Alert({
         importantForAccessibility="no-hide-descendants"
       >
         {icon ?? (
-          <View style={[styles.glyph, { backgroundColor: activeColor }]}>
-            <Text style={[styles.glyphText, { color: glyphForeground }]}>{severity.glyph}</Text>
+          <View style={[styles.glyph, { backgroundColor: fg }]}>
+            <Text style={[styles.glyphText, { color: bg }]}>{severity.glyph}</Text>
           </View>
         )}
       </View>
 
       <View style={[styles.contentContainer, { gap: spacing.xs }]}>
         <Text
-          style={[styles.title, { fontSize: typography.sm, color: colors.foreground }]}
+          style={[styles.title, { fontSize: typography.sm, color: fg }]}
           numberOfLines={2}
           maxFontSizeMultiplier={1.3}
         >
@@ -116,7 +106,8 @@ export function Alert({
         </Text>
         {description ? (
           <Text
-            style={[styles.description, { fontSize: typography.sm, color: colors.mutedForeground }]}
+            // Full foreground, not mutedForeground or a fade: both drop below 4.5:1 on the coloured fills.
+            style={[styles.description, { fontSize: typography.sm, color: fg }]}
             maxFontSizeMultiplier={1.3}
           >
             {description}
@@ -137,8 +128,6 @@ const styles = StyleSheet.create({
   surface: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    borderWidth: borderWidths.heavy,
-    borderLeftWidth: LEFT_BORDER_WIDTH,
     borderRadius: 0,
   },
   iconContainer: {

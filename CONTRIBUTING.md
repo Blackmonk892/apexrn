@@ -37,6 +37,8 @@ node registry/check-contrast.mjs && node registry/build.mjs && (cd packages/cli 
 
 `registry/build.mjs` fails if a relative import points at nothing or a component has no description, so a broken dependency cannot ship.
 
+Release process and current readiness: [docs/releasing.md](docs/releasing.md).
+
 ## The CLI and registry
 
 - `registry/build.mjs` generates `registry/public/` from `packages/ui`. Never edit the output.
