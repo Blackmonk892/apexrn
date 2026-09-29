@@ -1,46 +1,76 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { Button, Card, CardFooter, CardHeader, useTheme } from '@apexrn/ui';
 import Layout from '../components/Layout';
-import { useShowcaseTheme } from '../context/ThemeContext';
-import Card, { CardHeader, CardFooter } from '@ui/components/card';
-import Button from '@ui/components/button';
+import Section, { Caption } from '../components/Section';
+
+const VARIANTS = ['default', 'primary', 'accent'] as const;
 
 export default function CardScreen({ onBack }: { onBack: () => void }) {
-  const { isDark } = useShowcaseTheme();
-  const textColor = isDark ? '#FFF' : '#000';
+  const { colors } = useTheme();
+  const [taps, setTaps] = useState(0);
+
+  // Card does not tint its children, so each variant pairs with its own foreground.
+  const foreground = {
+    default: colors.foreground,
+    primary: colors.primaryForeground,
+    accent: colors.accentForeground,
+  };
 
   return (
-    <Layout title="CARD COMPONENT" onBack={onBack}>
-      <Text style={[styles.label, { color: textColor }]}>DEFAULT CARD</Text>
-      <Card>
-        <Text style={[styles.cardTitle, { color: '#000' }]}>CARD TITLE</Text>
-        <Text style={[styles.cardBody, { color: '#000' }]}>This is a default card with thick borders and a hard shadow.</Text>
-      </Card>
-
-      <Text style={[styles.label, { color: textColor }]}>PRIMARY CARD</Text>
-      <Card variant="primary">
-        <Text style={[styles.cardTitle, { color: '#FFF' }]}>PRIMARY CARD</Text>
-        <Text style={[styles.cardBody, { color: '#FFF' }]}>Bold red background with white text.</Text>
-      </Card>
-
-      <Text style={[styles.label, { color: textColor }]}>COMPOSED CARD</Text>
-      <Card>
-        <CardHeader>
-          <Text style={[styles.cardTitle, { color: '#000' }]}>PRICING PLAN</Text>
-        </CardHeader>
-        <View style={{ padding: 16 }}>
-          <Text style={{ fontSize: 24, fontWeight: '900', color: '#000' }}>$9/mo</Text>
+    <Layout title="CARD" onBack={onBack}>
+      <Section title="Variants">
+        <View style={styles.stack}>
+          {VARIANTS.map((v) => (
+            <Card key={v} variant={v}>
+              <Text style={[styles.title, { color: foreground[v] }]}>{v} card</Text>
+              <Text style={[styles.body, { color: foreground[v] }]}>
+                Thick border, hard shadow, flat fill.
+              </Text>
+            </Card>
+          ))}
         </View>
-        <CardFooter>
-          <Button title="Get Started" variant="primary" onPress={() => {}} />
-        </CardFooter>
-      </Card>
+      </Section>
+
+      <Section title="Composed" note="CardHeader and CardFooter run edge to edge with their own dividers.">
+        <Card>
+          <CardHeader>
+            <Text style={[styles.title, { color: colors.foreground }]}>Pro plan</Text>
+          </CardHeader>
+          <Text style={[styles.price, { color: colors.foreground }]}>$9 / month</Text>
+          <Text style={[styles.body, { color: colors.mutedForeground }]}>Unlimited projects and priority support.</Text>
+          <CardFooter>
+            <Button title="Upgrade" variant="primary" />
+          </CardFooter>
+        </Card>
+      </Section>
+
+      <Section title="Pressable" note="Passing onPress turns the card into a button with press physics.">
+        <Card variant="accent" onPress={() => setTaps((n) => n + 1)} accessibilityLabel="Open release notes" accessibilityHint="Opens the release notes">
+          <Text style={[styles.title, { color: colors.accentForeground }]}>Release notes</Text>
+          <Text style={[styles.body, { color: colors.accentForeground }]}>See what changed in 2.0.</Text>
+        </Card>
+        <Caption>{`Taps: ${taps}`}</Caption>
+      </Section>
+
+      <Section title="Edge cases">
+        <View style={styles.narrow}>
+          <Card>
+            <Text style={[styles.title, { color: colors.foreground }]}>
+              A card title that is far too long for a narrow container
+            </Text>
+          </Card>
+        </View>
+        <Caption>Text wraps inside a 220pt container.</Caption>
+      </Section>
     </Layout>
   );
 }
 
 const styles = StyleSheet.create({
-  label: { fontSize: 12, fontWeight: '700', marginTop: 24, marginBottom: 12 },
-  cardTitle: { fontSize: 18, fontWeight: '800', textTransform: 'uppercase' },
-  cardBody: { fontSize: 14, marginTop: 8 },
+  stack: { gap: 20, paddingBottom: 4 },
+  title: { fontSize: 18, fontWeight: '900', textTransform: 'uppercase' },
+  body: { fontSize: 14, marginTop: 6 },
+  price: { fontSize: 24, fontWeight: '900' },
+  narrow: { width: 220 },
 });

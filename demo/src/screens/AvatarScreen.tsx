@@ -1,66 +1,51 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Avatar } from '@apexrn/ui';
 import Layout from '../components/Layout';
-import { useShowcaseTheme } from '../context/ThemeContext';
-import Avatar from '@ui/components/avatar';
+import Section, { Caption } from '../components/Section';
+
+const SIZES = ['sm', 'md', 'lg'] as const;
 
 export default function AvatarScreen({ onBack }: { onBack: () => void }) {
-  const { isDark } = useShowcaseTheme();
-  const textColor = isDark ? '#FFF' : '#000';
-
   return (
-    <Layout title="AVATAR COMPONENT" onBack={onBack}>
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: textColor }]}>SIZES (sm, md, lg)</Text>
+    <Layout title="AVATAR" onBack={onBack}>
+      <Section title="Sizes" note="40 / 56 / 80. Square block; the initials fallback is the default.">
         <View style={styles.row}>
-          <Avatar size="sm" initials="AB" />
-          <Avatar size="md" initials="CD" />
-          <Avatar size="lg" initials="EF" />
+          {SIZES.map((size, i) => (
+            <Avatar key={size} size={size} initials={['AB', 'CD', 'EF'][i]} />
+          ))}
         </View>
-      </View>
+      </Section>
 
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: textColor }]}>WITH IMAGES</Text>
+      <Section title="Image">
         <View style={styles.row}>
-          <Avatar 
-            size="sm" 
-            src="https://i.pravatar.cc/100?img=1" 
-          />
-          <Avatar 
-            size="md" 
-            src="https://i.pravatar.cc/150?img=2" 
-          />
-          <Avatar 
-            size="lg" 
-            src="https://i.pravatar.cc/200?img=3" 
-          />
+          {SIZES.map((size, i) => (
+            <Avatar key={size} size={size} src={`https://i.pravatar.cc/200?img=${i + 1}`} />
+          ))}
         </View>
-      </View>
+        <Caption>Remote images; without a network they show the initials fallback.</Caption>
+      </Section>
 
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: textColor }]}>HARD SHADOW</Text>
+      <Section title="Hard shadow" note="withShadow: small avatars use the subtle 2px offset, others 4px.">
         <View style={styles.row}>
-          <Avatar size="md" initials="SH" withShadow />
-          <Avatar 
-            size="lg" 
-            src="https://i.pravatar.cc/200?img=4" 
-            withShadow 
-          />
+          {SIZES.map((size, i) => (
+            <Avatar key={size} size={size} initials={['SH', 'AD', 'OW'][i]} withShadow />
+          ))}
         </View>
-      </View>
+      </Section>
 
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: textColor }]}>FALLBACK (BROKEN IMAGE)</Text>
+      <Section title="Fallbacks">
         <View style={styles.row}>
-          <Avatar size="md" src="https://broken.link/img.jpg" initials="FL" />
+          <Avatar src="https://invalid.example/missing.jpg" initials="FL" />
+          <Avatar />
+          <Avatar initials="xyz" />
         </View>
-      </View>
+        <Caption>Broken image, no initials (shows ?), and long initials (first two letters, uppercased).</Caption>
+      </Section>
     </Layout>
   );
 }
 
 const styles = StyleSheet.create({
-  section: { marginBottom: 36 },
-  label: { fontSize: 12, fontWeight: '700', marginBottom: 16, letterSpacing: 1 },
-  row: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 24 },
+  row: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 24, paddingBottom: 4 },
 });

@@ -1,10 +1,13 @@
 import { useCallback, useEffect } from 'react';
 import {
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
+
+import { motion } from './colors';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -30,8 +33,8 @@ export type PressPhysicsConfig = UsePressPhysicsOptions;
 
 // Stiff, low-damping spring so a press reads as a snap/impact with rebound,
 // not a linear slide into the shadow.
-const SPRING_CONFIG = { damping: 15, stiffness: 400, mass: 0.5 };
-const SQUASH_AMOUNT = 0.03; // scaleX 0.97 / scaleY 1.03 at full press
+const SPRING_CONFIG = motion.spring;
+const SQUASH_AMOUNT = motion.squash; // scaleX 0.97 / scaleY 1.03 at full press
 
 export function usePressPhysics({
   offset,
@@ -40,27 +43,32 @@ export function usePressPhysics({
   squash = true,
 }: UsePressPhysicsOptions) {
   const pressed = useSharedValue(0);
+  // Reduced motion: the block still sinks (state feedback), but instantly and
+  // without the squash/rebound.
+  const reduceMotion = useReducedMotion();
+  const animate = (to: number) =>
+    reduceMotion ? to : withSpring(to, SPRING_CONFIG);
 
   // Reset a stuck press when the surface becomes non-interactive mid-gesture
   // (e.g. disabled toggles while a finger is down, or an interrupted scroll).
   useEffect(() => {
     if (disabled) {
-      pressed.value = withSpring(0, SPRING_CONFIG);
+      pressed.value = 0;
     }
   }, [disabled, pressed]);
 
   const handlePressIn = useCallback(() => {
     if (disabled) return;
-    pressed.value = withSpring(1, SPRING_CONFIG);
+    pressed.value = animate(1);
     if (haptics) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     }
-  }, [disabled, haptics, pressed]);
+  }, [disabled, haptics, pressed, reduceMotion]);
 
   const handlePressOut = useCallback(() => {
     if (disabled) return;
-    pressed.value = withSpring(0, SPRING_CONFIG);
-  }, [disabled, pressed]);
+    pressed.value = animate(0);
+  }, [disabled, pressed, reduceMotion]);
 
   // The foreground surface sinks diagonally into the shadow and squashes
   // slightly wider/shorter, so the whole block reads as compressing rather
@@ -69,8 +77,8 @@ export function usePressPhysics({
     transform: [
       { translateX: pressed.value * offset },
       { translateY: pressed.value * offset },
-      { scaleX: 1 - (squash ? pressed.value * SQUASH_AMOUNT : 0) },
-      { scaleY: 1 + (squash ? pressed.value * SQUASH_AMOUNT : 0) },
+      { scaleX: 1 - (squash && !reduceMotion ? pressed.value * SQUASH_AMOUNT : 0) },
+      { scaleY: 1 + (squash && !reduceMotion ? pressed.value * SQUASH_AMOUNT : 0) },
     ],
   }));
 

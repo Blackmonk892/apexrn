@@ -1,66 +1,58 @@
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, Text } from 'react-native';
+import { BrutalSurface, Carousel, useTheme } from '@apexrn/ui';
 import Layout from '../components/Layout';
-import { useShowcaseTheme } from '../context/ThemeContext';
-import Carousel from '@ui/components/carousel';
+import Section, { Caption } from '../components/Section';
 
 export default function CarouselScreen({ onBack }: { onBack: () => void }) {
-  const { isDark } = useShowcaseTheme();
-  const textColor = isDark ? '#FFF' : '#000';
+  const { colors } = useTheme();
+  const [index, setIndex] = useState(0);
 
-  const data = [
-    { id: '1', title: 'CARD 1', color: '#FF5252' },
-    { id: '2', title: 'CARD 2', color: '#448AFF' },
-    { id: '3', title: 'CARD 3', color: '#69F0AE' },
-    { id: '4', title: 'CARD 4', color: '#FFD740' },
+  const slides = [
+    { id: 'a', title: 'Ship', bg: colors.primary, fg: colors.primaryForeground },
+    { id: 'b', title: 'Test', bg: colors.secondary, fg: colors.secondaryForeground },
+    { id: 'c', title: 'Learn', bg: colors.accent, fg: colors.accentForeground },
+    { id: 'd', title: 'Repeat', bg: colors.success, fg: colors.successForeground },
   ];
+  type Slide = (typeof slides)[number];
+
+  const renderSlide = ({ item, index: i }: { item: Slide; index: number }) => (
+    <BrutalSurface pressable={false} backgroundColor={item.bg} surfaceStyle={styles.card}>
+      <Text style={[styles.step, { color: item.fg }]}>{`${i + 1} of ${slides.length}`}</Text>
+      <Text style={[styles.title, { color: item.fg }]}>{item.title}</Text>
+    </BrutalSurface>
+  );
 
   return (
-    <Layout title="CAROUSEL COMPONENT" onBack={onBack}>
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: textColor }]}>DEFAULT (NO INDICATORS)</Text>
-        <Carousel 
-          data={data}
-          renderItem={({ item }) => (
-            <View style={[styles.card, { backgroundColor: item.color }]}>
-              <Text style={styles.cardText}>{item.title}</Text>
-            </View>
-          )}
-        />
-      </View>
+    <Layout title="CAROUSEL" onBack={onBack}>
+      <Section title="Default" note="Items are 80% of the screen; the next one peeks in. Swipe to snap.">
+        <Carousel data={slides} keyExtractor={(s) => s.id} renderItem={renderSlide} />
+      </Section>
 
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: textColor }]}>WITH INDICATORS & SMALL WIDTH</Text>
-        <Carousel 
-          data={data}
+      <Section title="Indicators and fixed width" note="showIndicators adds position squares; itemWidth and gap are set explicitly.">
+        <Carousel
+          data={slides}
+          keyExtractor={(s) => s.id}
           showIndicators
           itemWidth={200}
           gap={20}
-          renderItem={({ item }) => (
-            <View style={[styles.card, { backgroundColor: item.color, height: 100 }]}>
-              <Text style={[styles.cardText, { fontSize: 20 }]}>{item.title}</Text>
-            </View>
-          )}
+          onActiveIndexChange={setIndex}
+          renderItem={renderSlide}
         />
-      </View>
+        <Caption>{`Active index: ${index}`}</Caption>
+      </Section>
+
+      <Section title="Edge cases" note="A single item and an empty list both render without errors.">
+        <Carousel data={slides.slice(0, 1)} keyExtractor={(s) => s.id} showIndicators renderItem={renderSlide} />
+        <Carousel data={[] as Slide[]} keyExtractor={(s) => s.id} showIndicators renderItem={renderSlide} />
+        <Caption>Above: one item (no indicators). Below the line: empty.</Caption>
+      </Section>
     </Layout>
   );
 }
 
 const styles = StyleSheet.create({
-  section: { marginBottom: 36 },
-  label: { fontSize: 12, fontWeight: '700', marginBottom: 16, letterSpacing: 1 },
-  card: {
-    height: 150,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 4,
-    borderColor: '#000',
-    backgroundColor: '#FFF',
-  },
-  cardText: {
-    fontSize: 28,
-    fontWeight: '900',
-    color: '#000',
-  }
+  card: { height: 130, padding: 16, justifyContent: 'space-between' },
+  step: { fontSize: 12, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase' },
+  title: { fontSize: 28, fontWeight: '900', textTransform: 'uppercase' },
 });

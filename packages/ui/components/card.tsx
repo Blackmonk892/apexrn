@@ -46,10 +46,26 @@ const SHADOW_OFFSET = 4;
 // Sub-components
 // ---------------------------------------------------------------------------
 
+// Header/footer bleed out of the card's padding (negative margins) so their
+// dividers run edge to edge instead of floating inside the content inset.
 export function CardHeader({ children, style }: CardHeaderProps) {
   const { colors } = useTheme();
   return (
-    <View style={[styles.header, { borderBottomColor: colors.border }, style]}>
+    <View
+      style={[
+        styles.header,
+        {
+          marginHorizontal: -spacing.lg,
+          marginTop: -spacing.lg,
+          marginBottom: spacing.md,
+          paddingHorizontal: spacing.lg,
+          paddingTop: spacing.lg,
+          paddingBottom: spacing.sm,
+          borderBottomColor: colors.border,
+        },
+        style,
+      ]}
+    >
       {children}
     </View>
   );
@@ -58,7 +74,21 @@ export function CardHeader({ children, style }: CardHeaderProps) {
 export function CardFooter({ children, style }: CardFooterProps) {
   const { colors } = useTheme();
   return (
-    <View style={[styles.footer, { borderTopColor: colors.border }, style]}>
+    <View
+      style={[
+        styles.footer,
+        {
+          marginHorizontal: -spacing.lg,
+          marginBottom: -spacing.lg,
+          marginTop: spacing.md,
+          paddingHorizontal: spacing.lg,
+          paddingTop: spacing.sm,
+          paddingBottom: spacing.lg,
+          borderTopColor: colors.border,
+        },
+        style,
+      ]}
+    >
       {children}
     </View>
   );
@@ -107,7 +137,7 @@ export default function Card({
       accessibilityLabel={accessibilityLabel}
       accessibilityHint={isPressable ? accessibilityHint : undefined}
     >
-      <View style={styles.content}>
+      <View style={{ padding: spacing.lg }}>
         {children}
       </View>
     </BrutalSurface>
@@ -119,19 +149,10 @@ export default function Card({
 // ---------------------------------------------------------------------------
 
 const styles = StyleSheet.create({
-  content: {
-    padding: spacing.lg,
-  },
   header: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.sm,
     borderBottomWidth: borderWidths.standard,
   },
   footer: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.lg,
-    paddingTop: spacing.sm,
     borderTopWidth: borderWidths.standard,
   },
 });

@@ -1,35 +1,44 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { Separator, useTheme } from '@apexrn/ui';
 import Layout from '../components/Layout';
-import { useShowcaseTheme } from '../context/ThemeContext';
-import Separator from '@ui/components/separator';
+import Section from '../components/Section';
 
 export default function SeparatorScreen({ onBack }: { onBack: () => void }) {
-  const { isDark } = useShowcaseTheme();
-  const textColor = isDark ? '#FFF' : '#000';
+  const { colors } = useTheme();
+  const text = { color: colors.foreground, fontWeight: '700' as const };
 
   return (
-    <Layout title="SEPARATOR COMPONENT" onBack={onBack}>
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: textColor }]}>HORIZONTAL SEPARATOR</Text>
-        <Text style={{ color: textColor }}>Above the line</Text>
-        <Separator orientation="horizontal" style={{ marginVertical: 16 }} />
-        <Text style={{ color: textColor }}>Below the line</Text>
-      </View>
+    <Layout title="SEPARATOR" onBack={onBack}>
+      <Section title="Horizontal">
+        <Text style={text}>Above the line</Text>
+        <Separator />
+        <Text style={text}>Below the line</Text>
+      </Section>
 
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: textColor }]}>VERTICAL SEPARATOR</Text>
-        <View style={{ flexDirection: 'row', height: 40, alignItems: 'center' }}>
-          <Text style={{ color: textColor }}>Left Side</Text>
-          <Separator orientation="vertical" style={{ marginHorizontal: 16 }} />
-          <Text style={{ color: textColor }}>Right Side</Text>
+      <Section title="Vertical" note="Stretches to the height of its row.">
+        <View style={styles.row}>
+          <Text style={text}>Left</Text>
+          <Separator orientation="vertical" />
+          <Text style={text}>Middle</Text>
+          <Separator orientation="vertical" />
+          <Text style={text}>Right</Text>
         </View>
-      </View>
+      </Section>
+
+      <Section title="In a list" note="Horizontal separators between rows.">
+        {['Profile', 'Notifications', 'Privacy and security'].map((item, i) => (
+          <View key={item}>
+            {i > 0 ? <Separator /> : null}
+            <Text style={[text, styles.item]}>{item}</Text>
+          </View>
+        ))}
+      </Section>
     </Layout>
   );
 }
 
 const styles = StyleSheet.create({
-  section: { marginBottom: 36 },
-  label: { fontSize: 12, fontWeight: '700', marginBottom: 16, letterSpacing: 1 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 16, height: 40 },
+  item: { paddingVertical: 12 },
 });

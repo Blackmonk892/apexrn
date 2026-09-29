@@ -2,36 +2,40 @@ import {
   cloneElement,
   createContext,
   isValidElement,
-  useContext,
-  useState,
   useCallback,
-  useRef,
+  useContext,
   useEffect,
+  useMemo,
+  useRef,
+  useState,
   type ReactElement,
   type ReactNode,
 } from 'react';
 import {
-  GestureResponderEvent,
+  type GestureResponderEvent,
+  type LayoutRectangle,
   Modal,
   Pressable,
+  type PressableProps,
+  ScrollView,
   StyleSheet,
-  View,
-  ViewProps,
-  PressableProps,
-  LayoutRectangle,
   useWindowDimensions,
+  View,
+  type ViewProps,
 } from 'react-native';
-import Animated, { 
-  useAnimatedStyle, 
-  useSharedValue, 
-  withTiming, 
+import Animated, {
   Easing,
   interpolate,
-  runOnJS
+  runOnJS,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withTiming,
 } from 'react-native-reanimated';
 
 import { borderWidths, spacing } from '../lib/colors';
 import { useTheme } from '../lib/theme';
+import BrutalSurface from './brutal_surface';
 import ListItem from './listitem';
 
 // ---------------------------------------------------------------------------
@@ -56,8 +60,16 @@ function useDropdownContext() {
 }
 
 export interface DropdownMenuProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  /**
+   * The controlled open state. Omit for an uncontrolled menu.
+   */
+  open?: boolean;
+  /**
+   * Initial open state when uncontrolled.
+   * @default false
+   */
+  defaultOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
   children: ReactNode;
 }
 
@@ -72,25 +84,33 @@ export interface DropdownMenuItemProps extends Omit<PressableProps, 'style'> {
 // Design tokens
 // ---------------------------------------------------------------------------
 const SHADOW_OFFSET = 4;
+// Minimum width; the menu grows to its widest item, up to the screen edge.
+const MENU_WIDTH = 220;
+const MENU_MAX_HEIGHT = 320;
 
 // ---------------------------------------------------------------------------
 // Components
 // ---------------------------------------------------------------------------
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-
-export function DropdownMenu({ open, onOpenChange, children }: DropdownMenuProps) {
+export function DropdownMenu({ open: openProp, defaultOpen = false, onOpenChange, children }: DropdownMenuProps) {
   const [triggerLayout, setTriggerLayout] = useState<LayoutRectangle | null>(null);
+  const [internalOpen, setInternalOpen] = useState(defaultOpen);
+  const isControlled = openProp !== undefined;
+  const isOpen = isControlled ? openProp : internalOpen;
 
   const setIsOpen = useCallback((nextOpen: boolean) => {
-    onOpenChange(nextOpen);
-  }, [onOpenChange]);
+    if (!isControlled) setInternalOpen(nextOpen);
+    onOpenChange?.(nextOpen);
+  }, [isControlled, onOpenChange]);
 
-  const close = useCallback(() => {
-    onOpenChange(false);
-  }, [onOpenChange]);
+  const close = useCallback(() => setIsOpen(false), [setIsOpen]);
+
+  const context = useMemo(
+    () => ({ isOpen, setIsOpen, close, triggerLayout, setTriggerLayout }),
+    [isOpen, setIsOpen, close, triggerLayout],
+  );
 
   return (
-    <DropdownContext.Provider value={{ isOpen: open, setIsOpen, close, triggerLayout, setTriggerLayout }}>
+    <DropdownContext.Provider value={context}>
       {children}
     </DropdownContext.Provider>
   );
@@ -126,12 +146,13 @@ export function DropdownMenuTrigger({ children, onPress, asChild, ...props }: Pr
   if (asChild && isValidElement(children)) {
     // Never inject `ref` into an arbitrary child (e.g. `Button` is a
     // function component without forwardRef — the ref would be null and
-    // measurement would silently fall back). Instead measure this wrapper.
+    // measurement would silently fall back). Instead measure this wrapper,
+    // which hugs the child (flex-start) so its rect is the child's rect.
     const child = children as ReactElement<{
       onPress?: (e: GestureResponderEvent) => void;
     }>;
     return (
-      <View ref={triggerRef} collapsable={false}>
+      <View ref={triggerRef} collapsable={false} style={styles.triggerWrapper}>
         {cloneElement(child, {
           onPress: (e: GestureResponderEvent) => {
             child.props.onPress?.(e);
@@ -147,6 +168,8 @@ export function DropdownMenuTrigger({ children, onPress, asChild, ...props }: Pr
       ref={triggerRef}
       accessibilityRole="button"
       accessibilityState={{ expanded: isOpen }}
+      aria-expanded={isOpen}
+      aria-haspopup="menu"
       {...props}
       onPress={handlePress}
     >
@@ -158,69 +181,67 @@ export function DropdownMenuTrigger({ children, onPress, asChild, ...props }: Pr
 export function DropdownMenuContent({ children, style, ...props }: ViewProps) {
   const { isOpen, close, triggerLayout } = useDropdownContext();
   const { colors } = useTheme();
-  const [isModalVisible, setIsModalVisible] = useState(false);
+  const reduceMotion = useReducedMotion();
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+  // The Modal stays mounted until the exit animation finishes.
+  const [isModalVisible, setIsModalVisible] = useState(isOpen);
 
-  const scale = useSharedValue(0);
-  const opacity = useSharedValue(0);
+  const progress = useSharedValue(0);
 
   useEffect(() => {
     if (isOpen) {
       setIsModalVisible(true);
-      scale.value = withTiming(1, { duration: 120, easing: Easing.out(Easing.quad) });
-      opacity.value = withTiming(1, { duration: 120, easing: Easing.out(Easing.quad) });
-    } else if (isModalVisible) {
-      scale.value = withTiming(0, { duration: 100, easing: Easing.in(Easing.quad) });
-      opacity.value = withTiming(0, { duration: 100, easing: Easing.in(Easing.quad) }, (finished) => {
+      progress.value = withTiming(1, { duration: reduceMotion ? 0 : 120, easing: Easing.out(Easing.quad) });
+    } else {
+      // Also runs on first mount while closed: 0 -> 0 finishes immediately.
+      progress.value = withTiming(0, { duration: reduceMotion ? 0 : 100, easing: Easing.in(Easing.quad) }, (finished) => {
         if (finished) {
           runOnJS(setIsModalVisible)(false);
         }
       });
     }
-  }, [isOpen, isModalVisible, scale, opacity]);
-
-  const handleClose = () => {
-    close();
-  };
+  }, [isOpen, reduceMotion, progress]);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-    transform: [
-      { scale: interpolate(scale.value, [0, 1], [0.85, 1]) }
-    ],
+    opacity: progress.value,
+    transform: [{ scale: interpolate(progress.value, [0, 1], [0.9, 1]) }],
   }));
 
-  const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useWindowDimensions();
-
-  // Position anchored to the trigger, clamped on-screen with room for the
-  // shadow offset. Falls back to a visible default when unmeasured.
-  const MENU_WIDTH = 200;
-  const MENU_MAX_HEIGHT = 320;
-  const topPosition = triggerLayout
-    ? Math.max(
-        spacing.sm,
-        Math.min(
-          triggerLayout.y + triggerLayout.height + spacing.xs,
-          SCREEN_HEIGHT - MENU_MAX_HEIGHT - spacing.lg,
-        ),
-      )
-    : 100;
-
-  const leftPosition = triggerLayout
-    ? Math.max(spacing.sm, Math.min(triggerLayout.x, SCREEN_WIDTH - MENU_WIDTH - spacing.sm))
+  // Anchored under the trigger, flipped above it when there is not enough
+  // room below, and clamped on-screen with room for the hard shadow.
+  // Falls back to a visible default when the trigger was not measured.
+  const gap = spacing.xs;
+  const edge = spacing.sm;
+  const left = triggerLayout
+    ? Math.max(edge, Math.min(triggerLayout.x, screenWidth - MENU_WIDTH - SHADOW_OFFSET - edge))
     : spacing.lg;
+  let vertical: { top: number } | { bottom: number };
+  if (!triggerLayout) {
+    vertical = { top: 100 };
+  } else {
+    const below = screenHeight - (triggerLayout.y + triggerLayout.height);
+    const above = triggerLayout.y;
+    const fitsBelow = below >= MENU_MAX_HEIGHT + SHADOW_OFFSET + gap + edge;
+    vertical = fitsBelow || below >= above
+      ? { top: Math.max(edge, triggerLayout.y + triggerLayout.height + gap) }
+      : { bottom: Math.max(edge, screenHeight - triggerLayout.y + gap) };
+  }
+  const maxHeight = triggerLayout
+    ? Math.min(MENU_MAX_HEIGHT, Math.max(120, 'top' in vertical ? screenHeight - vertical.top - SHADOW_OFFSET - edge : triggerLayout.y - gap - edge))
+    : MENU_MAX_HEIGHT;
 
   return (
     <Modal
       visible={isModalVisible}
       transparent
       animationType="none"
-      onRequestClose={handleClose}
+      onRequestClose={close}
       accessibilityViewIsModal
     >
       <View style={styles.portalOverlay}>
-        <AnimatedPressable
+        <Pressable
           style={styles.backdrop}
-          onPress={handleClose}
+          onPress={close}
           accessibilityRole="button"
           accessibilityLabel="Dismiss Dropdown"
         />
@@ -228,37 +249,41 @@ export function DropdownMenuContent({ children, style, ...props }: ViewProps) {
         <Animated.View
           style={[
             styles.menuWrapper,
+            { left, minWidth: MENU_WIDTH + SHADOW_OFFSET, maxWidth: screenWidth - left - edge, ...vertical },
             style,
-            {
-              top: topPosition,
-              left: leftPosition,
-              width: MENU_WIDTH,
-              maxHeight: MENU_MAX_HEIGHT,
-            },
             animatedStyle,
           ]}
           accessibilityRole="menu"
           {...props}
         >
-          <View style={[styles.shadow, { backgroundColor: colors.shadow, borderColor: colors.border }]} />
-          
-          <View style={[styles.surface, { backgroundColor: colors.background, borderColor: colors.border }]}>
-            {children}
-          </View>
+          <BrutalSurface
+            pressable={false}
+            offset={SHADOW_OFFSET}
+            borderWidth="heavy"
+            backgroundColor={colors.background}
+            surfaceStyle={[styles.surface, { maxHeight }]}
+          >
+            <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
+              {/* Every item draws a bottom divider; the negative margin lets
+                  the last one slide under the surface border instead of
+                  doubling it. */}
+              <View style={{ marginBottom: -borderWidths.standard }}>{children}</View>
+            </ScrollView>
+          </BrutalSurface>
         </Animated.View>
       </View>
     </Modal>
   );
 }
 
-export function DropdownMenuItem({ 
-  label, 
-  description, 
-  leading, 
-  trailing, 
-  onPress, 
+export function DropdownMenuItem({
+  label,
+  description,
+  leading,
+  trailing,
+  onPress,
   disabled,
-  ...props 
+  ...props
 }: DropdownMenuItemProps) {
   const { close } = useDropdownContext();
   const { colors } = useTheme();
@@ -276,7 +301,7 @@ export function DropdownMenuItem({
       trailing={trailing}
       disabled={!!disabled}
       onPress={handlePress}
-      style={[styles.menuItem, { borderColor: colors.border }]}
+      style={[{ borderColor: colors.border, paddingVertical: spacing.sm, paddingHorizontal: spacing.sm }]}
       accessibilityRole="menuitem"
       {...props}
     />
@@ -287,6 +312,9 @@ export function DropdownMenuItem({
 // Styles
 // ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
+  triggerWrapper: {
+    alignSelf: 'flex-start',
+  },
   portalOverlay: {
     ...StyleSheet.absoluteFill,
     backgroundColor: 'transparent',
@@ -297,31 +325,10 @@ const styles = StyleSheet.create({
   },
   menuWrapper: {
     position: 'absolute',
-    marginBottom: SHADOW_OFFSET,
-    marginRight: SHADOW_OFFSET,
     zIndex: 1,
-  },
-  shadow: {
-    position: 'absolute',
-    top: SHADOW_OFFSET,
-    left: SHADOW_OFFSET,
-    right: -SHADOW_OFFSET,
-    bottom: -SHADOW_OFFSET,
-    borderWidth: borderWidths.heavy,
-    zIndex: 1,
-    borderRadius: 0,
   },
   surface: {
-    position: 'relative',
-    zIndex: 2,
-    borderWidth: borderWidths.heavy,
-    borderRadius: 0,
     overflow: 'hidden',
     flexDirection: 'column',
-  },
-  menuItem: {
-    borderBottomWidth: borderWidths.standard,
-    paddingVertical: spacing.sm, 
-    paddingHorizontal: spacing.sm,
   },
 });

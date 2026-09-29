@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BackHandler } from 'react-native';
+import { BackHandler, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -30,6 +30,7 @@ import CarouselScreen from './src/screens/CarouselScreen';
 import MarqueeScreen from './src/screens/MarqueeScreen';
 import ListItemScreen from './src/screens/ListItemScreen';
 import DialogScreen from './src/screens/DialogScreen';
+import AlertDialogScreen from './src/screens/AlertDialogScreen';
 import SheetScreen from './src/screens/SheetScreen';
 import DropdownScreen from './src/screens/DropdownScreen';
 import SelectScreen from './src/screens/SelectScreen';
@@ -40,6 +41,13 @@ import FABScreen from './src/screens/FABScreen';
 import LabelScreen from './src/screens/LabelScreen';
 import InputOTPScreen from './src/screens/InputOTPScreen';
 import TextareaScreen from './src/screens/TextareaScreen';
+
+// Web only: `#button` opens the Button screen directly, `#button:light` also forces
+// the theme (used for headless checks).
+function initialScreen(): string {
+  if (Platform.OS !== 'web' || typeof window === 'undefined') return 'home';
+  return window.location.hash.replace('#', '').split(':')[0] || 'home';
+}
 
 export default function App() {
   return (
@@ -55,7 +63,7 @@ export default function App() {
 
 function AppShell() {
   const { isDark } = useShowcaseTheme();
-  const [currentScreen, setCurrentScreen] = useState<string>('home');
+  const [currentScreen, setCurrentScreen] = useState<string>(initialScreen);
 
   // Android hardware back navigates home instead of exiting the demo.
   useEffect(() => {
@@ -97,6 +105,7 @@ function AppShell() {
       case 'marquee': return <MarqueeScreen onBack={() => setCurrentScreen('home')} />;
       case 'listitem': return <ListItemScreen onBack={() => setCurrentScreen('home')} />;
       case 'dialog': return <DialogScreen onBack={() => setCurrentScreen('home')} />;
+      case 'alertdialog': return <AlertDialogScreen onBack={() => setCurrentScreen('home')} />;
       case 'sheet': return <SheetScreen onBack={() => setCurrentScreen('home')} />;
       case 'dropdown': return <DropdownScreen onBack={() => setCurrentScreen('home')} />;
       case 'select': return <SelectScreen onBack={() => setCurrentScreen('home')} />;

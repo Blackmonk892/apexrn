@@ -1,16 +1,22 @@
-import { useRef, useState, useEffect, forwardRef, useImperativeHandle } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import {
-  LayoutChangeEvent,
+  type LayoutChangeEvent,
   Pressable,
   StyleSheet,
   Text,
   TextInput,
-  TextInputProps,
+  type TextInputProps,
   View,
 } from 'react-native';
-import { useAnimatedStyle, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
+import {
+  Easing,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
-import { borderWidths, spacing, typography } from '../lib/colors';
+import { spacing, typography } from '../lib/colors';
 import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
 import BrutalSurface from './brutal_surface';
@@ -18,7 +24,7 @@ import BrutalSurface from './brutal_surface';
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
-export interface InputOTPProps extends Omit<TextInputProps, 'onChangeText' | 'value'> {
+export interface InputOTPProps extends Omit<TextInputProps, 'onChangeText' | 'value' | 'defaultValue'> {
   /**
    * The length of the OTP code (typically 4 or 6).
    * @default 4
@@ -27,11 +33,21 @@ export interface InputOTPProps extends Omit<TextInputProps, 'onChangeText' | 'va
   /**
    * Callback fired when the OTP code changes.
    */
-  onChangeText: (text: string) => void;
+  onChangeText?: (text: string) => void;
   /**
-   * The current controlled OTP value.
+   * The controlled OTP value. Omit for an uncontrolled input.
    */
-  value: string;
+  value?: string;
+  /**
+   * Initial value when uncontrolled.
+   * @default ''
+   */
+  defaultValue?: string;
+  /**
+   * Marks the code as invalid: destructive border and shadow on every block.
+   * @default false
+   */
+  error?: boolean;
   /**
    * Disables the OTP inputs.
    * @default false
@@ -49,6 +65,8 @@ export interface InputOTPProps extends Omit<TextInputProps, 'onChangeText' | 'va
 // ---------------------------------------------------------------------------
 const SHADOW_OFFSET = 4;
 const BLOCK_SIZE = 56;
+// Below this a digit stops being comfortably legible.
+const MIN_BLOCK_SIZE = 28;
 
 // ---------------------------------------------------------------------------
 // OTPBlock — sub-component per digit
@@ -56,46 +74,53 @@ const BLOCK_SIZE = 56;
 interface OTPBlockProps {
   char?: string;
   isActive: boolean;
+  error: boolean;
   disabled: boolean;
   size: number;
 }
 
-function OTPBlock({ char, isActive, disabled, size }: OTPBlockProps) {
+function OTPBlock({ char, isActive, error, disabled, size }: OTPBlockProps) {
   const { colors } = useTheme();
+  const reduceMotion = useReducedMotion();
   const focusProgress = useSharedValue(isActive ? 1 : 0);
 
   useEffect(() => {
-    focusProgress.value = withTiming(isActive ? 1 : 0, {
-      duration: isActive ? 100 : 80,
-      easing: isActive ? Easing.out(Easing.quad) : Easing.in(Easing.quad),
-    });
-  }, [isActive, focusProgress]);
+    const to = isActive ? 1 : 0;
+    focusProgress.value = reduceMotion
+      ? to
+      : withTiming(to, {
+          duration: isActive ? 100 : 80,
+          easing: isActive ? Easing.out(Easing.quad) : Easing.in(Easing.quad),
+        });
+  }, [isActive, reduceMotion, focusProgress]);
 
+  // The shadow layer is always laid out (so blocks never shift between
+  // states); the active block fades it in, errors and disabled override it.
+  const showError = error && !disabled;
   const animatedShadowStyle = useAnimatedStyle(() => ({
-    opacity: focusProgress.value,
-  }));
-
-  const animatedSurfaceStyle = useAnimatedStyle(() => ({
-    // Threshold, not equality: the shared value passes through 0.5
-    // mid-animation and only rests exactly on 0 or 1.
-    borderWidth: focusProgress.value > 0.5 ? borderWidths.heavy : borderWidths.standard,
+    opacity: disabled ? 0 : showError ? 1 : focusProgress.value,
   }));
 
   return (
     <BrutalSurface
-      style={[styles.blockContainer, { width: size, height: size }]}
-      surfaceStyle={[
-        styles.surface,
-        { width: size, height: size },
-        disabled ? { backgroundColor: colors.muted, borderColor: colors.mutedForeground } : { backgroundColor: colors.background, borderColor: colors.border },
-        animatedSurfaceStyle
-      ]}
+      surfaceStyle={[styles.surface, { width: size, height: size }]}
       shadowStyle={animatedShadowStyle}
       offset={SHADOW_OFFSET}
+      borderWidth="heavy"
+      backgroundColor={disabled ? colors.muted : colors.background}
+      borderColor={disabled ? colors.mutedForeground : showError ? colors.destructive : colors.border}
+      shadowColor={showError ? colors.destructive : undefined}
       pressable={false}
-      hasShadow={!disabled}
+      hasShadow
     >
-      <Text style={cn(styles.blockText, { color: colors.foreground }, disabled && { color: colors.mutedForeground })}>
+      <Text
+        style={cn(
+          styles.blockText,
+          { fontSize: Math.min(typography.xl, Math.round(size * 0.5)), color: colors.foreground },
+          disabled && { color: colors.mutedForeground },
+        )}
+        maxFontSizeMultiplier={1.3}
+      >
         {char || ''}
       </Text>
 
@@ -112,55 +137,48 @@ function OTPBlock({ char, isActive, disabled, size }: OTPBlockProps) {
 const InputOTP = forwardRef<TextInput, InputOTPProps>(({
   length = 4,
   onChangeText,
-  value,
+  value: valueProp,
+  defaultValue = '',
+  error = false,
   disabled = false,
   blockSize: blockSizeProp,
   style,
+  onFocus,
+  onBlur,
   ...props
 }, ref) => {
   const inputRef = useRef<TextInput>(null);
   useImperativeHandle(ref, () => inputRef.current as TextInput);
 
+  const [internalValue, setInternalValue] = useState(defaultValue);
+  const value = valueProp ?? internalValue;
   const [isFocused, setIsFocused] = useState(false);
   const [rowWidth, setRowWidth] = useState(0);
 
   // Disabling mid-focus must not leave the active-block styling stuck on.
   useEffect(() => {
-    if (disabled) {
-      setIsFocused(false);
-    }
+    if (disabled) setIsFocused(false);
   }, [disabled]);
 
-  const handleFocus = () => {
-    if (disabled) return;
-    setIsFocused(true);
-  };
-
-  const handleBlur = () => {
-    if (disabled) return;
-    setIsFocused(false);
-  };
-
-  const handlePressContainer = () => {
-    if (disabled) return;
-    inputRef.current?.focus();
+  const handleChangeText = (text: string) => {
+    if (valueProp === undefined) setInternalValue(text);
+    onChangeText?.(text);
   };
 
   const handleRowLayout = (e: LayoutChangeEvent) => {
     const w = e.nativeEvent.layout.width;
-    if (w > 0 && w !== rowWidth) {
-      setRowWidth(w);
-    }
+    if (w > 0 && w !== rowWidth) setRowWidth(w);
   };
 
   const safeLength = Math.max(1, Math.floor(length));
   // Fit blocks into the measured row: total shadow margins included.
+  const gap = spacing.sm;
   const fittedSize =
     rowWidth > 0
-      ? Math.floor((rowWidth - spacing.sm * (safeLength - 1)) / safeLength) - SHADOW_OFFSET
+      ? Math.floor((rowWidth - gap * (safeLength - 1)) / safeLength) - SHADOW_OFFSET
       : BLOCK_SIZE;
   const blockSize = Math.max(
-    32,
+    MIN_BLOCK_SIZE,
     Math.min(blockSizeProp ?? BLOCK_SIZE, Number.isFinite(fittedSize) ? fittedSize : BLOCK_SIZE),
   );
 
@@ -172,15 +190,22 @@ const InputOTP = forwardRef<TextInput, InputOTPProps>(({
       <TextInput
         ref={inputRef}
         value={value}
-        onChangeText={onChangeText}
+        onChangeText={handleChangeText}
         maxLength={safeLength}
         keyboardType="number-pad"
         textContentType="oneTimeCode"
         autoComplete="sms-otp"
         style={styles.hiddenInput}
-        onFocus={handleFocus}
-        onBlur={handleBlur}
+        onFocus={(e) => {
+          if (!disabled) setIsFocused(true);
+          onFocus?.(e);
+        }}
+        onBlur={(e) => {
+          setIsFocused(false);
+          onBlur?.(e);
+        }}
         editable={!disabled}
+        aria-invalid={error || undefined}
         accessibilityLabel={`One-time password input, ${filledCount} of ${safeLength} digits entered`}
         accessibilityState={{ disabled }}
         {...props}
@@ -189,9 +214,11 @@ const InputOTP = forwardRef<TextInput, InputOTPProps>(({
       {/* Decorative blocks: the hidden input above carries semantics so
           screen readers don't hear each block as a separate key. */}
       <Pressable
-        onPress={handlePressContainer}
+        onPress={() => {
+          if (!disabled) inputRef.current?.focus();
+        }}
         onLayout={handleRowLayout}
-        style={styles.blocksRow}
+        style={[styles.blocksRow, { gap }]}
         accessible={false}
         importantForAccessibility="no-hide-descendants"
       >
@@ -200,6 +227,7 @@ const InputOTP = forwardRef<TextInput, InputOTPProps>(({
             key={i}
             char={value[i]}
             isActive={isFocused && i === activeIndex}
+            error={error}
             disabled={disabled}
             size={blockSize}
           />
@@ -217,7 +245,7 @@ export default InputOTP;
 // ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
   root: {
-    width: '100%',
+    alignSelf: 'stretch',
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
@@ -232,15 +260,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: spacing.sm,
   },
-  blockContainer: {},
   surface: {
     alignItems: 'center',
     justifyContent: 'center',
   },
   blockText: {
-    fontSize: typography.xl,
     fontWeight: '800',
   },
   cursor: {

@@ -1,21 +1,23 @@
-import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
   StyleSheet,
+  useWindowDimensions,
   View,
-  ViewProps,
+  type ViewProps,
 } from 'react-native';
-import Animated, { 
-  useAnimatedStyle, 
-  useSharedValue, 
-  withTiming, 
+import Animated, {
   Easing,
-  runOnJS
+  runOnJS,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withTiming,
 } from 'react-native-reanimated';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { borderWidths, spacing } from '../lib/colors';
 import { useTheme } from '../lib/theme';
@@ -53,7 +55,8 @@ export interface SheetProps {
 
 export interface SheetContentProps extends ViewProps {
   /**
-   * The height the sheet snaps to when pulled up.
+   * The height the sheet snaps to when pulled up. Capped at 90% of the
+   * window height so it never covers the whole screen.
    * @default 400
    */
   sheetHeight?: number;
@@ -65,6 +68,9 @@ export interface SheetContentProps extends ViewProps {
 }
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+const SCRIM_OPACITY = 0.5;
+const MAX_HEIGHT_RATIO = 0.9;
 
 export function Sheet({ open, onOpenChange, children }: SheetProps) {
   const [isModalVisible, setIsModalVisible] = useState(open);
@@ -86,12 +92,17 @@ export function Sheet({ open, onOpenChange, children }: SheetProps) {
     setIsModalVisible(false);
   }, []);
 
-  const childrenRender = typeof children === 'function' 
+  const context = useMemo(
+    () => ({ open, close, onDismissAnimationFinished }),
+    [open, close, onDismissAnimationFinished],
+  );
+
+  const childrenRender = typeof children === 'function'
     ? children({ open, handleDismiss: close })
     : children;
 
   return (
-    <SheetContext.Provider value={{ open, close, onDismissAnimationFinished }}>
+    <SheetContext.Provider value={context}>
       <Modal
         visible={isModalVisible}
         transparent
@@ -99,7 +110,9 @@ export function Sheet({ open, onOpenChange, children }: SheetProps) {
         onRequestClose={close}
         accessibilityViewIsModal
       >
-        {childrenRender}
+        {/* Android renders a Modal in its own window, outside the app's root
+            GestureHandlerRootView, so the drag-to-dismiss needs its own. */}
+        <GestureHandlerRootView style={styles.root}>{childrenRender}</GestureHandlerRootView>
       </Modal>
     </SheetContext.Provider>
   );
@@ -114,7 +127,10 @@ export function SheetContent({
 }: SheetContentProps) {
   const { open, close, onDismissAnimationFinished } = useSheetContext();
   const { colors } = useTheme();
-  const resolvedHeight = sheetHeight ?? PointHeight ?? 400;
+  const reduceMotion = useReducedMotion();
+  const { height: windowHeight } = useWindowDimensions();
+  const resolvedHeight = Math.min(sheetHeight ?? PointHeight ?? 400, windowHeight * MAX_HEIGHT_RATIO);
+  const ms = (duration: number) => (reduceMotion ? 0 : duration);
 
   // TranslateY: 0 is open/docked, resolvedHeight is fully closed/hidden
   const translateY = useSharedValue(resolvedHeight);
@@ -127,41 +143,37 @@ export function SheetContent({
   useEffect(() => {
     if (open) {
       isClosingRef.current = false;
-      translateY.value = withTiming(0, { 
-        duration: 250, 
-        easing: Easing.out(Easing.quad) 
-      });
-      backdropOpacity.value = withTiming(0.5, { 
-        duration: 250 
-      });
+      translateY.value = withTiming(0, { duration: ms(250), easing: Easing.out(Easing.quad) });
+      backdropOpacity.value = withTiming(SCRIM_OPACITY, { duration: ms(250) });
     } else {
       if (isClosingRef.current) return;
       isClosingRef.current = true;
       translateY.value = withTiming(resolvedHeight, {
-        duration: 200,
-        easing: Easing.in(Easing.quad)
+        duration: ms(200),
+        easing: Easing.in(Easing.quad),
       }, (finished) => {
         if (finished) {
           runOnJS(onDismissAnimationFinished)();
         }
       });
-      backdropOpacity.value = withTiming(0, { duration: 200 });
+      backdropOpacity.value = withTiming(0, { duration: ms(200) });
     }
-  }, [open, resolvedHeight, translateY, backdropOpacity, onDismissAnimationFinished]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- ms only reads reduceMotion
+  }, [open, resolvedHeight, reduceMotion, translateY, backdropOpacity, onDismissAnimationFinished]);
 
   const triggerClose = () => {
     if (isClosingRef.current) return;
     isClosingRef.current = true;
     translateY.value = withTiming(resolvedHeight, {
-      duration: 200, 
-      easing: Easing.in(Easing.quad) 
+      duration: ms(200),
+      easing: Easing.in(Easing.quad),
     }, (finished) => {
       if (finished) {
         runOnJS(close)();
         runOnJS(onDismissAnimationFinished)();
       }
     });
-    backdropOpacity.value = withTiming(0, { duration: 200 });
+    backdropOpacity.value = withTiming(0, { duration: ms(200) });
   };
 
   const pan = Gesture.Pan()
@@ -180,10 +192,7 @@ export function SheetContent({
       if (translateY.value > resolvedHeight / 3 || event.velocityY > 500) {
         runOnJS(triggerClose)();
       } else {
-        translateY.value = withTiming(0, {
-          duration: 150,
-          easing: Easing.out(Easing.quad)
-        });
+        translateY.value = withTiming(0, { duration: ms(150), easing: Easing.out(Easing.quad) });
       }
     });
 
@@ -203,40 +212,43 @@ export function SheetContent({
     >
       {/* Backdrop */}
       <AnimatedPressable
-        style={[styles.backdrop, animatedBackdropStyle]}
+        style={[styles.backdrop, { backgroundColor: colors.scrim }, animatedBackdropStyle]}
         onPress={triggerClose}
         accessibilityRole="button"
         accessibilityLabel="Dismiss Sheet"
       />
 
-      <GestureDetector gesture={pan}>
-        <Animated.View
-          style={[
-            styles.sheet,
-            {
-              height: resolvedHeight,
-              backgroundColor: colors.background,
-              borderColor: colors.border,
-            },
-            style,
-            animatedSheetStyle,
-          ]}
-          {...props}
-        >
-          {/* Top drag handle (decorative) */}
+      <Animated.View
+        style={[
+          styles.sheet,
+          {
+            height: resolvedHeight,
+            backgroundColor: colors.background,
+            borderColor: colors.border,
+          },
+          style,
+          animatedSheetStyle,
+        ]}
+        {...props}
+      >
+        {/* The drag-to-dismiss gesture lives on the handle strip only. A pan
+            over the whole sheet would fight any ScrollView inside it (Select,
+            DatePicker) for vertical drags. Backdrop, back button and Escape
+            remain as gesture-free ways to close. */}
+        <GestureDetector gesture={pan}>
           <View
-            style={styles.handleContainer}
+            style={[styles.handleContainer, { paddingVertical: spacing.md }]}
             accessible={false}
             importantForAccessibility="no-hide-descendants"
           >
             <View style={[styles.handleBar, { backgroundColor: colors.foreground }]} />
           </View>
+        </GestureDetector>
 
-          <View style={styles.content}>
-            {children}
-          </View>
-        </Animated.View>
-      </GestureDetector>
+        <View style={[styles.content, { paddingHorizontal: spacing.md, paddingBottom: spacing.md }]}>
+          {children}
+        </View>
+      </Animated.View>
     </KeyboardAvoidingView>
   );
 }
@@ -245,13 +257,15 @@ export function SheetContent({
 // Styles
 // ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+  },
   wrapper: {
     flex: 1,
     justifyContent: 'flex-end',
   },
   backdrop: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: '#000000',
     zIndex: 0,
   },
   sheet: {
@@ -260,15 +274,14 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 1,
-    borderTopWidth: borderWidths.extraHeavy, 
+    borderTopWidth: borderWidths.extraHeavy,
     borderLeftWidth: borderWidths.heavy,
     borderRightWidth: borderWidths.heavy,
     borderRadius: 0,
     flexDirection: 'column',
   },
   handleContainer: {
-    width: '100%',
-    paddingVertical: spacing.sm,
+    alignSelf: 'stretch',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -279,6 +292,5 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: spacing.md,
   },
 });

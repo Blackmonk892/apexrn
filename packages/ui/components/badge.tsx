@@ -50,16 +50,18 @@ export default function Badge({
   const { colors } = useTheme();
 
   const VARIANTS = {
+    // Inverse "ink" fill so default reads as a different variant from outline.
     default: {
-      surface: { backgroundColor: colors.background },
-      text: { color: colors.foreground },
+      surface: { backgroundColor: colors.foreground },
+      text: { color: colors.background },
     },
     primary: {
       surface: { backgroundColor: colors.primary },
       text: { color: colors.primaryForeground },
     },
     outline: {
-      surface: { backgroundColor: 'transparent' },
+      // Transparent would let the hard shadow show through the fill.
+      surface: { backgroundColor: withShadow ? colors.background : 'transparent' },
       text: { color: colors.foreground },
     },
     accent: {
@@ -70,22 +72,30 @@ export default function Badge({
 
   const activeVariant = VARIANTS[variant];
   const content = children ?? label ?? '';
-  const announcement = typeof content === 'string' ? content : label ?? 'badge';
 
   return (
     <BrutalSurface
       style={[styles.container, style]}
-      surfaceStyle={cn(styles.surface, activeVariant.surface)}
+      surfaceStyle={cn(
+        styles.surface,
+        { paddingHorizontal: spacing.sm, paddingVertical: spacing.xs },
+        activeVariant.surface,
+      )}
       offset={SHADOW_OFFSET_SUBTLE}
       borderWidth="standard"
       pressable={false}
       hasShadow={withShadow}
+      accessible={typeof content === 'string'}
       accessibilityRole="text"
-      accessibilityLabel={`Badge: ${announcement}`}
       {...props}
     >
       {typeof content === 'string' ? (
-        <Text style={cn(styles.label, activeVariant.text)} numberOfLines={1} ellipsizeMode="tail">
+        <Text
+          style={cn(styles.label, { fontSize: typography.xs }, activeVariant.text)}
+          numberOfLines={1}
+          ellipsizeMode="tail"
+          maxFontSizeMultiplier={1.3}
+        >
           {content}
         </Text>
       ) : (
@@ -101,15 +111,17 @@ export default function Badge({
 const styles = StyleSheet.create({
   container: {
     alignSelf: 'flex-start',
+    // Without a cap, a nowrap label's min-content width defeats truncation.
+    maxWidth: '100%',
   },
+  // Row + shrinkable label (same as Button) so long text truncates instead of overflowing.
   surface: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
   },
   label: {
-    fontSize: typography.xs,
+    flexShrink: 1,
     fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 0.4,

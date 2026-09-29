@@ -24,7 +24,7 @@ export interface AlertProps extends ViewProps {
    */
   description?: string;
   /**
-   * Optional icon to display on the left side. Decorative — hidden from
+   * Replaces the built-in severity glyph. Decorative — hidden from
    * screen readers (the title/description carry the announcement).
    */
   icon?: ReactNode;
@@ -35,6 +35,15 @@ export interface AlertProps extends ViewProps {
 // ---------------------------------------------------------------------------
 const SHADOW_OFFSET = 4;
 const LEFT_BORDER_WIDTH = 8;
+const GLYPH_SIZE = 22;
+
+// Severity is never colour-only: each variant has its own glyph and spoken prefix.
+const SEVERITY = {
+  default: { glyph: 'i', spoken: '' },
+  destructive: { glyph: '✕', spoken: 'Error. ' },
+  warning: { glyph: '!', spoken: 'Warning. ' },
+  success: { glyph: '✓', spoken: 'Success. ' },
+} as const;
 
 // ---------------------------------------------------------------------------
 // Component
@@ -57,7 +66,14 @@ export default function Alert({
   };
 
   const activeColor = variantColors[variant];
-  const announcement = description ? `${title}. ${description}` : title;
+  const severity = SEVERITY[variant];
+  const announcement = `${severity.spoken}${description ? `${title}. ${description}` : title}`;
+  const glyphForeground = {
+    default: colors.background,
+    destructive: colors.destructiveForeground,
+    warning: colors.warningForeground,
+    success: colors.successForeground,
+  }[variant];
 
   return (
     <BrutalSurface
@@ -65,6 +81,7 @@ export default function Alert({
       surfaceStyle={[
         styles.surface,
         {
+          padding: spacing.md,
           backgroundColor: colors.background,
           borderColor: colors.border,
           borderLeftColor: activeColor,
@@ -77,18 +94,31 @@ export default function Alert({
       accessibilityLabel={announcement}
       {...props}
     >
-      {icon && (
-        <View style={styles.iconContainer} accessible={false} importantForAccessibility="no-hide-descendants">
-          {icon}
-        </View>
-      )}
+      <View
+        style={[styles.iconContainer, { marginRight: spacing.sm }]}
+        accessible={false}
+        importantForAccessibility="no-hide-descendants"
+      >
+        {icon ?? (
+          <View style={[styles.glyph, { backgroundColor: activeColor }]}>
+            <Text style={[styles.glyphText, { color: glyphForeground }]}>{severity.glyph}</Text>
+          </View>
+        )}
+      </View>
 
-      <View style={styles.contentContainer}>
-        <Text style={[styles.title, { color: colors.foreground }]} numberOfLines={2}>
+      <View style={[styles.contentContainer, { gap: spacing.xs }]}>
+        <Text
+          style={[styles.title, { fontSize: typography.sm, color: colors.foreground }]}
+          numberOfLines={2}
+          maxFontSizeMultiplier={1.3}
+        >
           {title}
         </Text>
         {description ? (
-          <Text style={[styles.description, { color: colors.mutedForeground }]}>
+          <Text
+            style={[styles.description, { fontSize: typography.sm, color: colors.mutedForeground }]}
+            maxFontSizeMultiplier={1.3}
+          >
             {description}
           </Text>
         ) : null}
@@ -102,7 +132,7 @@ export default function Alert({
 // ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
   container: {
-    width: '100%',
+    alignSelf: 'stretch',
   },
   surface: {
     flexDirection: 'row',
@@ -110,24 +140,29 @@ const styles = StyleSheet.create({
     borderWidth: borderWidths.heavy,
     borderLeftWidth: LEFT_BORDER_WIDTH,
     borderRadius: 0,
-    padding: spacing.md,
   },
   iconContainer: {
-    marginRight: spacing.sm,
-    marginTop: 2, 
+    alignSelf: 'flex-start',
+  },
+  glyph: {
+    width: GLYPH_SIZE,
+    height: GLYPH_SIZE,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  glyphText: {
+    fontSize: 14,
+    fontWeight: '900',
+    lineHeight: 16,
   },
   contentContainer: {
     flex: 1,
     flexDirection: 'column',
-    gap: spacing.xs,
   },
   title: {
-    fontSize: typography.sm,
     fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 0.4,
   },
-  description: {
-    fontSize: typography.sm,
-  },
+  description: {},
 });

@@ -1,6 +1,12 @@
 import { useEffect } from 'react';
 import { StyleSheet, ViewProps } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
 import { useTheme } from '../lib/theme';
 import BrutalSurface from './brutal_surface';
@@ -47,21 +53,22 @@ export default function Progress({
   const clampedValue = Number.isFinite(value)
     ? Math.min(Math.max(value, 0), clampedMax)
     : 0;
-  const safeValue = (clampedValue / clampedMax) * 100;
+  const ratio = clampedValue / clampedMax;
+  const reduceMotion = useReducedMotion();
   const progress = useSharedValue(0);
 
   useEffect(() => {
-    progress.value = withTiming(safeValue, {
-      duration: 500,
-      easing: Easing.out(Easing.cubic),
-    });
-  }, [safeValue, progress]);
+    progress.value = reduceMotion
+      ? ratio
+      : withTiming(ratio, { duration: 500, easing: Easing.out(Easing.cubic) });
+  }, [ratio, reduceMotion, progress]);
 
-  const animatedFillStyle = useAnimatedStyle(() => {
-    return {
-      width: `${progress.value}%`,
-    };
-  });
+  // scaleX from the left edge instead of animating `width`: transform-only,
+  // so the fill never triggers a layout pass.
+  const animatedFillStyle = useAnimatedStyle(() => ({
+    transform: [{ scaleX: progress.value }],
+    transformOrigin: 'left center',
+  }));
 
   return (
     <BrutalSurface
@@ -73,6 +80,7 @@ export default function Progress({
       hasShadow={withShadow}
       accessibilityRole="progressbar"
       accessibilityValue={{ min: 0, max: clampedMax, now: clampedValue }}
+      accessible
       {...props}
     >
       <Animated.View style={[styles.fill, { backgroundColor: colors.foreground }, animatedFillStyle]} />
@@ -84,8 +92,9 @@ export default function Progress({
 // Styles
 // ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
+  // stretch (not width: 100%) so the shadow's margin doesn't push past the parent.
   container: {
-    width: '100%',
+    alignSelf: 'stretch',
   },
   track: {
     width: '100%',
@@ -93,6 +102,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   fill: {
+    width: '100%',
     height: '100%',
     borderRadius: 0,
   },

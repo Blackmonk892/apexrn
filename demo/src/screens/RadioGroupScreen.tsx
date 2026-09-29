@@ -1,74 +1,70 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { RadioGroup, RadioGroupItem, useTheme } from '@apexrn/ui';
 import Layout from '../components/Layout';
-import { useShowcaseTheme } from '../context/ThemeContext';
-import { RadioGroup, RadioGroupItem } from '@ui/components/radiogroup';
+import Section, { Caption } from '../components/Section';
+
+function Option({ value, label, disabled }: { value: string; label: string; disabled?: boolean }) {
+  const { colors } = useTheme();
+  return (
+    <View style={styles.row}>
+      <RadioGroupItem value={value} disabled={disabled} accessibilityLabel={label} />
+      <Text style={[styles.rowText, { color: disabled ? colors.mutedForeground : colors.foreground }]}>{label}</Text>
+    </View>
+  );
+}
 
 export default function RadioGroupScreen({ onBack }: { onBack: () => void }) {
-  const { isDark } = useShowcaseTheme();
-  const textColor = isDark ? '#FFF' : '#000';
-
   const [flavor, setFlavor] = useState('vanilla');
-  const [size, setSize] = useState('md');
+  const [plan, setPlan] = useState('none');
 
   return (
-    <Layout title="RADIO GROUP COMPONENT" onBack={onBack}>
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: textColor }]}>VERTICAL LIST (DEFAULT)</Text>
+    <Layout title="RADIO GROUP" onBack={onBack}>
+      <Section title="Controlled" note="value + onValueChange. Selection is a filled dot, not just colour.">
         <RadioGroup value={flavor} onValueChange={setFlavor}>
-          <View style={styles.row}>
-            <RadioGroupItem value="vanilla" accessibilityLabel="Vanilla" />
-            <Text style={[styles.rowText, { color: textColor }]}>Vanilla</Text>
-          </View>
-          <View style={styles.row}>
-            <RadioGroupItem value="chocolate" accessibilityLabel="Chocolate" />
-            <Text style={[styles.rowText, { color: textColor }]}>Chocolate</Text>
-          </View>
-          <View style={styles.row}>
-            <RadioGroupItem value="strawberry" accessibilityLabel="Strawberry" />
-            <Text style={[styles.rowText, { color: textColor }]}>Strawberry</Text>
-          </View>
+          <Option value="vanilla" label="Vanilla" />
+          <Option value="chocolate" label="Chocolate" />
+          <Option value="strawberry" label="Strawberry" />
         </RadioGroup>
-      </View>
+        <Caption>{`Selected: ${flavor}`}</Caption>
+      </Section>
 
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: textColor }]}>HORIZONTAL LAYOUT</Text>
-        <RadioGroup value={size} onValueChange={setSize} style={{ flexDirection: 'row', gap: 24 }}>
-          <View style={styles.row}>
-            <RadioGroupItem value="sm" accessibilityLabel="Small" />
-            <Text style={[styles.rowText, { color: textColor }]}>Small</Text>
-          </View>
-          <View style={styles.row}>
-            <RadioGroupItem value="md" accessibilityLabel="Medium" />
-            <Text style={[styles.rowText, { color: textColor }]}>Medium</Text>
-          </View>
-          <View style={styles.row}>
-            <RadioGroupItem value="lg" accessibilityLabel="Large" />
-            <Text style={[styles.rowText, { color: textColor }]}>Large</Text>
-          </View>
+      <Section title="Uncontrolled" note="defaultValue keeps its own state; nothing is selected without one.">
+        <RadioGroup defaultValue="monthly" onValueChange={setPlan}>
+          <Option value="monthly" label="Monthly" />
+          <Option value="yearly" label="Yearly" />
         </RadioGroup>
-      </View>
+        <Caption>{`Last change: ${plan}`}</Caption>
+        <RadioGroup>
+          <Option value="a" label="No default selected" />
+          <Option value="b" label="Another option" />
+        </RadioGroup>
+      </Section>
 
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: textColor }]}>DISABLED STATE</Text>
-        <RadioGroup value="option1" disabled>
-          <View style={styles.row}>
-            <RadioGroupItem value="option1" accessibilityLabel="Selected Disabled" />
-            <Text style={[styles.rowText, { color: isDark ? '#666' : '#999' }]}>Selected Disabled</Text>
-          </View>
-          <View style={styles.row}>
-            <RadioGroupItem value="option2" accessibilityLabel="Unselected Disabled" />
-            <Text style={[styles.rowText, { color: isDark ? '#666' : '#999' }]}>Unselected Disabled</Text>
-          </View>
+      <Section title="Disabled" note="Disable one item, or the whole group with disabled on RadioGroup.">
+        <RadioGroup defaultValue="one">
+          <Option value="one" label="Available" />
+          <Option value="two" label="Unavailable item" disabled />
         </RadioGroup>
-      </View>
+        <RadioGroup defaultValue="x" disabled>
+          <Option value="x" label="Whole group disabled (selected)" disabled />
+          <Option value="y" label="Whole group disabled" disabled />
+        </RadioGroup>
+      </Section>
+
+      <Section title="Edge cases">
+        <View style={styles.narrow}>
+          <RadioGroup defaultValue="long">
+            <Option value="long" label="An option label long enough to wrap in a narrow column" />
+          </RadioGroup>
+        </View>
+      </Section>
     </Layout>
   );
 }
 
 const styles = StyleSheet.create({
-  section: { marginBottom: 36 },
-  label: { fontSize: 12, fontWeight: '700', marginBottom: 16, letterSpacing: 1 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  rowText: { fontSize: 16, fontWeight: '600' }
+  row: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  rowText: { fontSize: 16, fontWeight: '600', flexShrink: 1 },
+  narrow: { width: 260 },
 });

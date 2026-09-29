@@ -1,7 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-// ⚠️ IMPORTANT: Importing existing ApexRN components for composition!
 import {
   Dialog,
   DialogTrigger,
@@ -13,7 +12,6 @@ import {
 } from './dialog';
 import Button from './button';
 
-// Notice typography and spacing are imported here
 import { spacing } from '../lib/colors';
 
 // ---------------------------------------------------------------------------
@@ -21,9 +19,14 @@ import { spacing } from '../lib/colors';
 // ---------------------------------------------------------------------------
 export interface AlertDialogProps {
   /**
-   * The controlled open state of the alert dialog.
+   * The controlled open state of the alert dialog. Omit for uncontrolled use.
    */
   open?: boolean;
+  /**
+   * Initial open state when uncontrolled.
+   * @default false
+   */
+  defaultOpen?: boolean;
   /**
    * Callback fired when the open state changes.
    */
@@ -47,7 +50,14 @@ export interface AlertDialogProps {
    */
   actionText?: string;
   /**
-   * Callback fired when the cancel button is pressed.
+   * Styles the action button as destructive. Set false for actions that are
+   * not destructive (for example "Sign out").
+   * @default true
+   */
+  destructive?: boolean;
+  /**
+   * Callback fired when the user cancels: the cancel button, the Android back
+   * button, or the Escape key.
    */
   onCancel?: () => void;
   /**
@@ -66,18 +76,20 @@ export interface AlertDialogProps {
 
 export default function AlertDialog({
   open,
+  defaultOpen = false,
   onOpenChange,
   title,
   description,
   cancelText = 'Cancel',
   actionText = 'Continue',
+  destructive = true,
   onCancel,
   onAction,
   children,
 }: AlertDialogProps) {
-  const [internalOpen, setInternalOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(defaultOpen);
   const isControlled = open !== undefined;
-  
+
   const currentOpen = isControlled ? open : internalOpen;
 
   const handleOpenChange = (newState: boolean) => {
@@ -92,18 +104,25 @@ export default function AlertDialog({
     handleOpenChange(false);
   };
 
+  // Back button / Escape reach us as a close request from the Dialog. That is
+  // a cancel: the cancel button already runs handleCancel itself.
+  const handleDialogOpenChange = (newState: boolean) => {
+    if (!newState) onCancel?.();
+    handleOpenChange(newState);
+  };
+
   const handleAction = () => {
     onAction?.();
     handleOpenChange(false);
   };
 
   // Alert Dialogs intentionally intercept outside interactions.
-  // Passing this empty function prevents the underlying Dialog from closing 
+  // Passing this empty function prevents the underlying Dialog from closing
   // when the user taps the backdrop, forcing them to make a distinct choice.
   const handleInteractOutside = () => {};
 
   return (
-    <Dialog open={currentOpen} onOpenChange={handleOpenChange}>
+    <Dialog open={currentOpen} onOpenChange={handleDialogOpenChange}>
       {children && (
         <DialogTrigger asChild>
           {children}
@@ -121,22 +140,23 @@ export default function AlertDialog({
             <DialogDescription>{description}</DialogDescription>
           ) : null}
         </DialogHeader>
-        
+
         {/* The required forced footer layout for alerts */}
-        <DialogFooter style={styles.footerLayout}>
+        <DialogFooter style={[styles.footerLayout, { gap: spacing.sm, marginTop: spacing.md }]}>
           <View style={styles.buttonWrapper}>
             <Button
               variant="outline"
               title={cancelText}
               onPress={handleCancel}
+              style={styles.fill}
             />
           </View>
           <View style={styles.buttonWrapper}>
-            {/* Action button strictly forced to the destructive variant */}
             <Button
-              variant="destructive"
+              variant={destructive ? 'destructive' : 'primary'}
               title={actionText}
               onPress={handleAction}
+              style={styles.fill}
             />
           </View>
         </DialogFooter>
@@ -148,18 +168,22 @@ export default function AlertDialog({
 // ---------------------------------------------------------------------------
 // Styles
 // ---------------------------------------------------------------------------
-const styles = StyleSheet.create({ 
+const styles = StyleSheet.create({
   footerLayout: {
     // Ensures the buttons have a consistent gap and wrap cleanly on very small screens
     flexDirection: 'row',
     justifyContent: 'flex-end',
     flexWrap: 'wrap',
-    gap: spacing.sm,
-    marginTop: spacing.md,
   },
   buttonWrapper: {
-    // Grow to share the row, but wrap below `minWidth` on small screens.
+    // Sized to its label, then grown to share the row. A label that does not
+    // fit next to its neighbour wraps to its own row instead of truncating.
     flexGrow: 1,
-    flexBasis: 100,
-  }
+    flexShrink: 1,
+    flexBasis: 'auto',
+    minWidth: 100,
+  },
+  fill: {
+    alignSelf: 'stretch',
+  },
 });

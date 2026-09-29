@@ -1,71 +1,105 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@apexrn/ui';
 import Layout from '../components/Layout';
-import { useShowcaseTheme } from '../context/ThemeContext';
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@ui/components/dialog';
-import Button from '@ui/components/button';
+import Section, { Caption } from '../components/Section';
 
 export default function DialogScreen({ onBack }: { onBack: () => void }) {
-  const { isDark } = useShowcaseTheme();
-  const textColor = isDark ? '#FFF' : '#000';
-
-  const [actionsOpen, setActionsOpen] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [interactions, setInteractions] = useState(0);
 
   return (
-    <Layout title="DIALOG COMPONENT" onBack={onBack}>
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: textColor }]}>DEFAULT DIALOG</Text>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button title="Open Simple Dialog" />
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Hello World</DialogTitle>
-              <DialogDescription>This is a basic dialog without actions.</DialogDescription>
-            </DialogHeader>
-          </DialogContent>
-        </Dialog>
-      </View>
+    <Layout title="DIALOG" onBack={onBack}>
+      <Section title="Uncontrolled" note="DialogTrigger asChild wraps your own button. Close with the backdrop, Android back or Escape.">
+        <View style={styles.row}>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button title="Open dialog" />
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Welcome back</DialogTitle>
+                <DialogDescription>Nothing else needs your attention right now.</DialogDescription>
+              </DialogHeader>
+            </DialogContent>
+          </Dialog>
+        </View>
+      </Section>
 
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: textColor }]}>WITH ACTIONS (FOOTER)</Text>
-        <Dialog open={actionsOpen} onOpenChange={setActionsOpen}>
-          <DialogTrigger asChild>
-            <Button title="Open Action Dialog" variant="outline" />
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>CONFIRM DELETION</DialogTitle>
-              <DialogDescription>Are you sure you want to delete this file? This action cannot be undone.</DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button title="CANCEL" variant="outline" onPress={() => setActionsOpen(false)} />
-              <Button title="DELETE" variant="primary" onPress={() => setActionsOpen(false)} />
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </View>
+      <Section title="Controlled, with actions" note="open + onOpenChange; the footer holds the actions.">
+        <View style={styles.row}>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button title="Delete file" variant="outline" />
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Delete this file?</DialogTitle>
+                <DialogDescription>You cannot undo this. The file is removed for everyone with access.</DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button title="Cancel" variant="outline" size="sm" onPress={() => setOpen(false)} />
+                <Button title="Delete" variant="destructive" size="sm" onPress={() => setOpen(false)} />
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </View>
+        <Caption>{open ? 'State: open' : 'State: closed'}</Caption>
+      </Section>
 
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: textColor }]}>CUSTOM CONTENT</Text>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button title="Open Custom Dialog" variant="outline" />
-          </DialogTrigger>
-          <DialogContent>
-            <View style={{ padding: 20, backgroundColor: '#000', borderWidth: 2, borderColor: '#FFF' }}>
-              <Text style={{ color: '#FFF', fontSize: 24, fontWeight: 'bold' }}>CUSTOM BRUTALIST BLOCK</Text>
-              <Text style={{ color: '#AAA', marginTop: 8 }}>You can place anything inside the dialog content.</Text>
-            </View>
-          </DialogContent>
-        </Dialog>
-      </View>
+      <Section title="defaultOpen and onInteractOutside" note="A backdrop tap calls onInteractOutside instead of closing. Close it with the button.">
+        <View style={styles.row}>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button title="Open locked dialog" variant="primary" />
+            </DialogTrigger>
+            <DialogContent onInteractOutside={() => setInteractions((n) => n + 1)}>
+              <DialogHeader>
+                <DialogTitle>Locked</DialogTitle>
+                <DialogDescription>Tapping outside does not close this one.</DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <DialogTrigger asChild>
+                  <Button title="Stay" size="sm" variant="outline" />
+                </DialogTrigger>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </View>
+        <Caption>{`Outside taps: ${interactions}`}</Caption>
+      </Section>
+
+      <Section title="Edge cases" note="Long title and description wrap inside the 400pt maximum width.">
+        <View style={styles.row}>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button title="Open long dialog" variant="outline" />
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>A dialog title that is long enough to wrap onto several lines</DialogTitle>
+                <DialogDescription>
+                  The description also wraps. The dialog grows with its content and stays centred with its hard
+                  shadow inside the screen edge, even on a 320pt wide device.
+                </DialogDescription>
+              </DialogHeader>
+            </DialogContent>
+          </Dialog>
+        </View>
+      </Section>
     </Layout>
   );
 }
 
 const styles = StyleSheet.create({
-  section: { marginBottom: 36, zIndex: 1 },
-  label: { fontSize: 12, fontWeight: '700', marginBottom: 16, letterSpacing: 1 },
+  row: { flexDirection: 'row', gap: 14 },
 });

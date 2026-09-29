@@ -1,65 +1,86 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { Button, Input, Sheet, SheetContent, useTheme } from '@apexrn/ui';
 import Layout from '../components/Layout';
-import { useShowcaseTheme } from '../context/ThemeContext';
-import { Sheet, SheetContent } from '@ui/components/sheet';
-import Button from '@ui/components/button';
-import Input from '@ui/components/input';
+import Section, { Caption } from '../components/Section';
 
 export default function SheetScreen({ onBack }: { onBack: () => void }) {
-  const { isDark } = useShowcaseTheme();
-  const textColor = isDark ? '#FFF' : '#000';
-
-  const [sheet1Open, setSheet1Open] = useState(false);
-  const [sheet2Open, setSheet2Open] = useState(false);
+  const { colors } = useTheme();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
+  const [tallOpen, setTallOpen] = useState(false);
+  const [changes, setChanges] = useState<string[]>([]);
+  const log = (name: string) => (open: boolean) => setChanges((c) => [`${name}: ${open ? 'open' : 'closed'}`, ...c].slice(0, 4));
+  const heading = [styles.heading, { color: colors.foreground }];
+  const body = [styles.body, { color: colors.foreground }];
 
   return (
-    <Layout title="SHEET COMPONENT" onBack={onBack}>
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: textColor }]}>DEFAULT BOTTOM SHEET</Text>
-        <Button title="Open Standard Sheet" onPress={() => setSheet1Open(true)} />
-        
-        <Sheet open={sheet1Open} onOpenChange={setSheet1Open}>
+    <Layout title="SHEET" onBack={onBack}>
+      <Section
+        title="Standard"
+        note="Slides up from the bottom. Close with the button, the backdrop, a downward drag, the Android back button or Escape."
+      >
+        <View style={styles.row}>
+          <Button title="Open sheet" onPress={() => setMenuOpen(true)} />
+        </View>
+        <Sheet
+          open={menuOpen}
+          onOpenChange={(o) => {
+            setMenuOpen(o);
+            log('menu')(o);
+          }}
+        >
           {({ handleDismiss }) => (
             <SheetContent sheetHeight={300}>
-              <View style={styles.sheetBody}>
-                <Text style={[styles.sheetTitle, { color: textColor }]}>MENU</Text>
-                <Text style={[styles.sheetText, { color: textColor }]}>Swipe down or press the button to close.</Text>
-                <Button title="Close Sheet" onPress={handleDismiss} style={{ marginTop: 24 }} />
-              </View>
+              <Text style={heading}>Menu</Text>
+              <Text style={body}>Drag the handle down, tap outside, or press the button.</Text>
+              <Button title="Close sheet" onPress={handleDismiss} style={styles.gap} />
             </SheetContent>
           )}
         </Sheet>
-      </View>
+        <Caption>{changes.length ? changes.join('  |  ') : 'No changes yet'}</Caption>
+      </Section>
 
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: textColor }]}>TALL SHEET WITH INPUTS</Text>
-        <Button title="Open Tall Sheet" variant="outline" onPress={() => setSheet2Open(true)} />
-        
-        <Sheet open={sheet2Open} onOpenChange={setSheet2Open}>
+      <Section title="With inputs" note="The sheet lifts above the keyboard.">
+        <View style={styles.row}>
+          <Button title="Edit profile" variant="outline" onPress={() => setFormOpen(true)} />
+        </View>
+        <Sheet open={formOpen} onOpenChange={setFormOpen}>
           {({ handleDismiss }) => (
-            <SheetContent sheetHeight={500}>
-              <View style={styles.sheetBody}>
-                <Text style={[styles.sheetTitle, { color: textColor }]}>EDIT PROFILE</Text>
-                <View style={{ gap: 16, marginTop: 24 }}>
-                  <Input placeholder="Username" />
-                  <Input placeholder="Email Address" />
-                  <Input placeholder="Bio" style={{ height: 100 }} multiline />
-                </View>
-                <Button title="Save Changes" variant="primary" onPress={handleDismiss} style={{ marginTop: 24 }} />
+            <SheetContent sheetHeight={460}>
+              <Text style={heading}>Edit profile</Text>
+              <View style={styles.form}>
+                <Input placeholder="Username" />
+                <Input placeholder="Email address" keyboardType="email-address" autoCapitalize="none" />
               </View>
+              <Button title="Save changes" variant="primary" onPress={handleDismiss} style={styles.gap} />
             </SheetContent>
           )}
         </Sheet>
-      </View>
+      </Section>
+
+      <Section title="Edge cases" note="A sheetHeight taller than the screen is capped at 90% of the window height.">
+        <View style={styles.row}>
+          <Button title="Oversized sheet" variant="destructive" onPress={() => setTallOpen(true)} />
+        </View>
+        <Sheet open={tallOpen} onOpenChange={setTallOpen}>
+          {({ handleDismiss }) => (
+            <SheetContent sheetHeight={5000}>
+              <Text style={heading}>Capped</Text>
+              <Text style={body}>Requested 5000pt; rendered at most 90% of the window.</Text>
+              <Button title="Close" onPress={handleDismiss} style={styles.gap} />
+            </SheetContent>
+          )}
+        </Sheet>
+      </Section>
     </Layout>
   );
 }
 
 const styles = StyleSheet.create({
-  section: { marginBottom: 36, zIndex: 1 },
-  label: { fontSize: 12, fontWeight: '700', marginBottom: 16, letterSpacing: 1 },
-  sheetBody: { flex: 1, padding: 16 },
-  sheetTitle: { fontSize: 24, fontWeight: '900', marginBottom: 8 },
-  sheetText: { fontSize: 16 }
+  row: { flexDirection: 'row', gap: 14 },
+  heading: { fontSize: 22, fontWeight: '900', textTransform: 'uppercase' },
+  body: { fontSize: 15, lineHeight: 21, marginTop: 8, fontWeight: '500' },
+  form: { gap: 16, marginTop: 20 },
+  gap: { marginTop: 24 },
 });

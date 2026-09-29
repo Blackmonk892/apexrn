@@ -1,24 +1,25 @@
-import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
+  type LayoutChangeEvent,
+  type LayoutRectangle,
   Pressable,
-  StyleProp,
+  type PressableProps,
+  type StyleProp,
   StyleSheet,
   Text,
   View,
-  ViewProps,
-  PressableProps,
-  LayoutChangeEvent,
-  LayoutRectangle,
-  ViewStyle,
+  type ViewProps,
+  type ViewStyle,
 } from 'react-native';
-import Animated, { 
-  useAnimatedStyle, 
-  useSharedValue, 
-  withTiming, 
-  Easing 
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withTiming,
 } from 'react-native-reanimated';
 
-import { borderWidths, spacing, typography } from '../lib/colors';
+import { borderWidths, spacing, touchTarget, typography } from '../lib/colors';
 import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
 import BrutalSurface from './brutal_surface';
@@ -57,13 +58,17 @@ function useTabsListContext() {
 
 export interface TabsProps extends ViewProps {
   /**
-   * The value of the currently selected tab.
+   * The value of the selected tab. Omit for an uncontrolled tab set.
    */
-  value: string;
+  value?: string;
+  /**
+   * Initial tab when uncontrolled.
+   */
+  defaultValue?: string;
   /**
    * Callback fired when a tab is selected.
    */
-  onValueChange: (value: string) => void;
+  onValueChange?: (value: string) => void;
   children?: ReactNode;
 }
 
@@ -106,9 +111,31 @@ const SHADOW_OFFSET = 4;
 // Components
 // ---------------------------------------------------------------------------
 
-export function Tabs({ value, onValueChange, children, style, ...props }: TabsProps) {
+export function Tabs({
+  value: valueProp,
+  defaultValue = '',
+  onValueChange,
+  children,
+  style,
+  ...props
+}: TabsProps) {
+  const [internalValue, setInternalValue] = useState(defaultValue);
+  const value = valueProp ?? internalValue;
+  const controlled = valueProp !== undefined;
+
+  const context = useMemo<TabsContextState>(
+    () => ({
+      value,
+      onValueChange: (next) => {
+        if (!controlled) setInternalValue(next);
+        onValueChange?.(next);
+      },
+    }),
+    [value, controlled, onValueChange],
+  );
+
   return (
-    <TabsContext.Provider value={{ value, onValueChange }}>
+    <TabsContext.Provider value={context}>
       <View style={cn(styles.root, style)} {...props}>
         {children}
       </View>
@@ -119,10 +146,10 @@ export function Tabs({ value, onValueChange, children, style, ...props }: TabsPr
 export function TabsList({ children, style, ...props }: ViewProps) {
   const { value } = useTabsContext();
   const { colors } = useTheme();
+  const reduceMotion = useReducedMotion();
   const [layouts, setLayouts] = useState<Record<string, LayoutRectangle>>({});
-  
+
   const translateX = useSharedValue(0);
-  const indicatorWidth = useSharedValue(0);
   // Plain ref: StrictMode-safe, no worklet involvement.
   const isFirstRender = useRef(true);
 
@@ -134,37 +161,34 @@ export function TabsList({ children, style, ...props }: ViewProps) {
       return { ...prev, [tabValue]: layout };
     });
   }, []);
+  const listContext = useMemo(() => ({ registerLayout }), [registerLayout]);
+
+  const activeLayout = layouts[value];
 
   useEffect(() => {
-    const activeLayout = layouts[value];
-
-    if (activeLayout) {
-      if (isFirstRender.current) {
-        translateX.value = activeLayout.x;
-        indicatorWidth.value = activeLayout.width;
-        isFirstRender.current = false;
-      } else {
-        translateX.value = withTiming(activeLayout.x, { 
-          duration: 150, 
-          easing: Easing.out(Easing.quad) 
-        });
-        indicatorWidth.value = withTiming(activeLayout.width, { 
-          duration: 150, 
-          easing: Easing.out(Easing.quad) 
-        });
-      }
+    if (!activeLayout) return;
+    // A trigger's layout.x is measured from the list's border box, but the
+    // absolutely positioned indicator starts inside the border, so the
+    // border width comes off or the indicator sits that far to the right.
+    const x = activeLayout.x - borderWidths.heavy;
+    if (isFirstRender.current || reduceMotion) {
+      translateX.value = x;
+      isFirstRender.current = false;
+    } else {
+      translateX.value = withTiming(x, { duration: 150, easing: Easing.out(Easing.quad) });
     }
-  }, [value, layouts, translateX, indicatorWidth, isFirstRender]);
+  }, [activeLayout, reduceMotion, translateX]);
 
+  // Only translateX is animated. Triggers are flex: 1, so every tab has the
+  // same width and the indicator's width is a plain (non-animated) style.
   const animatedIndicatorStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value }],
-    width: indicatorWidth.value,
   }));
 
   return (
-    <TabsListContext.Provider value={{ registerLayout }}>
+    <TabsListContext.Provider value={listContext}>
       <BrutalSurface
-        style={[styles.listWrapper, style]}
+        style={[styles.listWrapper, { marginBottom: SHADOW_OFFSET + spacing.md }, style]}
         surfaceStyle={[styles.listSurface, { backgroundColor: colors.background }]}
         offset={SHADOW_OFFSET}
         borderWidth="heavy"
@@ -172,7 +196,17 @@ export function TabsList({ children, style, ...props }: ViewProps) {
         accessibilityRole="tablist"
         {...props}
       >
-        <Animated.View style={[styles.indicator, { backgroundColor: colors.foreground, borderColor: colors.border }, animatedIndicatorStyle]} />
+        <Animated.View
+          style={[
+            styles.indicator,
+            {
+              width: activeLayout?.width ?? 0,
+              backgroundColor: colors.foreground,
+              borderColor: colors.border,
+            },
+            animatedIndicatorStyle,
+          ]}
+        />
         {children}
       </BrutalSurface>
     </TabsListContext.Provider>
@@ -183,37 +217,36 @@ export function TabsTrigger({ value, disabled = false, children, style, ...props
   const { value: selectedValue, onValueChange } = useTabsContext();
   const { registerLayout } = useTabsListContext();
   const { colors } = useTheme();
-  
+
   const isSelected = selectedValue === value;
-
-  const handleLayout = (e: LayoutChangeEvent) => {
-    registerLayout(value, e.nativeEvent.layout);
-  };
-
-  const handlePress = () => {
-    if (!disabled) {
-      onValueChange(value);
-    }
-  };
 
   return (
     <Pressable
-      onLayout={handleLayout}
-      onPress={handlePress}
+      onLayout={(e: LayoutChangeEvent) => registerLayout(value, e.nativeEvent.layout)}
+      onPress={() => {
+        if (!disabled) onValueChange(value);
+      }}
       disabled={disabled}
-      style={cn(styles.trigger, style)}
+      style={cn(
+        styles.trigger,
+        { minHeight: touchTarget, paddingHorizontal: spacing.sm, paddingVertical: spacing.sm },
+        style,
+      )}
       accessibilityRole="tab"
       accessibilityState={{ selected: isSelected, disabled }}
+      aria-selected={isSelected}
+      aria-disabled={disabled}
       {...props}
     >
-      <Text 
+      <Text
         style={cn(
-          styles.triggerText, 
-          { color: colors.foreground },
+          styles.triggerText,
+          { fontSize: typography.sm, color: colors.foreground },
           isSelected && { color: colors.background },
           disabled && { color: colors.mutedForeground }
         )}
         numberOfLines={1}
+        maxFontSizeMultiplier={1.3}
       >
         {children}
       </Text>
@@ -247,12 +280,12 @@ export function TabsContent({ value, children, keepMounted = false, style, ...pr
 // ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
   root: {
-    width: '100%',
+    alignSelf: 'stretch',
     flexDirection: 'column',
   },
+  // stretch (not width: 100%) so the shadow's margin doesn't push past the parent.
   listWrapper: {
-    width: '100%',
-    marginBottom: SHADOW_OFFSET + spacing.md,
+    alignSelf: 'stretch',
   },
   listSurface: {
     flexDirection: 'row',
@@ -268,20 +301,17 @@ const styles = StyleSheet.create({
   },
   trigger: {
     flex: 1,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.sm,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 2,
   },
   triggerText: {
-    fontSize: typography.sm,
     fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 0.4,
   },
   content: {
-    width: '100%',
+    alignSelf: 'stretch',
   },
   hidden: {
     height: 0,

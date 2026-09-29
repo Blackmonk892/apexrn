@@ -1,17 +1,23 @@
-import { forwardRef, useEffect, useState, type ReactNode } from 'react';
+import { forwardRef, useEffect, type ReactNode } from 'react';
 import {
   Pressable,
-  StyleProp,
+  type StyleProp,
   StyleSheet,
   TextInput,
-  TextInputProps,
-  TextStyle,
+  type TextInputProps,
+  type TextStyle,
   View,
-  ViewStyle,
+  type ViewStyle,
 } from 'react-native';
-import { useAnimatedStyle, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
+import {
+  Easing,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
-import { spacing, typography } from '../lib/colors';
+import { controlHeight, spacing, typography } from '../lib/colors';
 import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
 import BrutalSurface from './brutal_surface';
@@ -21,7 +27,7 @@ import BrutalSurface from './brutal_surface';
 // ---------------------------------------------------------------------------
 export interface InputProps extends TextInputProps {
   /**
-   * Optional icon to display on the left side of the input.
+   * Optional icon to display on the left side of the input. Decorative.
    */
   leadingIcon?: ReactNode;
   /**
@@ -34,6 +40,18 @@ export interface InputProps extends TextInputProps {
    */
   onTrailingIconPress?: () => void;
   /**
+   * Accessibility label for the tappable trailing icon.
+   * @default 'Input action'
+   */
+  trailingIconLabel?: string;
+  /**
+   * Marks the value as invalid. The border and shadow switch to the
+   * destructive colour and the shadow stays on even without focus, so the
+   * state is readable without relying on hue alone.
+   * @default false
+   */
+  error?: boolean;
+  /**
    * Disables the input, applying muted styles and preventing interactions.
    * @default false
    */
@@ -44,7 +62,6 @@ export interface InputProps extends TextInputProps {
   inputStyle?: StyleProp<TextStyle>;
   /**
    * Style overrides for the brutalist surface (borders, background).
-   * Use this — not `style` — for border overrides such as error states.
    */
   surfaceStyle?: StyleProp<ViewStyle>;
 }
@@ -61,6 +78,8 @@ const Input = forwardRef<TextInput, InputProps>(({
   leadingIcon,
   trailingIcon,
   onTrailingIconPress,
+  trailingIconLabel = 'Input action',
+  error = false,
   disabled = false,
   inputStyle,
   surfaceStyle,
@@ -71,67 +90,72 @@ const Input = forwardRef<TextInput, InputProps>(({
   ...props
 }, ref) => {
   const { colors } = useTheme();
-  const [isFocused, setIsFocused] = useState(false);
+  const reduceMotion = useReducedMotion();
+  // 0 = resting, 1 = shadow fully shown (focused).
   const focusProgress = useSharedValue(0);
 
-  // Disabling mid-focus must not leave the focused styling stuck on.
+  const animateTo = (to: number) => {
+    focusProgress.value = reduceMotion
+      ? to
+      : withTiming(to, { duration: to ? 100 : 80, easing: to ? Easing.out(Easing.quad) : Easing.in(Easing.quad) });
+  };
+
+  // Disabling mid-focus must not leave the focus shadow stuck on.
   useEffect(() => {
-    if (disabled) {
-      setIsFocused(false);
-      focusProgress.value = withTiming(0, {
-        duration: 80,
-        easing: Easing.in(Easing.quad),
-      });
-    }
+    if (disabled) focusProgress.value = 0;
   }, [disabled, focusProgress]);
 
   const handleFocus: NonNullable<TextInputProps['onFocus']> = (e) => {
-    if (disabled) return;
-    setIsFocused(true);
-    focusProgress.value = withTiming(1, {
-      duration: 100,
-      easing: Easing.out(Easing.quad),
-    });
+    if (!disabled) animateTo(1);
     onFocus?.(e);
   };
 
   const handleBlur: NonNullable<TextInputProps['onBlur']> = (e) => {
-    if (disabled) return;
-    setIsFocused(false);
-    focusProgress.value = withTiming(0, {
-      duration: 80,
-      easing: Easing.in(Easing.quad),
-    });
+    animateTo(0);
     onBlur?.(e);
   };
 
+  // The shadow layer is always laid out (so size never changes between
+  // states); focus only fades its opacity. Errors keep it visible.
   const animatedShadowStyle = useAnimatedStyle(() => ({
-    opacity: focusProgress.value,
+    opacity: error && !disabled ? 1 : focusProgress.value,
   }));
+
+  const accent = error && !disabled ? colors.destructive : colors.border;
 
   return (
     <View style={cn(styles.container, style)}>
       <BrutalSurface
         pressable={false}
-        hasShadow={!disabled}
+        hasShadow
         shadowStyle={animatedShadowStyle}
         offset={SHADOW_OFFSET}
-        borderWidth={isFocused ? 'heavy' : 'standard'}
+        borderWidth="heavy"
         backgroundColor={disabled ? colors.muted : colors.background}
-        borderColor={disabled ? colors.mutedForeground : colors.border}
-        surfaceStyle={[styles.surface, surfaceStyle]}
+        borderColor={disabled ? colors.mutedForeground : accent}
+        shadowColor={error && !disabled ? colors.destructive : undefined}
+        surfaceStyle={[styles.surface, { minHeight: controlHeight.md }, surfaceStyle]}
       >
-        {leadingIcon && (
-          <View style={cn(styles.iconContainer, styles.leadingIcon)}>
+        {leadingIcon ? (
+          <View
+            style={[styles.iconContainer, { paddingLeft: spacing.md }]}
+            importantForAccessibility="no-hide-descendants"
+            accessibilityElementsHidden
+          >
             {leadingIcon}
           </View>
-        )}
+        ) : null}
 
         <TextInput
           ref={ref}
           style={cn(
             styles.input,
-            { color: colors.foreground },
+            {
+              fontSize: typography.md,
+              paddingVertical: spacing.sm,
+              paddingHorizontal: spacing.md,
+              color: colors.foreground,
+            },
             disabled && { color: colors.mutedForeground },
             inputStyle
           )}
@@ -139,27 +163,33 @@ const Input = forwardRef<TextInput, InputProps>(({
           onFocus={handleFocus}
           onBlur={handleBlur}
           placeholderTextColor={placeholderTextColor ?? colors.mutedForeground}
+          maxFontSizeMultiplier={1.3}
+          aria-invalid={error || undefined}
           accessibilityState={{ disabled }}
           {...props}
         />
 
-        {trailingIcon && (
+        {trailingIcon ? (
           onTrailingIconPress && !disabled ? (
             <Pressable
               onPress={onTrailingIconPress}
-              style={cn(styles.iconContainer, styles.trailingIcon)}
+              style={[styles.iconContainer, { paddingRight: spacing.md }]}
               accessibilityRole="button"
-              accessibilityLabel="Input action"
+              accessibilityLabel={trailingIconLabel}
               hitSlop={8}
             >
               {trailingIcon}
             </Pressable>
           ) : (
-            <View style={cn(styles.iconContainer, styles.trailingIcon)}>
+            <View
+              style={[styles.iconContainer, { paddingRight: spacing.md }]}
+              importantForAccessibility="no-hide-descendants"
+              accessibilityElementsHidden
+            >
               {trailingIcon}
             </View>
           )
-        )}
+        ) : null}
       </BrutalSurface>
     </View>
   );
@@ -172,28 +202,19 @@ export default Input;
 // Styles
 // ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
+  // stretch (not width: 100%) so the shadow's margin doesn't push past the parent.
   container: {
-    width: '100%',
+    alignSelf: 'stretch',
   },
   surface: {
     flexDirection: 'row',
     alignItems: 'center',
-    minHeight: 48,
   },
   input: {
     flex: 1,
-    fontSize: typography.md,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
   },
   iconContainer: {
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  leadingIcon: {
-    paddingLeft: spacing.md,
-  },
-  trailingIcon: {
-    paddingRight: spacing.md,
   },
 });

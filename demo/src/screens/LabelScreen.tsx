@@ -1,31 +1,45 @@
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { Input, Label } from '@apexrn/ui';
 import Layout from '../components/Layout';
-import { useShowcaseTheme } from '../context/ThemeContext';
-import Label from '@ui/components/label';
+import Section, { Caption } from '../components/Section';
 
 export default function LabelScreen({ onBack }: { onBack: () => void }) {
-  const { isDark } = useShowcaseTheme();
-  const textColor = isDark ? '#FFF' : '#000';
+  const [email, setEmail] = useState('');
 
   return (
-    <Layout title="LABEL COMPONENT" onBack={onBack}>
-      <View style={styles.section}>
-        <Text style={[styles.headerLabel, { color: textColor }]}>DEFAULT LABEL</Text>
-        <Label>Email Address</Label>
-        <Text style={{ color: textColor, marginTop: 4 }}>Used to denote form fields.</Text>
-      </View>
+    <Layout title="LABEL" onBack={onBack}>
+      <Section title="Default">
+        <Label>Email address</Label>
+        <Caption>Names a form control.</Caption>
+      </Section>
 
-      <View style={styles.section}>
-        <Text style={[styles.headerLabel, { color: textColor }]}>DISABLED LABEL</Text>
+      <Section title="Disabled" note="Mutes the label when the control it names is unavailable.">
         <Label disabled>Username</Label>
-        <Text style={{ color: textColor, marginTop: 4 }}>Used when the associated field is disabled.</Text>
-      </View>
+      </Section>
+
+      <Section title="With a control">
+        <View style={styles.field}>
+          <Label>Email address</Label>
+          <Input value={email} onChangeText={setEmail} placeholder="you@example.com" />
+        </View>
+        <View style={styles.field}>
+          <Label disabled>Username</Label>
+          <Input value="apex_user" editable={false} />
+        </View>
+      </Section>
+
+      <Section title="Edge cases">
+        <View style={styles.narrow}>
+          <Label>A long label that wraps onto a second line when space runs out</Label>
+        </View>
+        <Caption>Wraps inside a 180pt container; text scales up to 1.3x.</Caption>
+      </Section>
     </Layout>
   );
 }
 
 const styles = StyleSheet.create({
-  section: { marginBottom: 36 },
-  headerLabel: { fontSize: 12, fontWeight: '700', marginBottom: 16, letterSpacing: 1 },
+  field: { marginBottom: 12 },
+  narrow: { width: 180 },
 });

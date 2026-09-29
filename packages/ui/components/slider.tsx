@@ -1,23 +1,24 @@
 import { useEffect, useState } from 'react';
 import {
-  AccessibilityActionEvent,
-  StyleProp,
+  type AccessibilityActionEvent,
+  type LayoutChangeEvent,
+  type StyleProp,
   StyleSheet,
   View,
-  ViewProps,
-  ViewStyle,
-  LayoutChangeEvent,
+  type ViewProps,
+  type ViewStyle,
 } from 'react-native';
-import Animated, { 
-  useAnimatedStyle, 
-  useSharedValue, 
-  withTiming, 
+import Animated, {
+  Easing,
   runOnJS,
-  Easing
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withTiming,
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
-import { borderWidths, spacing } from '../lib/colors';
+import { borderWidths, spacing, touchTarget } from '../lib/colors';
 import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
 import BrutalSurface from './brutal_surface';
@@ -27,13 +28,22 @@ import BrutalSurface from './brutal_surface';
 // ---------------------------------------------------------------------------
 export interface SliderProps extends Omit<ViewProps, 'style'> {
   /**
-   * The current value of the slider.
+   * The controlled value. Omit for an uncontrolled slider.
    */
-  value: number;
+  value?: number;
   /**
-   * Callback fired when the slider value changes after dragging ends.
+   * Initial value when uncontrolled.
+   * @default min
    */
-  onValueChange: (value: number) => void;
+  defaultValue?: number;
+  /**
+   * Fires whenever the stepped value changes, including while dragging.
+   */
+  onValueChange?: (value: number) => void;
+  /**
+   * Fires once with the final value when a drag or tap ends.
+   */
+  onSlidingComplete?: (value: number) => void;
   /**
    * Minimum value.
    * @default 0
@@ -63,13 +73,17 @@ export interface SliderProps extends Omit<ViewProps, 'style'> {
 const SHADOW_OFFSET = 2;
 const THUMB_WIDTH = 16;
 const THUMB_HEIGHT = 32;
+const ROW_HEIGHT = Math.max(touchTarget, THUMB_HEIGHT + SHADOW_OFFSET);
+const TRACK_HEIGHT = borderWidths.heavy;
 
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 export default function Slider({
-  value,
+  value: valueProp,
+  defaultValue,
   onValueChange,
+  onSlidingComplete,
   min = 0,
   max = 100,
   step = 1,
@@ -78,7 +92,10 @@ export default function Slider({
   ...props
 }: SliderProps) {
   const { colors } = useTheme();
+  const reduceMotion = useReducedMotion();
   const [trackWidth, setTrackWidth] = useState(0);
+  const [internalValue, setInternalValue] = useState(defaultValue ?? min);
+  const value = valueProp ?? internalValue;
   // Reserve the thumb's shadow offset so the thumb never overflows the track.
   const maxTravel = Math.max(0, trackWidth - THUMB_WIDTH - SHADOW_OFFSET);
 
@@ -102,6 +119,7 @@ export default function Slider({
   const gestureOffset = useSharedValue(0);
   const maxTravelSV = useSharedValue(0);
   const isDraggingSV = useSharedValue(false);
+  const lastEmitted = useSharedValue(Number.NaN);
 
   // Keep the worklet-visible travel distance in sync across rotation/resize.
   useEffect(() => {
@@ -111,19 +129,31 @@ export default function Slider({
   useEffect(() => {
     // Don't fight an in-flight drag when the parent echoes values back.
     if (trackWidth > 0 && !isDraggingSV.value) {
-      translateX.value = withTiming(ratioFor(value) * maxTravel, {
-        duration: 150,
-        easing: Easing.out(Easing.quad),
-      });
+      const to = ratioFor(value) * maxTravel;
+      translateX.value = reduceMotion
+        ? to
+        : withTiming(to, { duration: 150, easing: Easing.out(Easing.quad) });
     }
-  }, [value, trackWidth, min, max, maxTravel, translateX]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- ratioFor is derived from min/max/value
+  }, [value, trackWidth, min, max, maxTravel, reduceMotion, translateX]);
 
   const handleLayout = (event: LayoutChangeEvent) => {
     setTrackWidth(event.nativeEvent.layout.width);
   };
 
+  const commit = (next: number) => {
+    if (valueProp === undefined) setInternalValue(next);
+    onValueChange?.(next);
+  };
+
+  const complete = (next: number) => {
+    onSlidingComplete?.(next);
+  };
+
+  const interactive = !disabled && trackWidth > 0 && validRange > 0;
+
   const pan = Gesture.Pan()
-    .enabled(!disabled && trackWidth > 0 && validRange > 0)
+    .enabled(interactive)
     // Horizontal-only: vertical drags belong to the parent ScrollView and
     // must not move the thumb or trap scrolling.
     .activeOffsetX([-10, 10])
@@ -131,51 +161,57 @@ export default function Slider({
     .onStart(() => {
       isDraggingSV.value = true;
       gestureOffset.value = translateX.value;
+      lastEmitted.value = Number.NaN;
     })
     .onUpdate((event) => {
       const travel = maxTravelSV.value;
-      let nextX = gestureOffset.value + event.translationX;
-      nextX = Math.max(0, Math.min(nextX, travel));
+      if (travel <= 0) return;
+      const nextX = Math.max(0, Math.min(gestureOffset.value + event.translationX, travel));
       translateX.value = nextX;
+      // Inline math: worklets cannot call the JS closures above.
+      let live = Math.max(min, Math.min(min + (nextX / travel) * validRange, max));
+      if (validStep > 0) {
+        live = Math.max(min, Math.min(Math.round(live / validStep) * validStep, max));
+      }
+      if (live !== lastEmitted.value) {
+        lastEmitted.value = live;
+        runOnJS(commit)(live);
+      }
     })
     .onEnd(() => {
       isDraggingSV.value = false;
       const travel = maxTravelSV.value;
       if (travel <= 0 || validRange <= 0) return;
-      // Inline math: worklets cannot call the JS closures above.
-      const currentRatio = translateX.value / travel;
-      const rawValue = min + currentRatio * validRange;
-      let finalValue = Math.max(min, Math.min(rawValue, max));
+      let finalValue = Math.max(min, Math.min(min + (translateX.value / travel) * validRange, max));
       if (validStep > 0) {
         finalValue = Math.max(min, Math.min(Math.round(finalValue / validStep) * validStep, max));
       }
-      const finalRatio = (finalValue - min) / validRange;
-
-      translateX.value = withTiming(finalRatio * travel, {
-        duration: 100,
-        easing: Easing.out(Easing.quad)
+      // Snap the thumb to the stepped position.
+      translateX.value = withTiming(((finalValue - min) / validRange) * travel, {
+        duration: reduceMotion ? 0 : 100,
+        easing: Easing.out(Easing.quad),
       });
-
-      runOnJS(onValueChange)(finalValue);
+      if (finalValue !== lastEmitted.value) runOnJS(commit)(finalValue);
+      runOnJS(complete)(finalValue);
     });
 
   const tap = Gesture.Tap()
-    .enabled(!disabled && trackWidth > 0 && validRange > 0)
+    .enabled(interactive)
     .onEnd((event) => {
       const travel = maxTravelSV.value;
       if (travel <= 0 || validRange <= 0) return;
       // Tap-to-seek: center the thumb on the tap point (inline worklet math).
       const x = Math.max(0, Math.min(event.x - THUMB_WIDTH / 2, travel));
-      translateX.value = withTiming(x, {
-        duration: 100,
-        easing: Easing.out(Easing.quad),
-      });
-      const rawValue = min + (x / travel) * validRange;
-      let finalValue = Math.max(min, Math.min(rawValue, max));
+      let finalValue = Math.max(min, Math.min(min + (x / travel) * validRange, max));
       if (validStep > 0) {
         finalValue = Math.max(min, Math.min(Math.round(finalValue / validStep) * validStep, max));
       }
-      runOnJS(onValueChange)(finalValue);
+      translateX.value = withTiming(((finalValue - min) / validRange) * travel, {
+        duration: reduceMotion ? 0 : 100,
+        easing: Easing.out(Easing.quad),
+      });
+      runOnJS(commit)(finalValue);
+      runOnJS(complete)(finalValue);
     });
 
   const composedGestures = Gesture.Race(pan, tap);
@@ -183,21 +219,30 @@ export default function Slider({
   const handleAccessibilityAction = (event: AccessibilityActionEvent) => {
     if (disabled || validRange <= 0) return;
     const delta = validStep > 0 ? validStep : validRange / 20;
-    const next =
-      event.nativeEvent.actionName === 'increment' ? value + delta : value - delta;
-    onValueChange(clampToDomain(next));
+    const next = clampToDomain(
+      event.nativeEvent.actionName === 'increment' ? value + delta : value - delta,
+    );
+    commit(next);
+    complete(next);
   };
 
-  const animatedThumbStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateX: translateX.value }],
-    };
-  });
+  const animatedThumbStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.value }],
+  }));
+
+  // The filled part of the track is a full-width bar scaled from the left
+  // edge (transform only) up to the thumb's centre.
+  const animatedFillStyle = useAnimatedStyle(() => ({
+    transform: [
+      { scaleX: trackWidth > 0 ? (translateX.value + THUMB_WIDTH / 2) / trackWidth : 0 },
+    ],
+    transformOrigin: 'left center',
+  }));
 
   return (
     <GestureDetector gesture={composedGestures}>
       <View
-        style={cn(styles.container, style)}
+        style={cn(styles.container, { marginBottom: spacing.sm }, style)}
         onLayout={handleLayout}
         accessibilityRole="adjustable"
         accessibilityValue={{ min, max, now: clampToDomain(value) }}
@@ -207,12 +252,16 @@ export default function Slider({
         {...props}
       >
         <View
-          style={cn(
+          style={[
             styles.trackLine,
-            { backgroundColor: colors.border },
-            disabled && { backgroundColor: colors.mutedForeground }
-          )}
+            { backgroundColor: disabled ? colors.mutedForeground : colors.border },
+          ]}
         />
+        {disabled ? null : (
+          <Animated.View
+            style={[styles.trackLine, { backgroundColor: colors.primary }, animatedFillStyle]}
+          />
+        )}
 
         <Animated.View style={[styles.thumbWrapper, animatedThumbStyle]}>
           <BrutalSurface
@@ -235,21 +284,20 @@ export default function Slider({
 // ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
   container: {
-    width: '100%',
-    height: THUMB_HEIGHT + SHADOW_OFFSET,
+    alignSelf: 'stretch',
+    height: ROW_HEIGHT,
     justifyContent: 'center',
     position: 'relative',
-    marginBottom: spacing.sm,
   },
   trackLine: {
     position: 'absolute',
     left: 0,
     right: 0,
-    height: borderWidths.standard,
+    height: TRACK_HEIGHT,
   },
   thumbWrapper: {
     position: 'absolute',
-    top: 0,
+    top: (ROW_HEIGHT - (THUMB_HEIGHT + SHADOW_OFFSET)) / 2,
     left: 0,
     width: THUMB_WIDTH + SHADOW_OFFSET,
     height: THUMB_HEIGHT + SHADOW_OFFSET,

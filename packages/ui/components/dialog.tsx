@@ -2,31 +2,33 @@ import {
   cloneElement,
   createContext,
   isValidElement,
-  useContext,
-  useState,
-  useEffect,
   useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
   type ReactElement,
   type ReactNode,
 } from 'react';
 import {
-  GestureResponderEvent,
+  type GestureResponderEvent,
   Modal,
   Pressable,
+  type PressableProps,
   StyleSheet,
   Text,
+  type TextProps,
   View,
-  ViewProps,
-  PressableProps,
-  TextProps
+  type ViewProps,
 } from 'react-native';
-import Animated, { 
-  useAnimatedStyle, 
-  useSharedValue, 
-  withTiming, 
+import Animated, {
   Easing,
+  interpolate,
   runOnJS,
-  interpolate
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withTiming,
 } from 'react-native-reanimated';
 
 import { spacing, typography } from '../lib/colors';
@@ -54,9 +56,14 @@ function useDialogContext() {
 
 export interface DialogProps {
   /**
-   * The controlled open state of the dialog.
+   * The controlled open state of the dialog. Omit for an uncontrolled dialog.
    */
   open?: boolean;
+  /**
+   * Initial open state when uncontrolled.
+   * @default false
+   */
+  defaultOpen?: boolean;
   /**
    * Callback fired when the open state changes.
    */
@@ -66,7 +73,8 @@ export interface DialogProps {
 
 export interface DialogContentProps extends ViewProps {
   /**
-   * Callback fired when the backdrop is pressed.
+   * Callback fired when the backdrop is pressed. Replaces the default
+   * behaviour of closing the dialog.
    */
   onInteractOutside?: () => void;
   children?: ReactNode;
@@ -76,17 +84,18 @@ export interface DialogContentProps extends ViewProps {
 // Design tokens
 // ---------------------------------------------------------------------------
 const DIALOG_SHADOW_OFFSET = 8;
+const SCRIM_OPACITY = 0.5;
 
 // ---------------------------------------------------------------------------
 // Components
 // ---------------------------------------------------------------------------
 
-export function Dialog({ open: controlledOpen, onOpenChange, children }: DialogProps) {
-  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+export function Dialog({ open: controlledOpen, defaultOpen = false, onOpenChange, children }: DialogProps) {
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(defaultOpen);
   const isControlled = controlledOpen !== undefined;
-  
+
   const open = isControlled ? controlledOpen : uncontrolledOpen;
-  
+
   const setOpen = useCallback((newState: boolean) => {
     if (!isControlled) {
       setUncontrolledOpen(newState);
@@ -94,8 +103,10 @@ export function Dialog({ open: controlledOpen, onOpenChange, children }: DialogP
     onOpenChange?.(newState);
   }, [isControlled, onOpenChange]);
 
+  const context = useMemo(() => ({ open, setOpen }), [open, setOpen]);
+
   return (
-    <DialogContext.Provider value={{ open, setOpen }}>
+    <DialogContext.Provider value={context}>
       {children}
     </DialogContext.Provider>
   );
@@ -132,7 +143,7 @@ export function DialogTrigger({
   // `onPress` is destructured above, so spreading `props` here cannot
   // clobber the open handler.
   return (
-    <Pressable onPress={handlePress} {...props}>
+    <Pressable accessibilityRole="button" onPress={handlePress} {...props}>
       {children}
     </Pressable>
   );
@@ -140,38 +151,34 @@ export function DialogTrigger({
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-export function DialogContent({ 
-  children, 
+export function DialogContent({
+  children,
   onInteractOutside,
-  style, 
-  ...props 
+  style,
+  ...props
 }: DialogContentProps) {
   const { open, setOpen } = useDialogContext();
   const { colors } = useTheme();
+  const reduceMotion = useReducedMotion();
+  // The Modal stays mounted until the exit animation finishes.
   const [isVisible, setIsVisible] = useState(open);
-  
+
   const progress = useSharedValue(0);
 
   useEffect(() => {
     if (open) {
       setIsVisible(true);
-      progress.value = withTiming(1, {
-        duration: 150,
-        easing: Easing.out(Easing.quad)
-      });
-    } else if (isVisible) {
-      progress.value = withTiming(0, {
-        duration: 100,
-        easing: Easing.in(Easing.quad)
-      }, (finished) => {
+      progress.value = withTiming(1, { duration: reduceMotion ? 0 : 150, easing: Easing.out(Easing.quad) });
+    } else {
+      // Also runs on first mount while closed: 0 -> 0 finishes immediately
+      // and unmounting an already-hidden Modal is a no-op.
+      progress.value = withTiming(0, { duration: reduceMotion ? 0 : 100, easing: Easing.in(Easing.quad) }, (finished) => {
         if (finished) {
           runOnJS(setIsVisible)(false);
         }
       });
     }
-    // Deps intentionally `[open]` only: including `isVisible` would restart
-    // the open animation when `setIsVisible(true)` re-renders.
-  }, [open]);
+  }, [open, reduceMotion, progress]);
 
   const handleBackdropPress = () => {
     if (onInteractOutside) {
@@ -182,7 +189,7 @@ export function DialogContent({
   };
 
   const backdropAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: progress.value,
+    opacity: progress.value * SCRIM_OPACITY,
   }));
 
   const contentAnimatedStyle = useAnimatedStyle(() => ({
@@ -200,21 +207,23 @@ export function DialogContent({
       onRequestClose={() => setOpen(false)}
       accessibilityViewIsModal
     >
-      <View style={styles.modalContainer}>
+      <View style={[styles.modalContainer, { padding: spacing.lg }]}>
         <AnimatedPressable
-          style={[styles.backdrop, backdropAnimatedStyle]}
+          style={[styles.backdrop, { backgroundColor: colors.scrim }, backdropAnimatedStyle]}
           onPress={handleBackdropPress}
           accessibilityRole="button"
           accessibilityLabel="Close Dialog"
         />
 
+        {/* paddingRight makes room for the hard shadow's margin so the
+            surface + shadow together are centred, not the surface alone. */}
         <Animated.View
-          style={[styles.contentPositioner, style, contentAnimatedStyle]}
+          style={[styles.contentPositioner, { paddingRight: DIALOG_SHADOW_OFFSET }, style, contentAnimatedStyle]}
           {...props}
         >
           <BrutalSurface
             style={styles.dialogWrapper}
-            surfaceStyle={[styles.surface, { backgroundColor: colors.background }]}
+            surfaceStyle={[styles.surface, { padding: spacing.xl, gap: spacing.md, backgroundColor: colors.background }]}
             offset={DIALOG_SHADOW_OFFSET}
             borderWidth="extraHeavy"
             pressable={false}
@@ -229,23 +238,24 @@ export function DialogContent({
 
 export function DialogHeader({ style, ...props }: ViewProps) {
   return (
-    <View style={cn(styles.header, style)} {...props} />
+    <View style={cn(styles.header, { gap: spacing.xs }, style)} {...props} />
   );
 }
 
 export function DialogFooter({ style, ...props }: ViewProps) {
   return (
-    <View style={cn(styles.footer, style)} {...props} />
+    <View style={cn(styles.footer, { gap: spacing.sm, marginTop: spacing.md }, style)} {...props} />
   );
 }
 
 export function DialogTitle({ style, ...props }: TextProps) {
   const { colors } = useTheme();
   return (
-    <Text 
-      style={cn(styles.title, { color: colors.foreground }, style)} 
-      accessibilityRole="header" 
-      {...props} 
+    <Text
+      style={cn(styles.title, { fontSize: typography.xl, color: colors.foreground }, style)}
+      accessibilityRole="header"
+      maxFontSizeMultiplier={1.3}
+      {...props}
     />
   );
 }
@@ -253,7 +263,11 @@ export function DialogTitle({ style, ...props }: TextProps) {
 export function DialogDescription({ style, ...props }: TextProps) {
   const { colors } = useTheme();
   return (
-    <Text style={cn(styles.description, { color: colors.mutedForeground }, style)} {...props} />
+    <Text
+      style={cn({ fontSize: typography.md, color: colors.mutedForeground }, style)}
+      maxFontSizeMultiplier={1.3}
+      {...props}
+    />
   );
 }
 
@@ -265,15 +279,13 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: spacing.lg,
   },
   backdrop: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     zIndex: 0,
   },
   contentPositioner: {
-    width: '100%',
+    alignSelf: 'stretch',
     alignItems: 'center',
     zIndex: 1,
     elevation: 1,
@@ -282,27 +294,17 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 400,
   },
-  surface: {
-    padding: spacing.xl,
-    gap: spacing.md,
-  },
+  surface: {},
   header: {
     flexDirection: 'column',
-    gap: spacing.xs,
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    gap: spacing.sm,
-    marginTop: spacing.md,
   },
   title: {
-    fontSize: typography.xl,
     fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 0.4,
-  },
-  description: {
-    fontSize: typography.md,
   },
 });

@@ -1,34 +1,43 @@
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, Text } from 'react-native';
+import { Label, Textarea, useTheme } from '@apexrn/ui';
 import Layout from '../components/Layout';
-import { useShowcaseTheme } from '../context/ThemeContext';
-import Textarea from '@ui/components/textarea';
+import Section from '../components/Section';
+
+const LIMIT = 80;
 
 export default function TextareaScreen({ onBack }: { onBack: () => void }) {
-  const { isDark } = useShowcaseTheme();
-  const textColor = isDark ? '#FFF' : '#000';
+  const { colors } = useTheme();
+  const [bio, setBio] = useState('');
+  const over = bio.length > LIMIT;
 
   return (
-    <Layout title="TEXTAREA COMPONENT" onBack={onBack}>
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: textColor }]}>DEFAULT TEXTAREA</Text>
-        <Textarea placeholder="Write a description here..." />
-      </View>
+    <Layout title="TEXTAREA" onBack={onBack}>
+      <Section title="Default" note="Always multiline, text starts at the top.">
+        <Textarea placeholder="Write a description" />
+      </Section>
 
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: textColor }]}>CUSTOM HEIGHT</Text>
-        <Textarea placeholder="This one is much taller..." style={{ height: 200 }} />
-      </View>
+      <Section title="Custom height" note="Set the height through inputStyle.">
+        <Textarea placeholder="This one is much taller" inputStyle={styles.tall} />
+      </Section>
 
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: textColor }]}>DISABLED TEXTAREA</Text>
+      <Section title="Error" note="Same error treatment as Input: destructive border and a permanent shadow.">
+        <Label>Bio</Label>
+        <Textarea placeholder="Tell us about yourself" value={bio} onChangeText={setBio} error={over} />
+        <Text style={[styles.count, { color: over ? colors.destructive : colors.mutedForeground }]}>
+          {over ? `${bio.length - LIMIT} characters over the limit` : `${bio.length} / ${LIMIT}`}
+        </Text>
+      </Section>
+
+      <Section title="Disabled">
         <Textarea placeholder="Cannot type here" disabled />
-      </View>
+        <Textarea value={'Read only content.\nSecond line.'} disabled />
+      </Section>
     </Layout>
   );
 }
 
 const styles = StyleSheet.create({
-  section: { marginBottom: 36 },
-  label: { fontSize: 12, fontWeight: '700', marginBottom: 16, letterSpacing: 1 },
+  tall: { minHeight: 200 },
+  count: { fontSize: 12, fontWeight: '800', marginTop: 8 },
 });

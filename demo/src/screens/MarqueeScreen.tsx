@@ -1,39 +1,36 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Marquee } from '@apexrn/ui';
 import Layout from '../components/Layout';
-import { useShowcaseTheme } from '../context/ThemeContext';
-import Marquee from '@ui/components/marquee';
+import Section, { Caption } from '../components/Section';
 
 export default function MarqueeScreen({ onBack }: { onBack: () => void }) {
-  const { isDark } = useShowcaseTheme();
-  const textColor = isDark ? '#FFF' : '#000';
-
   return (
-    <Layout title="MARQUEE COMPONENT" onBack={onBack}>
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: textColor }]}>DEFAULT SPEED</Text>
-        <Marquee text="BREAKING NEWS" />
-      </View>
+    <Layout title="MARQUEE" onBack={onBack}>
+      <Section title="Default" note="60 px per second, repeating with a bullet divider.">
+        <Marquee text="Breaking news" />
+      </Section>
 
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: textColor }]}>FAST SPEED & CUSTOM DIVIDER</Text>
-        <Marquee text="SPECIAL OFFER" speed={150} divider=" 🔥 " />
-      </View>
+      <Section title="Speed" note="speed is pixels per second.">
+        <Caption>30</Caption>
+        <Marquee text="Read me slowly" speed={30} />
+        <Caption>150</Caption>
+        <Marquee text="Special offer" speed={150} />
+      </Section>
 
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: textColor }]}>SLOW SPEED</Text>
-        <Marquee text="READ ME SLOWLY" speed={30} />
-      </View>
+      <Section title="Custom divider">
+        <Marquee text="Sale ends Sunday" divider="  //  " />
+      </Section>
 
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: textColor }]}>DISABLED STATE</Text>
-        <Marquee text="CURRENTLY UNAVAILABLE" disabled />
-      </View>
+      <Section title="Disabled" note="Muted colours and no scrolling.">
+        <Marquee text="Currently unavailable" disabled />
+      </Section>
+
+      <Section title="Edge cases" note="Reduced motion also renders the text static.">
+        <Caption>Short text (repeats to fill the row)</Caption>
+        <Marquee text="Go" />
+        <Caption>Long text (wider than the screen)</Caption>
+        <Marquee text="A headline long enough that a single copy already spans the whole width of the screen" />
+      </Section>
     </Layout>
   );
 }
-
-const styles = StyleSheet.create({
-  section: { marginBottom: 36 },
-  label: { fontSize: 12, fontWeight: '700', marginBottom: 16, letterSpacing: 1 },
-});

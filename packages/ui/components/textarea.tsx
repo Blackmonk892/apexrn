@@ -14,6 +14,11 @@ export interface TextareaProps extends TextInputProps {
    */
   disabled?: boolean;
   /**
+   * Marks the value as invalid (destructive border + persistent shadow), same as Input.
+   * @default false
+   */
+  error?: boolean;
+  /**
    * Style overrides for the underlying multiline TextInput.
    */
   inputStyle?: StyleProp<TextStyle>;

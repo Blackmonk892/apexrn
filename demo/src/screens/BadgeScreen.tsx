@@ -1,54 +1,64 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { Badge, BrutalSurface, useTheme } from '@apexrn/ui';
 import Layout from '../components/Layout';
-import { useShowcaseTheme } from '../context/ThemeContext';
-import Badge from '@ui/components/badge';
+import Section, { Caption } from '../components/Section';
+
+const VARIANTS = ['default', 'primary', 'outline', 'accent'] as const;
 
 export default function BadgeScreen({ onBack }: { onBack: () => void }) {
-  const { isDark } = useShowcaseTheme();
-  const textColor = isDark ? '#FFF' : '#000';
+  const { colors } = useTheme();
 
   return (
-    <Layout title="BADGE COMPONENT" onBack={onBack}>
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: textColor }]}>VARIANTS (WITHOUT SHADOW)</Text>
+    <Layout title="BADGE" onBack={onBack}>
+      <Section title="Variants">
         <View style={styles.row}>
-          <Badge label="DEFAULT" />
-          <Badge variant="primary" label="PRIMARY" />
-          <Badge variant="outline" label="OUTLINE" />
-          <Badge variant="accent" label="ACCENT" />
+          {VARIANTS.map((v) => (
+            <Badge key={v} variant={v} label={v} />
+          ))}
         </View>
-      </View>
+      </Section>
 
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: textColor }]}>VARIANTS (WITH SHADOW)</Text>
+      <Section title="With shadow" note="withShadow adds a 2px hard offset.">
         <View style={styles.row}>
-          <Badge label="DEFAULT" withShadow />
-          <Badge variant="primary" label="PRIMARY" withShadow />
-          <Badge variant="outline" label="OUTLINE" withShadow />
-          <Badge variant="accent" label="ACCENT" withShadow />
+          {VARIANTS.map((v) => (
+            <Badge key={v} variant={v} label={v} withShadow />
+          ))}
         </View>
-      </View>
+      </Section>
 
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: textColor }]}>MIXED IN LAYOUT</Text>
-        <View style={[styles.card, { borderColor: isDark ? '#444' : '#000', backgroundColor: isDark ? '#111' : '#FFF' }]}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Text style={{ fontSize: 18, fontWeight: 'bold', color: textColor }}>New Release</Text>
+      <Section title="Custom content" note="children replace the label.">
+        <View style={styles.row}>
+          <Badge variant="accent">
+            <Text style={{ color: colors.accentForeground, fontWeight: '900' }}>★ 4.8</Text>
+          </Badge>
+        </View>
+      </Section>
+
+      <Section title="In context">
+        <BrutalSurface pressable={false} surfaceStyle={styles.card}>
+          <View style={styles.cardHead}>
+            <Text style={[styles.cardTitle, { color: colors.foreground }]}>New release</Text>
             <Badge variant="accent" label="v2.0" withShadow />
           </View>
-          <Text style={{ marginTop: 12, color: isDark ? '#CCC' : '#333' }}>
-            Check out the latest features in our new major release!
-          </Text>
+          <Text style={{ color: colors.foreground }}>Faster press physics and a new dark theme.</Text>
+        </BrutalSurface>
+      </Section>
+
+      <Section title="Edge cases">
+        <View style={styles.narrow}>
+          <Badge variant="primary" label="A very long badge label that must truncate" />
         </View>
-      </View>
+        <Caption>Single line, truncated with an ellipsis, in a 120pt container.</Caption>
+      </Section>
     </Layout>
   );
 }
 
 const styles = StyleSheet.create({
-  section: { marginBottom: 36 },
-  label: { fontSize: 12, fontWeight: '700', marginBottom: 16, letterSpacing: 1 },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 16 },
-  card: { padding: 16, borderWidth: 2, borderRadius: 0 }
+  card: { padding: 16, gap: 8 },
+  cardHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  cardTitle: { fontSize: 18, fontWeight: '900' },
+  narrow: { width: 120 },
 });

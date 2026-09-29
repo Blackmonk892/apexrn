@@ -1,56 +1,74 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { Checkbox, useTheme } from '@apexrn/ui';
 import Layout from '../components/Layout';
-import { useShowcaseTheme } from '../context/ThemeContext';
-import Checkbox from '@ui/components/checkbox';
+import Section, { Caption } from '../components/Section';
+
+function Row({ label, muted, children }: { label: string; muted?: boolean; children: React.ReactNode }) {
+  const { colors } = useTheme();
+  return (
+    <View style={styles.row}>
+      {children}
+      <Text style={[styles.rowText, { color: muted ? colors.mutedForeground : colors.foreground }]}>{label}</Text>
+    </View>
+  );
+}
 
 export default function CheckboxScreen({ onBack }: { onBack: () => void }) {
-  const { isDark } = useShowcaseTheme();
-  const textColor = isDark ? '#FFF' : '#000';
-
-  const [checked1, setChecked1] = useState(false);
-  const [checked2, setChecked2] = useState(true);
+  const [terms, setTerms] = useState(false);
+  const [news, setNews] = useState(true);
+  const [events, setEvents] = useState('none');
 
   return (
-    <Layout title="CHECKBOX COMPONENT" onBack={onBack}>
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: textColor }]}>DEFAULT (UNCHECKED)</Text>
-        <View style={styles.row}>
-          <Checkbox checked={checked1} onCheckedChange={setChecked1} accessibilityLabel="Accept terms and conditions" />
-          <Text style={[styles.rowText, { color: textColor }]}>Accept terms and conditions</Text>
-        </View>
-      </View>
+    <Layout title="CHECKBOX" onBack={onBack}>
+      <Section title="Controlled" note="checked + onCheckedChange.">
+        <Row label="Accept terms and conditions">
+          <Checkbox checked={terms} onCheckedChange={setTerms} accessibilityLabel="Accept terms and conditions" />
+        </Row>
+        <Row label="Subscribe to the newsletter">
+          <Checkbox checked={news} onCheckedChange={setNews} accessibilityLabel="Subscribe to the newsletter" />
+        </Row>
+        <Caption>{`terms: ${terms}, newsletter: ${news}`}</Caption>
+      </Section>
 
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: textColor }]}>DEFAULT (CHECKED)</Text>
-        <View style={styles.row}>
-          <Checkbox checked={checked2} onCheckedChange={setChecked2} accessibilityLabel="Subscribe to newsletter" />
-          <Text style={[styles.rowText, { color: textColor }]}>Subscribe to newsletter</Text>
-        </View>
-      </View>
+      <Section title="Uncontrolled" note="defaultChecked keeps its own state; onCheckedChange is optional.">
+        <Row label="Starts unchecked">
+          <Checkbox accessibilityLabel="Starts unchecked" onCheckedChange={(c) => setEvents(`unchecked-start -> ${c}`)} />
+        </Row>
+        <Row label="Starts checked">
+          <Checkbox defaultChecked accessibilityLabel="Starts checked" onCheckedChange={(c) => setEvents(`checked-start -> ${c}`)} />
+        </Row>
+        <Caption>{`Last change: ${events}`}</Caption>
+      </Section>
 
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: textColor }]}>DISABLED (UNCHECKED)</Text>
-        <View style={styles.row}>
-          <Checkbox checked={false} onCheckedChange={() => {}} disabled accessibilityLabel="Unavailable option" />
-          <Text style={[styles.rowText, { color: isDark ? '#666' : '#999' }]}>Unavailable option</Text>
-        </View>
-      </View>
+      <Section title="Disabled" note="Muted fill and border, no shadow, not pressable.">
+        <Row label="Unavailable option" muted>
+          <Checkbox checked={false} disabled accessibilityLabel="Unavailable option" />
+        </Row>
+        <Row label="Required option" muted>
+          <Checkbox checked disabled accessibilityLabel="Required option" />
+        </Row>
+      </Section>
 
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: textColor }]}>DISABLED (CHECKED)</Text>
-        <View style={styles.row}>
-          <Checkbox checked={true} onCheckedChange={() => {}} disabled accessibilityLabel="Mandatory option" />
-          <Text style={[styles.rowText, { color: isDark ? '#666' : '#999' }]}>Mandatory option</Text>
+      <Section title="Hit area" note="The box is 24pt; the touch target extends to 44pt on iOS and 48dp on Android.">
+        <Row label="Tap beside the box">
+          <Checkbox defaultChecked accessibilityLabel="Tap beside the box" />
+        </Row>
+      </Section>
+
+      <Section title="Edge cases">
+        <View style={styles.narrow}>
+          <Row label="A label long enough that it wraps beside its checkbox in a narrow column">
+            <Checkbox accessibilityLabel="Long label option" />
+          </Row>
         </View>
-      </View>
+      </Section>
     </Layout>
   );
 }
 
 const styles = StyleSheet.create({
-  section: { marginBottom: 32 },
-  label: { fontSize: 12, fontWeight: '700', marginBottom: 12, letterSpacing: 1 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  rowText: { fontSize: 16, fontWeight: '600' }
+  row: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 4 },
+  rowText: { fontSize: 16, fontWeight: '600', flexShrink: 1 },
+  narrow: { width: 240 },
 });

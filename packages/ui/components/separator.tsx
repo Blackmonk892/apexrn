@@ -28,7 +28,6 @@ export default function Separator({
   return (
     <View
       style={cn(
-        styles.base,
         { backgroundColor: colors.border },
         orientation === 'horizontal' ? styles.horizontal : styles.vertical,
         style
@@ -44,9 +43,8 @@ export default function Separator({
 // Styles
 // ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
-  base: {},
   horizontal: {
-    width: '100%',
+    alignSelf: 'stretch',
     height: borderWidths.standard,
   },
   vertical: {

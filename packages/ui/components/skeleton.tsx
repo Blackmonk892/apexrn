@@ -3,6 +3,7 @@ import { LayoutChangeEvent, StyleSheet, View, ViewProps } from 'react-native';
 import Animated, {
   cancelAnimation,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withTiming,
   withRepeat,
@@ -33,11 +34,14 @@ export default function Skeleton({
   ...props
 }: SkeletonProps) {
   const { colors } = useTheme();
+  const reduceMotion = useReducedMotion();
   const position = useSharedValue(0);
   const [containerWidth, setContainerWidth] = useState(0);
+  // Reduced motion renders a static block instead of the sweeping highlight.
+  const animated = !paused && !reduceMotion;
 
   useEffect(() => {
-    if (paused || containerWidth <= 0) {
+    if (!animated || containerWidth <= 0) {
       cancelAnimation(position);
       return;
     }
@@ -54,7 +58,7 @@ export default function Skeleton({
       -1,
       false
     );
-  }, [paused, containerWidth, position]);
+  }, [animated, containerWidth, position]);
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -71,14 +75,14 @@ export default function Skeleton({
 
   return (
     <View
-      style={cn(styles.base, { backgroundColor: colors.muted, borderColor: colors.border }, style)}
+      style={cn(styles.base, { minHeight: spacing.xl, backgroundColor: colors.muted, borderColor: colors.border }, style)}
       onLayout={handleLayout}
       accessibilityRole="progressbar"
       accessibilityLabel="Loading content"
       accessibilityState={{ busy: !paused }}
       {...props}
     >
-      {!paused && (
+      {animated && (
         <Animated.View style={[styles.swipe, { backgroundColor: colors.mutedForeground }, animatedStyle]} />
       )}
     </View>
@@ -94,7 +98,6 @@ const styles = StyleSheet.create({
     borderRadius: 0,
     overflow: 'hidden',
     position: 'relative',
-    minHeight: spacing.xl,
     width: '100%',
   },
   swipe: {

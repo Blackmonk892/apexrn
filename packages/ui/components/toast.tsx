@@ -1,10 +1,12 @@
-import { useEffect, useCallback, useRef } from 'react';
-import { StyleSheet, Text, View, ViewProps } from 'react-native';
+import { useCallback, useEffect, useRef } from 'react';
+import { StyleSheet, Text, View, type ViewProps } from 'react-native';
 import Animated, {
+  Easing,
+  runOnJS,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withTiming,
-  Easing,
 } from 'react-native-reanimated';
 
 import { spacing, typography } from '../lib/colors';
@@ -29,7 +31,8 @@ export interface ToastProps extends ViewProps {
    */
   description?: string;
   /**
-   * The visual severity of the toast.
+   * The visual style of the toast. `destructive` also adds an error glyph
+   * and is announced as an error, so it is never colour-only.
    * @default 'default'
    */
   variant?: 'default' | 'primary' | 'destructive';
@@ -39,7 +42,8 @@ export interface ToastProps extends ViewProps {
    */
   duration?: number;
   /**
-   * Callback fired when the toast is dismissed (either manually or via timeout).
+   * Callback fired once the toast has slid out after being dismissed
+   * (manually or via timeout).
    */
   onDismiss: () => void;
 }
@@ -48,6 +52,8 @@ export interface ToastProps extends ViewProps {
 // Design tokens
 // ---------------------------------------------------------------------------
 const SHADOW_OFFSET = 4;
+const HIDDEN_Y = -150;
+const GLYPH_SIZE = 22;
 
 // ---------------------------------------------------------------------------
 // Component
@@ -63,7 +69,8 @@ export default function Toast({
   ...props
 }: ToastProps) {
   const { colors } = useTheme();
-  const translateY = useSharedValue(-150);
+  const reduceMotion = useReducedMotion();
+  const translateY = useSharedValue(HIDDEN_Y);
 
   // Ref-stabilized so a re-created `onDismiss` identity doesn't restart
   // the auto-dismiss timer on every parent render.
@@ -72,10 +79,9 @@ export default function Toast({
     onDismissRef.current = onDismiss;
   }, [onDismiss]);
 
-  // Timeout for the dismiss notification. Cleared/replaced on every hide and
-  // on unmount so a stale notification can never fire after dismissal.
-  const notifyTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  useEffect(() => () => clearTimeout(notifyTimeout.current), []);
+  // One dismissal per showing: a tap followed by the auto-dismiss timer (or
+  // two quick taps) must notify the parent once.
+  const dismissing = useRef(false);
 
   const variants = {
     default: {
@@ -91,54 +97,55 @@ export default function Toast({
       text: { color: colors.destructiveForeground },
     },
   };
-
   const activeVariant = variants[variant];
+  const isError = variant === 'destructive';
+
+  const notifyDismissed = useCallback(() => {
+    onDismissRef.current();
+  }, []);
 
   const hideToast = useCallback(() => {
-    translateY.value = withTiming(-150, {
-      duration: 250,
-      easing: Easing.in(Easing.quad),
-    });
-    // Notify on the JS thread after the slide-out finishes, reading the
-    // latest `onDismiss` there. (A worklet completion callback cannot see
-    // fresh JS closures, so it must not be the notification path.)
-    clearTimeout(notifyTimeout.current);
-    notifyTimeout.current = setTimeout(() => {
-      onDismissRef.current();
-    }, 260);
-  }, [translateY]);
+    if (dismissing.current) return;
+    dismissing.current = true;
+    // Notify from the animation's completion callback (on the JS thread),
+    // and only if the slide-out actually finished.
+    translateY.value = withTiming(
+      HIDDEN_Y,
+      { duration: reduceMotion ? 0 : 250, easing: Easing.in(Easing.quad) },
+      (finished) => {
+        if (finished) runOnJS(notifyDismissed)();
+      },
+    );
+  }, [translateY, reduceMotion, notifyDismissed]);
 
   useEffect(() => {
-    let timeout: ReturnType<typeof setTimeout>;
-
-    if (visible) {
-      translateY.value = withTiming(0, {
-        duration: 300,
-        easing: Easing.out(Easing.back(1.5))
+    if (!visible) {
+      translateY.value = withTiming(HIDDEN_Y, {
+        duration: reduceMotion ? 0 : 250,
+        easing: Easing.in(Easing.quad),
       });
-
-      timeout = setTimeout(() => {
-        hideToast();
-      }, duration);
-    } else {
-      translateY.value = withTiming(-150, {
-        duration: 250,
-        easing: Easing.in(Easing.quad)
-      });
+      return;
     }
 
-    return () => clearTimeout(timeout);
-  }, [visible, duration, translateY, hideToast]);
+    dismissing.current = false;
+    translateY.value = withTiming(0, {
+      duration: reduceMotion ? 0 : 300,
+      easing: reduceMotion ? Easing.linear : Easing.out(Easing.back(1.5)),
+    });
 
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateY: translateY.value }],
-    };
-  });
+    const timeout = setTimeout(hideToast, duration);
+    return () => clearTimeout(timeout);
+  }, [visible, duration, reduceMotion, translateY, hideToast]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+  }));
+
+  const label = `${isError ? 'Error. ' : ''}${title}${description ? `. ${description}` : ''}`;
 
   return (
     <Animated.View
-      style={[styles.absoluteWrapper, style, animatedStyle]}
+      style={[styles.absoluteWrapper, { left: spacing.md, right: spacing.md }, style, animatedStyle]}
       pointerEvents={visible ? 'auto' : 'none'}
       accessibilityRole="alert"
       accessibilityLiveRegion="assertive"
@@ -151,16 +158,33 @@ export default function Toast({
         borderWidth="heavy"
         onPress={hideToast}
         accessibilityRole="button"
-        accessibilityLabel={`Dismiss notification: ${title}`}
-        accessibilityHint="Hides this notification"
-        surfaceStyle={cn(styles.surface, activeVariant.surface)}
+        accessibilityLabel={label}
+        accessibilityHint="Double tap to dismiss this notification"
+        surfaceStyle={cn(styles.surface, { padding: spacing.md }, activeVariant.surface)}
       >
-        <View style={styles.contentContainer}>
-          <Text style={cn(styles.title, activeVariant.text)} numberOfLines={2}>
+        {isError ? (
+          <View
+            style={[styles.glyph, { backgroundColor: colors.destructiveForeground, marginRight: spacing.sm }]}
+            importantForAccessibility="no-hide-descendants"
+            accessibilityElementsHidden
+          >
+            <Text style={[styles.glyphText, { color: colors.destructive }]}>✕</Text>
+          </View>
+        ) : null}
+        <View style={[styles.contentContainer, { gap: spacing.xs }]}>
+          <Text
+            style={cn(styles.title, { fontSize: typography.sm }, activeVariant.text)}
+            numberOfLines={2}
+            maxFontSizeMultiplier={1.3}
+          >
             {title}
           </Text>
           {description ? (
-            <Text style={cn(styles.description, activeVariant.text)} numberOfLines={3}>
+            <Text
+              style={cn(styles.description, { fontSize: typography.sm }, activeVariant.text)}
+              numberOfLines={3}
+              maxFontSizeMultiplier={1.3}
+            >
               {description}
             </Text>
           ) : null}
@@ -174,31 +198,38 @@ export default function Toast({
 // Styles
 // ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
+  // top is a plain default: the library has no safe-area dependency, so
+  // consumers pass `style={{ top: insets.top + 8 }}` for notched devices.
   absoluteWrapper: {
     position: 'absolute',
     top: 60,
-    left: spacing.md,
-    right: spacing.md,
     zIndex: 9999,
   },
   surface: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: spacing.md,
+  },
+  glyph: {
+    width: GLYPH_SIZE,
+    height: GLYPH_SIZE,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  glyphText: {
+    fontSize: 14,
+    fontWeight: '900',
+    lineHeight: 16,
   },
   contentContainer: {
     flex: 1,
     flexDirection: 'column',
-    gap: spacing.xs,
   },
   title: {
-    fontSize: typography.sm,
     fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 0.4,
   },
   description: {
-    fontSize: typography.sm,
     fontWeight: '500',
   },
 });

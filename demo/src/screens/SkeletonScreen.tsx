@@ -1,48 +1,51 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { BrutalSurface, Skeleton } from '@apexrn/ui';
 import Layout from '../components/Layout';
-import { useShowcaseTheme } from '../context/ThemeContext';
-import Skeleton from '@ui/components/skeleton';
+import Section, { Caption } from '../components/Section';
 
 export default function SkeletonScreen({ onBack }: { onBack: () => void }) {
-  const { isDark } = useShowcaseTheme();
-  const textColor = isDark ? '#FFF' : '#000';
-
   return (
-    <Layout title="SKELETON COMPONENT" onBack={onBack}>
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: textColor }]}>DEFAULT ANIMATION (TEXT LINES)</Text>
-        <View style={{ gap: 8 }}>
-          <Skeleton style={{ height: 20, width: '100%' }} />
-          <Skeleton style={{ height: 20, width: '80%' }} />
-          <Skeleton style={{ height: 20, width: '60%' }} />
+    <Layout title="SKELETON" onBack={onBack}>
+      <Section title="Text lines" note="Sweeps a highlight across the block. Sized entirely through style.">
+        <View style={styles.stack}>
+          <Skeleton style={styles.line} />
+          <Skeleton style={[styles.line, styles.w80]} />
+          <Skeleton style={[styles.line, styles.w60]} />
         </View>
-      </View>
+      </Section>
 
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: textColor }]}>CARD SKELETON</Text>
-        <View style={[styles.cardSkeleton, { borderColor: isDark ? '#444' : '#000', backgroundColor: isDark ? '#111' : '#FFF' }]}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 16 }}>
-            <Skeleton style={{ height: 48, width: 48, borderRadius: 24 }} />
-            <View style={{ gap: 8, flex: 1 }}>
-              <Skeleton style={{ height: 16, width: '60%' }} />
-              <Skeleton style={{ height: 12, width: '40%' }} />
+      <Section title="Card placeholder">
+        <BrutalSurface pressable={false} surfaceStyle={styles.card}>
+          <View style={styles.head}>
+            <Skeleton style={styles.avatar} />
+            <View style={styles.headText}>
+              <Skeleton style={[styles.line, styles.w60]} />
+              <Skeleton style={[styles.small, styles.w40]} />
             </View>
           </View>
-          <Skeleton style={{ height: 120, width: '100%' }} />
-        </View>
-      </View>
+          <Skeleton style={styles.media} />
+        </BrutalSurface>
+      </Section>
 
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: textColor }]}>PAUSED SKELETON (REDUCED MOTION)</Text>
-        <Skeleton paused style={{ height: 40, width: '100%' }} />
-      </View>
+      <Section title="Paused" note="paused stops the sweep; use it when motion is unwanted.">
+        <Skeleton paused style={styles.media} />
+        <Caption>Also static when the OS reduce-motion setting is on.</Caption>
+      </Section>
     </Layout>
   );
 }
 
 const styles = StyleSheet.create({
-  section: { marginBottom: 36 },
-  label: { fontSize: 12, fontWeight: '700', marginBottom: 16, letterSpacing: 1 },
-  cardSkeleton: { padding: 16, borderWidth: 2, borderRadius: 0 }
+  stack: { gap: 8 },
+  line: { height: 20 },
+  small: { height: 14 },
+  w80: { width: '80%' },
+  w60: { width: '60%' },
+  w40: { width: '40%' },
+  card: { padding: 16, gap: 16 },
+  head: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  headText: { flex: 1, gap: 8 },
+  avatar: { width: 48, height: 48 },
+  media: { height: 120 },
 });

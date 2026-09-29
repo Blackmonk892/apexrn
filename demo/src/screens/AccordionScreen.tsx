@@ -1,62 +1,88 @@
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, Text } from 'react-native';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger, useTheme } from '@apexrn/ui';
 import Layout from '../components/Layout';
-import { useShowcaseTheme } from '../context/ThemeContext';
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@ui/components/accordion';
+import Section, { Caption } from '../components/Section';
+
+function Body({ children }: { children: string }) {
+  const { colors } = useTheme();
+  return <Text style={[styles.body, { color: colors.foreground }]}>{children}</Text>;
+}
 
 export default function AccordionScreen({ onBack }: { onBack: () => void }) {
-  const { isDark } = useShowcaseTheme();
-  const textColor = isDark ? '#FFF' : '#000';
+  const [open, setOpen] = useState<string>('shipping');
 
   return (
-    <Layout title="ACCORDION COMPONENT" onBack={onBack}>
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: textColor }]}>SINGLE TYPE (DEFAULT)</Text>
-        <Accordion type="single" style={[styles.accordionContainer, { borderColor: textColor }]}>
-          <AccordionItem value="item-1">
-            <AccordionTrigger>What is Brutalism?</AccordionTrigger>
+    <Layout title="ACCORDION" onBack={onBack}>
+      <Section title="Single, controlled" note="type single (default): opening one closes the others. value + onValueChange.">
+        <Accordion type="single" value={open} onValueChange={(v) => setOpen(v as string)}>
+          <AccordionItem value="shipping">
+            <AccordionTrigger>Shipping</AccordionTrigger>
             <AccordionContent>
-              <Text style={{ color: textColor }}>It is a style with an emphasis on materials, textures and construction, producing highly expressive forms.</Text>
+              <Body>Orders ship within two business days. You get a tracking link by email.</Body>
             </AccordionContent>
           </AccordionItem>
-          <AccordionItem value="item-2">
-            <AccordionTrigger>Is it accessible?</AccordionTrigger>
+          <AccordionItem value="returns">
+            <AccordionTrigger>Returns</AccordionTrigger>
             <AccordionContent>
-              <Text style={{ color: textColor }}>Yes. It adheres to contrast and standard ARIA roles for screen readers.</Text>
+              <Body>Return any unused item within 30 days for a full refund.</Body>
             </AccordionContent>
           </AccordionItem>
-          <AccordionItem value="item-3">
-            <AccordionTrigger disabled>Disabled Item</AccordionTrigger>
+          <AccordionItem value="support">
+            <AccordionTrigger>Support</AccordionTrigger>
             <AccordionContent>
-              <Text style={{ color: textColor }}>You cannot read me.</Text>
+              <Body>Message us any time. We reply within one business day.</Body>
             </AccordionContent>
           </AccordionItem>
         </Accordion>
-      </View>
+        <Caption>{`Open: ${open || 'none'}`}</Caption>
+      </Section>
 
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: textColor }]}>MULTIPLE TYPE</Text>
-        <Accordion type="multiple" style={[styles.accordionContainer, { borderColor: textColor }]}>
-          <AccordionItem value="item-a">
-            <AccordionTrigger>Section A</AccordionTrigger>
+      <Section title="Multiple, uncontrolled" note="type multiple with defaultValue. The first item starts open and must not animate on mount.">
+        <Accordion type="multiple" defaultValue={['a']}>
+          <AccordionItem value="a">
+            <AccordionTrigger>Starts open</AccordionTrigger>
             <AccordionContent>
-              <Text style={{ color: textColor }}>You can open Section A and Section B at the same time.</Text>
+              <Body>This panel is open on first render.</Body>
             </AccordionContent>
           </AccordionItem>
-          <AccordionItem value="item-b">
-            <AccordionTrigger>Section B</AccordionTrigger>
+          <AccordionItem value="b">
+            <AccordionTrigger>Starts closed</AccordionTrigger>
             <AccordionContent>
-              <Text style={{ color: textColor }}>Both sections can remain expanded simultaneously.</Text>
+              <Body>Several panels can be open at once.</Body>
             </AccordionContent>
           </AccordionItem>
         </Accordion>
-      </View>
+      </Section>
+
+      <Section title="Disabled">
+        <Accordion>
+          <AccordionItem value="x">
+            <AccordionTrigger disabled>Unavailable section</AccordionTrigger>
+            <AccordionContent>
+              <Body>You cannot open this.</Body>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </Section>
+
+      <Section title="Edge cases">
+        <Accordion defaultValue="long">
+          <AccordionItem value="long">
+            <AccordionTrigger>A trigger label that is far too long to fit on one line of the row</AccordionTrigger>
+            <AccordionContent>
+              <Body>
+                Long content wraps and the panel grows to fit it. Long content wraps and the panel grows to fit it.
+                Long content wraps and the panel grows to fit it. Long content wraps and the panel grows to fit it.
+              </Body>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </Section>
     </Layout>
   );
 }
 
 const styles = StyleSheet.create({
-  section: { marginBottom: 36 },
-  label: { fontSize: 12, fontWeight: '700', marginBottom: 16, letterSpacing: 1 },
-  accordionContainer: { borderWidth: 4 },
+  body: { fontSize: 15, lineHeight: 21, fontWeight: '500' },
 });

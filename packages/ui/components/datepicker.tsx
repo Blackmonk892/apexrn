@@ -1,33 +1,29 @@
 import {
-  Children,
-  Fragment,
   createContext,
-  isValidElement,
-  useContext,
-  useState,
   useCallback,
+  useContext,
   useEffect,
-  type ReactElement,
+  useMemo,
+  useState,
   type ReactNode,
 } from 'react';
 import {
   Pressable,
-  StyleProp,
+  type StyleProp,
   StyleSheet,
   Text,
-  TextInputProps,
+  type TextInputProps,
   View,
-  ViewProps,
-  ViewStyle,
+  type ViewProps,
+  type ViewStyle,
 } from 'react-native';
 
-import { borderWidths, spacing, typography } from '../lib/colors';
+import { borderWidths, spacing, touchTarget, typography } from '../lib/colors';
 import { useTheme } from '../lib/theme';
-import { cn } from '../lib/utils';
 
+import Button from './button';
 import Input from './input';
 import { Sheet, SheetContent } from './sheet';
-import Button from './button';
 
 // ---------------------------------------------------------------------------
 // Types & Context
@@ -51,13 +47,30 @@ function useDatePickerContext() {
 
 export interface DatePickerProps {
   /**
-   * The controlled currently selected date.
+   * The controlled selected date. Omit for an uncontrolled picker.
    */
-  value: Date | null;
+  value?: Date | null;
+  /**
+   * Initial date when uncontrolled.
+   */
+  defaultValue?: Date | null;
   /**
    * Callback fired when a date is selected.
    */
-  onChange: (date: Date) => void;
+  onChange?: (date: Date) => void;
+  /**
+   * The controlled open state of the calendar sheet. Omit to let DatePicker manage it.
+   */
+  open?: boolean;
+  /**
+   * Initial open state when uncontrolled.
+   * @default false
+   */
+  defaultOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  /**
+   * A `DatePickerTrigger` and a `DatePickerContent`.
+   */
   children: ReactNode;
 }
 
@@ -96,80 +109,77 @@ const getFirstDayOfMonth = (year: number, month: number) => {
 
 const DAYS_OF_WEEK = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
+// Handle strip + sheet padding + month header + weekday row + confirm row,
+// measured with the default spacing scale plus slack. Grid rows are added on
+// top; a month spans up to six of them, and the sheet keeps that height for
+// every month so it doesn't jump when navigating.
+const SHEET_CHROME_HEIGHT = 220;
+const GRID_ROWS = 6;
+
 // ---------------------------------------------------------------------------
 // Components
 // ---------------------------------------------------------------------------
 
-export function DatePicker({ value, onChange, children }: DatePickerProps) {
-  const [isOpen, setIsOpen] = useState(false);
+export function DatePicker({
+  value: valueProp,
+  defaultValue = null,
+  onChange,
+  open: openProp,
+  defaultOpen = false,
+  onOpenChange,
+  children,
+}: DatePickerProps) {
+  const [internalDate, setInternalDate] = useState<Date | null>(defaultValue);
+  const [internalOpen, setInternalOpen] = useState(defaultOpen);
+
+  const selectedDate = valueProp !== undefined ? valueProp : internalDate;
+  const isOpen = openProp ?? internalOpen;
 
   const onDateChange = useCallback((date: Date) => {
-    onChange(date);
-  }, [onChange]);
+    if (valueProp === undefined) setInternalDate(date);
+    onChange?.(date);
+  }, [valueProp, onChange]);
 
-  const triggerChildren: ReactNode[] = [];
-  const contentChildren: ReactNode[] = [];
+  const setIsOpen = useCallback((next: boolean) => {
+    if (openProp === undefined) setInternalOpen(next);
+    onOpenChange?.(next);
+  }, [openProp, onOpenChange]);
 
-  const visit = (node: ReactNode) => {
-    Children.forEach(node, (child) => {
-      if (!isValidElement(child)) {
-        return;
-      }
-      if (child.type === Fragment) {
-        visit((child as ReactElement<{ children?: ReactNode }>).props.children);
-        return;
-      }
-      const type = child.type as { displayName?: string; name?: string };
-      if (
-        child.type === DatePickerContent ||
-        type?.displayName === 'DatePickerContent' ||
-        type?.name === 'DatePickerContent'
-      ) {
-        contentChildren.push(child);
-      } else {
-        triggerChildren.push(child);
-      }
-    });
-  };
-  visit(children);
-
-  return (
-    <DatePickerContext.Provider value={{ selectedDate: value, onDateChange, isOpen, setIsOpen }}>
-      {triggerChildren}
-      <Sheet open={isOpen} onOpenChange={setIsOpen}>
-        {() => contentChildren}
-      </Sheet>
-    </DatePickerContext.Provider>
+  const context = useMemo(
+    () => ({ selectedDate, onDateChange, isOpen, setIsOpen }),
+    [selectedDate, onDateChange, isOpen, setIsOpen],
   );
+
+  return <DatePickerContext.Provider value={context}>{children}</DatePickerContext.Provider>;
 }
 
 export function DatePickerTrigger({ placeholder, style, onFocus, onBlur, ...props }: DatePickerTriggerProps) {
   const { selectedDate, isOpen, setIsOpen } = useDatePickerContext();
 
-  const handlePress = () => {
-    setIsOpen(true);
-  };
-
   const formattedValue = selectedDate ? formatLocalDate(selectedDate) : '';
 
   return (
     <Pressable
-      onPress={handlePress}
+      onPress={() => setIsOpen(true)}
       onFocus={onFocus}
       onBlur={onBlur}
       style={[styles.triggerWrapper, style]}
       accessibilityRole="combobox"
+      accessibilityLabel={placeholder ?? 'Select a date'}
+      accessibilityValue={formattedValue ? { text: formattedValue } : undefined}
       accessibilityState={{ expanded: isOpen }}
-      accessibilityLabel={`Date Picker: ${selectedDate ? formattedValue : 'Select a date'}`}
+      aria-expanded={isOpen}
+      aria-haspopup="dialog"
     >
-      <Input
-        editable={false}
-        value={formattedValue}
-        placeholder={placeholder}
-        pointerEvents="none"
-        style={styles.inputReset}
-        {...props}
-      />
+      {/* Taps go to the Pressable; the read-only Input is just the visual. */}
+      <View style={styles.inputPassthrough}>
+        <Input
+          editable={false}
+          value={formattedValue}
+          placeholder={placeholder}
+          {...props}
+        />
+      </View>
     </Pressable>
   );
 }
@@ -190,7 +200,7 @@ export function DatePickerContent({ style, ...props }: ViewProps) {
       setCurrentDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1));
     }
   }, [isOpen, selectedDate]);
-  
+
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
 
@@ -199,133 +209,142 @@ export function DatePickerContent({ style, ...props }: ViewProps) {
 
   const renderGrid = () => {
     const grid = [];
-    
+
     for (let i = 0; i < firstDayOffset; i++) {
-      grid.push(<View key={`empty-${i}`} style={styles.gridCell} />);
+      grid.push(<View key={`empty-${i}`} style={[styles.gridCell, { height: touchTarget }]} />);
     }
 
     for (let day = 1; day <= daysCount; day++) {
-      const isSelected = 
-        selectedDate &&
+      const date = new Date(year, month, day);
+      const isSelected =
+        !!selectedDate &&
         selectedDate.getFullYear() === year &&
         selectedDate.getMonth() === month &&
         selectedDate.getDate() === day;
 
-      const handleSelect = () => {
-        onDateChange(new Date(year, month, day));
-      };
-
       grid.push(
         <Pressable
           key={day}
-          onPress={handleSelect}
-          style={cn(
+          onPress={() => onDateChange(date)}
+          style={({ pressed }) => [
+            styles.gridCell,
             styles.cellSurface,
-            isSelected && [styles.cellSelected, { backgroundColor: colors.primary, borderColor: colors.border }]
-          )}
+            { height: touchTarget },
+            pressed && { backgroundColor: colors.accent, borderColor: colors.border },
+            isSelected && { backgroundColor: colors.primary, borderColor: colors.border, borderWidth: borderWidths.standard },
+          ]}
           accessibilityRole="button"
-          accessibilityLabel={`${day} ${month + 1} ${year}`}
-          accessibilityState={{ selected: !!isSelected }}
+          accessibilityLabel={date.toLocaleDateString(undefined, {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          })}
+          accessibilityState={{ selected: isSelected }}
+          aria-selected={isSelected}
         >
-          <Text style={cn(styles.cellText, { color: colors.foreground }, isSelected && { color: colors.primaryForeground, fontWeight: '800' })}>
-            {day}
-          </Text>
+          {({ pressed }) => (
+            <Text
+              style={[
+                styles.cellText,
+                { fontSize: typography.sm, color: colors.foreground },
+                pressed && !isSelected && { color: colors.accentForeground },
+                isSelected && { color: colors.primaryForeground, fontWeight: '800' },
+              ]}
+              maxFontSizeMultiplier={1.3}
+            >
+              {day}
+            </Text>
+          )}
         </Pressable>
       );
     }
     return grid;
   };
 
-  const handlePrevMonth = () => {
-    setCurrentDate(new Date(year, month - 1, 1));
-  };
-
-  const handleNextMonth = () => {
-    setCurrentDate(new Date(year, month + 1, 1));
-  };
-
-  const handleClose = () => {
-    setIsOpen(false);
-  };
-
   return (
-    <SheetContent sheetHeight={420} style={style} {...props}>
-      <View style={styles.headerRow}>
-        <Button
-          variant="outline"
-          title="<"
-          accessibilityLabel="Previous month"
-          onPress={handlePrevMonth}
-          style={styles.navButton}
-        />
-        <Text style={[styles.headerTitle, { color: colors.foreground }]}>
-          {currentDate.toLocaleString('default', { month: 'long', year: 'numeric' }).toUpperCase()}
-        </Text>
-        <Button
-          variant="outline"
-          title=">"
-          accessibilityLabel="Next month"
-          onPress={handleNextMonth}
-          style={styles.navButton}
-        />
-      </View>
-
-      <View style={[styles.weekRow, { borderColor: colors.border }]}>
-        {DAYS_OF_WEEK.map((day) => (
-          <View key={day} style={styles.gridCell}>
-            <Text style={[styles.weekText, { color: colors.mutedForeground }]}>{day}</Text>
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
+      {() => (
+        <SheetContent sheetHeight={SHEET_CHROME_HEIGHT + GRID_ROWS * touchTarget} style={style} {...props}>
+          <View style={[styles.headerRow, { marginBottom: spacing.md }]}>
+            <Button
+              variant="outline"
+              title="<"
+              accessibilityLabel="Previous month"
+              onPress={() => setCurrentDate(new Date(year, month - 1, 1))}
+              style={styles.navButton}
+            />
+            <Text
+              style={[styles.headerTitle, { fontSize: typography.md, color: colors.foreground }]}
+              accessibilityRole="header"
+              maxFontSizeMultiplier={1.3}
+            >
+              {currentDate.toLocaleString('default', { month: 'long', year: 'numeric' }).toUpperCase()}
+            </Text>
+            <Button
+              variant="outline"
+              title=">"
+              accessibilityLabel="Next month"
+              onPress={() => setCurrentDate(new Date(year, month + 1, 1))}
+              style={styles.navButton}
+            />
           </View>
-        ))}
-      </View>
 
-      <View style={styles.gridContainer}>
-        {renderGrid()}
-      </View>
+          <View
+            style={[styles.weekRow, { borderColor: colors.border, marginBottom: spacing.xs, paddingBottom: spacing.xs }]}
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+          >
+            {DAYS_OF_WEEK.map((day) => (
+              <View key={day} style={styles.gridCell}>
+                <Text style={[styles.weekText, { fontSize: typography.xs, color: colors.mutedForeground }]}>{day}</Text>
+              </View>
+            ))}
+          </View>
 
-      <View style={styles.footer}>
-        <Button title="CONFIRM" onPress={handleClose} style={styles.confirmButton} />
-      </View>
-    </SheetContent>
+          <View style={styles.gridContainer}>
+            {renderGrid()}
+          </View>
+
+          <View style={[styles.footer, { paddingTop: spacing.md }]}>
+            <Button title="CONFIRM" onPress={() => setIsOpen(false)} style={styles.confirmButton} />
+          </View>
+        </SheetContent>
+      )}
+    </Sheet>
   );
 }
-DatePickerContent.displayName = 'DatePickerContent';
 
 // ---------------------------------------------------------------------------
 // Styles
 // ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
+  // stretch (not width: 100%) so the Input's shadow margin doesn't overflow.
   triggerWrapper: {
-    width: '100%',
+    alignSelf: 'stretch',
   },
-  inputReset: {
-    marginBottom: 0,
-    marginRight: 0,
+  inputPassthrough: {
+    pointerEvents: 'none',
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: spacing.md,
   },
   navButton: {
     minWidth: 48,
     paddingHorizontal: 0,
   },
   headerTitle: {
-    fontSize: typography.md,
     fontWeight: '800',
-    textTransform: 'uppercase',
     letterSpacing: 0.4,
   },
   weekRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: spacing.xs,
     borderBottomWidth: borderWidths.standard,
-    paddingBottom: spacing.xs,
   },
   weekText: {
-    fontSize: typography.xs,
     fontWeight: '800',
     textAlign: 'center',
   },
@@ -333,33 +352,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
   },
+  // 7 columns; the height is set per cell from the touch-target token.
   gridCell: {
-    width: '14.28%',
-    aspectRatio: 1,
+    width: '14.2857%',
     alignItems: 'center',
     justifyContent: 'center',
   },
   cellSurface: {
-    width: '14.28%',
-    aspectRatio: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
     borderWidth: 1,
     borderColor: 'transparent',
     borderRadius: 0,
   },
-  cellSelected: {
-    borderWidth: borderWidths.standard,
-  },
   cellText: {
-    fontSize: typography.sm,
     fontWeight: '600',
   },
   footer: {
     marginTop: 'auto',
-    paddingTop: spacing.md,
   },
   confirmButton: {
-    width: '100%',
+    alignSelf: 'stretch',
   },
 });

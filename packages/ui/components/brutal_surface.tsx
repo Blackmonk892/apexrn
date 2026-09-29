@@ -45,6 +45,8 @@ export interface BrutalSurfaceProps
   shadowStyle?: StyleProp<ViewStyle | AnimatedStyle<ViewStyle>>;
 }
 
+const PRESS_ONLY_PROPS = ['onPress', 'onLongPress', 'onPressIn', 'onPressOut'] as const;
+
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export default function BrutalSurface({
@@ -156,17 +158,9 @@ function NonInteractiveSurface({
   surfaceContent: StyleProp<ViewStyle | AnimatedStyle<ViewStyle>>;
   pressableProps: Omit<PressableProps, 'style' | 'children'>;
 }) {
-  const {
-    onPress: _onPress,
-    onLongPress: _onLongPress,
-    onPressIn: _onPressIn,
-    onPressOut: _onPressOut,
-    ...viewProps
-  } = pressableProps;
-  void _onPress;
-  void _onLongPress;
-  void _onPressIn;
-  void _onPressOut;
+  // Press-only handlers can't fire on a plain view, so drop them.
+  const viewProps: Record<string, unknown> = { ...pressableProps };
+  for (const key of PRESS_ONLY_PROPS) delete viewProps[key];
   // Animated.View (not plain View) so animated styles passed via
   // surfaceStyle still resolve on non-interactive surfaces.
   return (

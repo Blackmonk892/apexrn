@@ -32,10 +32,13 @@ export default function Label({
     <Text
       style={cn(
         styles.label,
+        // Size-dependent tokens are read at render time, not frozen at import.
+        { marginBottom: spacing.xs, fontSize: typography.sm },
         { color: disabled ? colors.mutedForeground : colors.foreground },
         style
       )}
       accessibilityRole="text"
+      maxFontSizeMultiplier={1.3}
       {...props}
     >
       {children}
@@ -48,8 +51,6 @@ export default function Label({
 // ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
   label: {
-    marginBottom: spacing.xs,
-    fontSize: typography.sm,
     fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 0.4,

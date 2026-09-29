@@ -1,19 +1,17 @@
 import type { ReactNode } from 'react';
 import {
-  GestureResponderEvent,
+  type GestureResponderEvent,
   Pressable,
-  PressableProps,
-  StyleProp,
+  type PressableProps,
+  type StyleProp,
   StyleSheet,
-  Text,
   View,
-  ViewStyle,
+  type ViewStyle,
 } from 'react-native';
-import Animated, { useAnimatedStyle, interpolateColor } from 'react-native-reanimated';
+import Animated, { interpolateColor, useAnimatedStyle } from 'react-native-reanimated';
 
-import { borderWidths, spacing, typography } from '../lib/colors';
+import { borderWidths, spacing, touchTarget, typography } from '../lib/colors';
 import { useTheme } from '../lib/theme';
-import { cn } from '../lib/utils';
 import { usePressPhysics } from '../lib/usePressPhysics';
 
 // ---------------------------------------------------------------------------
@@ -62,10 +60,12 @@ export default function ListItem({
   ...props
 }: ListItemProps) {
   const { colors } = useTheme();
+  const isPressable = typeof onPress === 'function';
+  const interactive = isPressable && !disabled;
 
   const { pressed, handlePressIn, handlePressOut } = usePressPhysics({
     offset: 0,
-    disabled,
+    disabled: !interactive,
     haptics: false,
   });
 
@@ -79,73 +79,75 @@ export default function ListItem({
     onPressOut?.(e);
   };
 
-  const animatedBackgroundStyle = useAnimatedStyle(() => {
-    return {
-      backgroundColor: interpolateColor(
-        pressed.value,
-        [0, 1],
-        [colors.background, colors.muted]
-      ),
-    };
-  });
-
-  const isPressable = typeof onPress === 'function';
+  // Pressed = the accent fill with its own foreground. A muted-on-white tint
+  // is nearly invisible, and accent text colours keep contrast in both themes.
+  const animatedRowStyle = useAnimatedStyle(() => ({
+    backgroundColor: interpolateColor(pressed.value, [0, 1], [colors.background, colors.accent]),
+  }));
+  const animatedTitleStyle = useAnimatedStyle(() => ({
+    color: interpolateColor(pressed.value, [0, 1], [colors.foreground, colors.accentForeground]),
+  }));
+  const animatedDescriptionStyle = useAnimatedStyle(() => ({
+    color: interpolateColor(pressed.value, [0, 1], [colors.mutedForeground, colors.accentForeground]),
+  }));
 
   return (
     <AnimatedPressable
       onPress={onPress}
       onPressIn={handlePressInInternal}
       onPressOut={handlePressOutInternal}
-      disabled={disabled}
+      disabled={disabled || !isPressable}
       style={[
         styles.container,
-        { borderColor: colors.border },
-        animatedBackgroundStyle,
+        {
+          paddingVertical: spacing.md,
+          paddingHorizontal: spacing.md,
+          minHeight: isPressable ? touchTarget : undefined,
+          borderColor: colors.border,
+        },
+        animatedRowStyle,
         // Disabled styling wins over the press animation so a disabled
         // item never renders the enabled background.
         disabled && { backgroundColor: colors.muted },
         style,
       ]}
-      accessibilityRole={isPressable ? 'button' : 'none'}
+      accessibilityRole={isPressable ? 'button' : undefined}
       accessibilityState={{ disabled }}
+      aria-disabled={disabled}
       {...props}
     >
-      {leading && (
-        <View style={styles.leadingContainer}>
-          {leading}
-        </View>
-      )}
+      {leading ? (
+        <View style={[styles.slot, { marginRight: spacing.md }]}>{leading}</View>
+      ) : null}
 
-      <View style={styles.contentContainer}>
-        <Text
-          style={cn(
+      <View style={[styles.contentContainer, { gap: spacing.xs }]}>
+        <Animated.Text
+          style={[
             styles.title,
-            { color: colors.foreground },
-            disabled && { color: colors.mutedForeground }
-          )}
+            { fontSize: typography.md },
+            animatedTitleStyle,
+            disabled && { color: colors.mutedForeground },
+          ]}
           numberOfLines={1}
+          maxFontSizeMultiplier={1.3}
         >
           {title}
-        </Text>
+        </Animated.Text>
 
         {description ? (
-          <Text
-            style={cn(
-              styles.description,
-              { color: colors.mutedForeground }
-            )}
+          <Animated.Text
+            style={[styles.description, { fontSize: typography.sm }, animatedDescriptionStyle]}
             numberOfLines={2}
+            maxFontSizeMultiplier={1.3}
           >
             {description}
-          </Text>
+          </Animated.Text>
         ) : null}
       </View>
 
-      {trailing && (
-        <View style={styles.trailingContainer}>
-          {trailing}
-        </View>
-      )}
+      {trailing ? (
+        <View style={[styles.slot, { marginLeft: spacing.md }]}>{trailing}</View>
+      ) : null}
     </AnimatedPressable>
   );
 }
@@ -157,35 +159,23 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
+    alignSelf: 'stretch',
     borderBottomWidth: borderWidths.standard,
     borderRadius: 0,
-    width: '100%',
   },
   contentContainer: {
     flex: 1,
     flexDirection: 'column',
     justifyContent: 'center',
-    gap: spacing.xs,
   },
-  leadingContainer: {
-    marginRight: spacing.md,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  trailingContainer: {
-    marginLeft: spacing.md,
+  slot: {
     justifyContent: 'center',
     alignItems: 'center',
   },
   title: {
-    fontSize: typography.md,
     fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 0.4,
   },
-  description: {
-    fontSize: typography.sm,
-  },
+  description: {},
 });

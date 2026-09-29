@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   PressableProps,
   StyleProp,
@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import Animated, {
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withTiming,
   Easing,
@@ -15,6 +16,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
 
+import { touchTarget } from '../lib/colors';
 import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
 import BrutalSurface from './brutal_surface';
@@ -24,13 +26,18 @@ import BrutalSurface from './brutal_surface';
 // ---------------------------------------------------------------------------
 export interface CheckboxProps extends Omit<PressableProps, 'onPress' | 'onPressIn' | 'onPressOut' | 'style'> {
   /**
-   * The controlled checked state of the checkbox.
+   * The controlled checked state. Omit for an uncontrolled checkbox.
    */
-  checked: boolean;
+  checked?: boolean;
+  /**
+   * Initial state when uncontrolled.
+   * @default false
+   */
+  defaultChecked?: boolean;
   /**
    * Callback fired when the checkbox state changes.
    */
-  onCheckedChange: (checked: boolean) => void;
+  onCheckedChange?: (checked: boolean) => void;
   /**
    * Disables the checkbox.
    * @default false
@@ -43,7 +50,7 @@ export interface CheckboxProps extends Omit<PressableProps, 'onPress' | 'onPress
   style?: StyleProp<ViewStyle>;
   /**
    * Expands the touch target beyond the 24px visual box.
-   * @default 10 (≈44px total target)
+   * @default enough to reach the platform touch target (44pt iOS / 48dp Android)
    */
   hitSlop?: PressableProps['hitSlop'];
 }
@@ -60,26 +67,31 @@ const CHECKBOX_SIZE = 24;
 const AnimatedView = Animated.createAnimatedComponent(View);
 
 export default function Checkbox({
-  checked,
+  checked: checkedProp,
+  defaultChecked = false,
   onCheckedChange,
   disabled = false,
   style,
-  hitSlop = 10,
+  hitSlop = Math.ceil((touchTarget - CHECKBOX_SIZE) / 2),
   ...props
 }: CheckboxProps) {
   const { colors } = useTheme();
+  const reduceMotion = useReducedMotion();
+  const [internalChecked, setInternalChecked] = useState(defaultChecked);
+  const checked = checkedProp ?? internalChecked;
   const isChecked = useSharedValue(checked ? 1 : 0);
 
   useEffect(() => {
-    isChecked.value = withTiming(checked ? 1 : 0, {
-      duration: 150,
-      easing: Easing.inOut(Easing.quad),
-    });
-  }, [checked, isChecked]);
+    const to = checked ? 1 : 0;
+    isChecked.value = reduceMotion
+      ? to
+      : withTiming(to, { duration: 150, easing: Easing.inOut(Easing.quad) });
+  }, [checked, reduceMotion, isChecked]);
 
   const handlePress = () => {
     if (disabled) return;
-    onCheckedChange(!checked);
+    if (checkedProp === undefined) setInternalChecked(!checked);
+    onCheckedChange?.(!checked);
   };
 
   const animatedFillStyle = useAnimatedStyle(() => ({
@@ -113,6 +125,8 @@ export default function Checkbox({
       onPress={handlePress}
       accessibilityRole="checkbox"
       accessibilityState={{ checked, disabled }}
+      aria-checked={checked}
+      aria-disabled={disabled}
       {...props}
     >
       <AnimatedView style={[styles.iconContainer, animatedCheckStyle]}>

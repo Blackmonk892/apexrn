@@ -1,23 +1,25 @@
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
-import { 
-  Pressable, 
-  StyleSheet, 
-  Text, 
-  View, 
-  ViewProps, 
-  PressableProps,
-  LayoutChangeEvent
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import {
+  type LayoutChangeEvent,
+  Pressable,
+  type PressableProps,
+  type StyleProp,
+  StyleSheet,
+  Text,
+  View,
+  type ViewProps,
+  type ViewStyle,
 } from 'react-native';
-import Animated, { 
-  useAnimatedStyle, 
-  useSharedValue, 
-  withTiming, 
+import Animated, {
   Easing,
-  interpolateColor
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withTiming,
 } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
 
-import { borderWidths, spacing, typography } from '../lib/colors';
+import { borderWidths, spacing, touchTarget, typography } from '../lib/colors';
 import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
 
@@ -83,7 +85,11 @@ export interface AccordionItemProps extends ViewProps {
   value: string;
 }
 
-export interface AccordionTriggerProps extends Omit<PressableProps, 'onPress' | 'children'> {
+export interface AccordionTriggerProps extends Omit<PressableProps, 'onPress' | 'children' | 'style'> {
+  /**
+   * Outer style of the trigger row. Function styles are not supported.
+   */
+  style?: StyleProp<ViewStyle>;
   /**
    * Disables the trigger.
    * @default false
@@ -95,8 +101,6 @@ export interface AccordionTriggerProps extends Omit<PressableProps, 'onPress' | 
    */
   children?: ReactNode;
 }
-
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export function Accordion({
   type = 'single',
@@ -116,8 +120,8 @@ export function Accordion({
   );
 
   const isControlled = value !== undefined;
-  
-  const activeValues = isControlled 
+
+  const activeValues = isControlled
     ? (Array.isArray(value) ? value : (value ? [value] : []))
     : internalValues;
 
@@ -128,7 +132,7 @@ export function Accordion({
     if (type === 'single') {
       newValues = isCurrentlyOpen ? [] : [itemValue];
     } else {
-      newValues = isCurrentlyOpen 
+      newValues = isCurrentlyOpen
         ? activeValues.filter(v => v !== itemValue)
         : [...activeValues, itemValue];
     }
@@ -142,9 +146,12 @@ export function Accordion({
     }
   }, [type, activeValues, isControlled, onValueChange]);
 
+  const { colors } = useTheme();
+  const context = useMemo(() => ({ activeValues, toggleValue }), [activeValues, toggleValue]);
+
   return (
-    <AccordionContext.Provider value={{ activeValues, toggleValue }}>
-      <View style={cn(styles.root, style)} {...props}>
+    <AccordionContext.Provider value={context}>
+      <View style={cn(styles.root, { borderTopColor: colors.border }, style)} {...props}>
         {children}
       </View>
     </AccordionContext.Provider>
@@ -155,9 +162,10 @@ export function AccordionItem({ value, children, style, ...props }: AccordionIte
   const { activeValues } = useAccordionContext();
   const { colors } = useTheme();
   const isOpen = activeValues.includes(value);
+  const itemContext = useMemo(() => ({ value, isOpen }), [value, isOpen]);
 
   return (
-    <AccordionItemContext.Provider value={{ value, isOpen }}>
+    <AccordionItemContext.Provider value={itemContext}>
       <View style={cn(styles.item, { borderColor: colors.border, backgroundColor: colors.background }, style)} {...props}>
         {children}
       </View>
@@ -169,103 +177,106 @@ export function AccordionTrigger({ disabled = false, children, style, ...props }
   const { toggleValue } = useAccordionContext();
   const { value, isOpen } = useAccordionItemContext();
   const { colors } = useTheme();
-  
-  const isPressed = useSharedValue(0);
+  const reduceMotion = useReducedMotion();
+
+  // Pressed = accent fill with its own foreground (same as ListItem). It
+  // switches instantly: tap feedback should not lag the finger.
+  const [pressed, setPressed] = useState(false);
   const rotation = useSharedValue(isOpen ? 180 : 0);
 
   useEffect(() => {
-    rotation.value = withTiming(isOpen ? 180 : 0, { 
-      duration: 200, 
-      easing: Easing.out(Easing.quad) 
-    });
-  }, [isOpen, rotation]);
-
-  const handlePressIn = () => {
-    if (disabled) return;
-    isPressed.value = withTiming(1, { duration: 100, easing: Easing.out(Easing.quad) });
-  };
-
-  const handlePressOut = () => {
-    if (disabled) return;
-    isPressed.value = withTiming(0, { duration: 80, easing: Easing.in(Easing.quad) });
-  };
-
-  const handlePress = () => {
-    if (disabled) return;
-    toggleValue(value);
-  };
-
-  const animatedBackgroundStyle = useAnimatedStyle(() => ({
-    backgroundColor: interpolateColor(
-      isPressed.value,
-      [0, 1],
-      [colors.background, colors.muted]
-    ),
-  }));
+    const to = isOpen ? 180 : 0;
+    rotation.value = reduceMotion ? to : withTiming(to, { duration: 200, easing: Easing.out(Easing.quad) });
+  }, [isOpen, reduceMotion, rotation]);
 
   const animatedChevronStyle = useAnimatedStyle(() => ({
     transform: [{ rotate: `${rotation.value}deg` }],
   }));
 
+  const fg = disabled
+    ? colors.mutedForeground
+    : pressed
+      ? colors.accentForeground
+      : colors.foreground;
+
   return (
-    <AnimatedPressable
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
-      onPress={handlePress}
+    <Pressable
+      onPressIn={() => !disabled && setPressed(true)}
+      onPressOut={() => setPressed(false)}
+      onPress={() => {
+        if (!disabled) toggleValue(value);
+      }}
       disabled={disabled}
       style={[
         styles.trigger,
-        disabled && { backgroundColor: colors.muted },
-        animatedBackgroundStyle,
-        style
+        {
+          minHeight: touchTarget,
+          paddingVertical: spacing.md,
+          paddingHorizontal: spacing.md,
+          backgroundColor: disabled ? colors.muted : pressed ? colors.accent : colors.background,
+        },
+        style,
       ]}
       accessibilityRole="button"
       accessibilityState={{ expanded: isOpen, disabled }}
+      aria-expanded={isOpen}
+      aria-disabled={disabled}
       {...props}
     >
       {typeof children === 'string' || typeof children === 'number' ? (
         <Text
-          style={cn(styles.triggerText, { color: disabled ? colors.mutedForeground : colors.foreground })}
+          style={cn(styles.triggerText, { fontSize: typography.md, color: fg })}
           numberOfLines={1}
+          maxFontSizeMultiplier={1.3}
         >
           {children}
         </Text>
       ) : (
         children
       )}
-      
-      <Animated.View style={[styles.chevronContainer, animatedChevronStyle]}>
-        <Svg 
-          width="20" 
-          height="20" 
-          viewBox="0 0 24 24" 
-          fill="none" 
-          stroke={disabled ? colors.mutedForeground : colors.foreground} 
+
+      <Animated.View
+        style={[styles.chevronContainer, { marginLeft: spacing.md }, animatedChevronStyle]}
+        importantForAccessibility="no-hide-descendants"
+        accessibilityElementsHidden
+      >
+        <Svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke={fg}
           strokeWidth="4"
-          strokeLinecap="square" 
+          strokeLinecap="square"
           strokeLinejoin="miter"
         >
           <Path d="M6 9l6 6 6-6" />
         </Svg>
       </Animated.View>
-    </AnimatedPressable>
+    </Pressable>
   );
 }
 
 export function AccordionContent({ children, style, ...props }: ViewProps) {
   const { isOpen } = useAccordionItemContext();
   const { colors } = useTheme();
+  const reduceMotion = useReducedMotion();
   const [contentHeight, setContentHeight] = useState(0);
   const height = useSharedValue(0);
+  const hasMeasured = useRef(false);
 
   useEffect(() => {
-    if (contentHeight > 0) {
-      height.value = withTiming(isOpen ? contentHeight : 0, {
-        duration: 250,
-        easing: Easing.out(Easing.quad)
-      });
+    if (contentHeight <= 0) return;
+    const to = isOpen ? contentHeight : 0;
+    if (!hasMeasured.current) {
+      // First measurement: an item that starts open must appear open, not
+      // animate up from zero on mount.
+      hasMeasured.current = true;
+      height.value = to;
+      return;
     }
-  }, [isOpen, contentHeight, height]);
+    height.value = reduceMotion ? to : withTiming(to, { duration: 250, easing: Easing.out(Easing.quad) });
+  }, [isOpen, contentHeight, reduceMotion, height]);
 
   const handleLayout = (e: LayoutChangeEvent) => {
     const h = e.nativeEvent.layout.height;
@@ -274,6 +285,8 @@ export function AccordionContent({ children, style, ...props }: ViewProps) {
     }
   };
 
+  // Height is animated on purpose: an expanding panel has to push the rows
+  // below it, and there is no transform-only way to reflow siblings.
   const animatedHeightStyle = useAnimatedStyle(() => ({
     height: height.value,
   }));
@@ -286,9 +299,9 @@ export function AccordionContent({ children, style, ...props }: ViewProps) {
       accessibilityElementsHidden={!isOpen}
       importantForAccessibility={isOpen ? 'auto' : 'no-hide-descendants'}
     >
-      <View 
-        onLayout={handleLayout} 
-        style={cn(styles.contentInner, { borderColor: colors.border }, style)}
+      <View
+        onLayout={handleLayout}
+        style={cn(styles.contentInner, { padding: spacing.md, borderColor: colors.border }, style)}
         {...props}
       >
         {children}
@@ -302,7 +315,8 @@ export function AccordionContent({ children, style, ...props }: ViewProps) {
 // ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
   root: {
-    width: '100%',
+    alignSelf: 'stretch',
+    borderTopWidth: borderWidths.heavy,
   },
   item: {
     borderBottomWidth: borderWidths.heavy,
@@ -311,18 +325,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
   },
   triggerText: {
     flex: 1,
-    fontSize: typography.md,
     fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 0.4,
   },
   chevronContainer: {
-    marginLeft: spacing.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -333,7 +343,6 @@ const styles = StyleSheet.create({
   contentInner: {
     position: 'absolute',
     width: '100%',
-    padding: spacing.md,
     borderTopWidth: borderWidths.standard,
   },
 });

@@ -3,6 +3,7 @@ import { StyleSheet, Text, View, ViewProps, LayoutChangeEvent } from 'react-nati
 import Animated, {
   cancelAnimation,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withTiming,
   withRepeat,
@@ -32,7 +33,7 @@ export interface MarqueeProps extends ViewProps {
    */
   divider?: string;
   /**
-   * Visually mutes the marquee text and borders.
+   * Visually mutes the marquee text and borders, and stops the scroll.
    * @default false
    */
   disabled?: boolean;
@@ -50,6 +51,8 @@ export default function Marquee({
   ...props
 }: MarqueeProps) {
   const { colors } = useTheme();
+  // Reduced motion: constant scrolling is non-essential, so show the text static.
+  const reduceMotion = useReducedMotion();
   const [textWidth, setTextWidth] = useState(0);
   const [containerWidth, setContainerWidth] = useState(0);
   const translateX = useSharedValue(0);
@@ -66,7 +69,7 @@ export default function Marquee({
 
   useEffect(() => {
     cancelAnimation(translateX);
-    if (textWidth > 0 && !disabled && validSpeed > 0 && text.length > 0) {
+    if (textWidth > 0 && !disabled && !reduceMotion && validSpeed > 0 && text.length > 0) {
       const duration = (textWidth / validSpeed) * 1000;
       translateX.value = 0;
 
@@ -81,7 +84,7 @@ export default function Marquee({
     } else {
       translateX.value = 0;
     }
-  }, [textWidth, containerWidth, validSpeed, disabled, content, text, translateX]);
+  }, [textWidth, containerWidth, validSpeed, disabled, reduceMotion, content, text, translateX]);
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -107,7 +110,7 @@ export default function Marquee({
     <View
       style={cn(
         styles.container,
-        { backgroundColor: colors.background, borderColor: colors.border },
+        { paddingVertical: spacing.sm, backgroundColor: colors.background, borderColor: colors.border },
         disabled && { backgroundColor: colors.muted, borderColor: colors.mutedForeground },
         style
       )}
@@ -127,25 +130,27 @@ export default function Marquee({
           <Text
             style={cn(
               styles.text,
-              { color: colors.foreground },
+              { fontSize: typography['3xl'], color: colors.foreground },
               disabled && { color: colors.mutedForeground }
             )}
             numberOfLines={1}
+            maxFontSizeMultiplier={1.3}
           >
             {content}
           </Text>
         </View>
 
-        {textWidth > 0 &&
+        {textWidth > 0 && !reduceMotion &&
           Array.from({ length: repetitions - 1 }, (_, i) => (
             <View key={i} style={styles.textWrapper}>
               <Text
                 style={cn(
                   styles.text,
-                  { color: colors.foreground },
+                  { fontSize: typography['3xl'], color: colors.foreground },
                   disabled && { color: colors.mutedForeground }
                 )}
                 numberOfLines={1}
+                maxFontSizeMultiplier={1.3}
               >
                 {content}
               </Text>
@@ -161,11 +166,10 @@ export default function Marquee({
 // ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
   container: {
-    width: '100%',
+    alignSelf: 'stretch',
     overflow: 'hidden',
     borderTopWidth: borderWidths.heavy,
     borderBottomWidth: borderWidths.heavy,
-    paddingVertical: spacing.sm,
   },
   track: {
     flexDirection: 'row',
@@ -175,7 +179,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   text: {
-    fontSize: typography['3xl'] || 32,
     fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 0.4,

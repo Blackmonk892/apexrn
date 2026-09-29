@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Image, StyleSheet, Text, View, ViewProps } from 'react-native';
 
-import { typography } from '../lib/colors';
+import { shadowOffset, typography } from '../lib/colors';
 import { useTheme } from '../lib/theme';
 import BrutalSurface from './brutal_surface';
 
@@ -32,19 +32,18 @@ export interface AvatarProps extends ViewProps {
 // ---------------------------------------------------------------------------
 // Design tokens
 // ---------------------------------------------------------------------------
-const SHADOW_OFFSET = 4;
-const AVATAR_RADIUS = 999;
-
+// Square block, not a circle: zero radius is part of the system geometry.
 const SIZES = {
   sm: 40,
   md: 56,
   lg: 80,
 };
 
-const TYPOGRAPHY_SIZES = {
-  sm: typography.sm,
-  md: typography.md,
-  lg: typography.lg,
+// Small avatars get the subtle offset so the shadow doesn't dominate the block.
+const SHADOW_OFFSETS = {
+  sm: shadowOffset.subtle.width,
+  md: shadowOffset.standard.width,
+  lg: shadowOffset.standard.width,
 };
 
 // ---------------------------------------------------------------------------
@@ -61,7 +60,8 @@ export default function Avatar({
   const { colors } = useTheme();
   const [imageFailed, setImageFailed] = useState(false);
   const dimension = SIZES[size];
-  const fontSize = TYPOGRAPHY_SIZES[size];
+  // Size-dependent tokens are read at render time.
+  const fontSize = { sm: typography.sm, md: typography.md, lg: typography.lg }[size];
 
   // A new src gets a fresh load attempt instead of sticking on the fallback.
   useEffect(() => {
@@ -75,9 +75,8 @@ export default function Avatar({
     <BrutalSurface
       style={[styles.container, style]}
       surfaceStyle={{ width: dimension, height: dimension, backgroundColor: colors.background, overflow: 'hidden' }}
-      offset={SHADOW_OFFSET}
+      offset={SHADOW_OFFSETS[size]}
       borderWidth="standard"
-      borderRadius={AVATAR_RADIUS}
       pressable={false}
       hasShadow={withShadow}
       accessibilityRole="image"
@@ -86,7 +85,11 @@ export default function Avatar({
     >
       {showFallback ? (
         <View style={[styles.fallbackContainer, { backgroundColor: colors.muted }]}>
-          <Text style={[styles.initialsText, { fontSize, color: colors.foreground }]} numberOfLines={1}>
+          <Text
+            style={[styles.initialsText, { fontSize, color: colors.foreground }]}
+            numberOfLines={1}
+            maxFontSizeMultiplier={1.3}
+          >
             {displayInitials}
           </Text>
         </View>
@@ -94,6 +97,7 @@ export default function Avatar({
         <Image
           source={{ uri: src }}
           style={styles.image}
+          resizeMode="cover"
           accessible={false}
           onError={() => setImageFailed(true)}
         />
@@ -112,7 +116,6 @@ const styles = StyleSheet.create({
   image: {
     width: '100%',
     height: '100%',
-    resizeMode: 'cover',
   },
   fallbackContainer: {
     width: '100%',

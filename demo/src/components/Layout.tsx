@@ -1,54 +1,56 @@
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useShowcaseTheme } from '../context/ThemeContext';
+import { borderWidths, touchTarget, useTheme } from '@apexrn/ui';
 
 interface LayoutProps {
   title: string;
   children: React.ReactNode;
   onBack?: () => void;
+  /** Rendered above the scroll area (toasts, FABs): positioned against the screen, not the scroll content. */
+  overlay?: React.ReactNode;
 }
 
-export default function Layout({ title, children, onBack }: LayoutProps) {
-  const { isDark, toggleTheme } = useShowcaseTheme();
-  const currentStyles = isDark ? darkStyles : lightStyles;
+/** Demo chrome. Every colour comes from the library theme, so a broken theme looks broken here. */
+export default function Layout({ title, children, onBack, overlay }: LayoutProps) {
+  const { colors, isDark, toggleTheme } = useTheme();
 
   return (
-    <SafeAreaView style={[styles.root, currentStyles.root]} edges={['top', 'bottom']}>
-      {/* Top Header Bar */}
-      <View style={[styles.header, currentStyles.header]}>
+    <SafeAreaView style={[styles.root, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
+      <View style={[styles.header, { backgroundColor: colors.muted, borderBottomColor: colors.border }]}>
         <View style={styles.headerLeft}>
           {onBack && (
             <Pressable
               onPress={onBack}
-              style={styles.backButton}
+              style={[styles.chip, { backgroundColor: colors.background, borderColor: colors.border }]}
+              hitSlop={8}
               accessibilityRole="button"
               accessibilityLabel="Go back"
               accessibilityHint="Returns to the component list"
             >
-              <Text style={currentStyles.text}>← BACK</Text>
+              <Text style={[styles.chipText, { color: colors.foreground }]}>← BACK</Text>
             </Pressable>
           )}
-          <Text style={[styles.headerTitle, currentStyles.text]}>{title}</Text>
+          <Text style={[styles.headerTitle, { color: colors.foreground }]} numberOfLines={1}>
+            {title}
+          </Text>
         </View>
 
-        {/* Universal Switcher Button */}
         <Pressable
           onPress={toggleTheme}
-          style={styles.themeToggle}
+          style={[styles.chip, { backgroundColor: colors.foreground, borderColor: colors.border }]}
+          hitSlop={8}
           accessibilityRole="button"
           accessibilityLabel={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
         >
-          <Text style={styles.toggleText}>{isDark ? '☀️ LIGHT' : '🌙 DARK'}</Text>
+          <Text style={[styles.chipText, { color: colors.background }]}>{isDark ? 'LIGHT' : 'DARK'}</Text>
         </Pressable>
       </View>
 
-      <ScrollView
-        contentContainerStyle={styles.container}
-        keyboardShouldPersistTaps="handled"
-      >
+      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         {children}
       </ScrollView>
+      {overlay}
     </SafeAreaView>
   );
 }
@@ -60,38 +62,18 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 16,
-    borderBottomWidth: 3,
+    paddingVertical: 12,
+    borderBottomWidth: borderWidths.heavy,
+    gap: 8,
   },
-  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  backButton: {
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderWidth: 2,
-    borderColor: '#000',
-    backgroundColor: '#FFF',
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flexShrink: 1 },
+  chip: {
+    minHeight: touchTarget - 8,
+    justifyContent: 'center',
+    paddingHorizontal: 10,
+    borderWidth: borderWidths.standard,
   },
-  headerTitle: { fontSize: 20, fontWeight: '900', letterSpacing: -0.5 },
-  themeToggle: {
-    backgroundColor: '#000',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderWidth: 1,
-    borderColor: '#FFF',
-  },
-  toggleText: { color: '#FFF', fontWeight: '800', fontSize: 11 },
+  chipText: { fontSize: 12, fontWeight: '800', letterSpacing: 0.5 },
+  headerTitle: { fontSize: 20, fontWeight: '900', letterSpacing: -0.5, flexShrink: 1 },
   container: { padding: 20, paddingBottom: 60 },
-});
-
-const lightStyles = StyleSheet.create({
-  root: { backgroundColor: '#FFFFFF' },
-  header: { backgroundColor: '#F0F0F0', borderBottomColor: '#000000' },
-  text: { color: '#000000' },
-});
-
-const darkStyles = StyleSheet.create({
-  root: { backgroundColor: '#1A1A1A' },
-  header: { backgroundColor: '#2A2A2A', borderBottomColor: '#FFFFFF' },
-  text: { color: '#FFFFFF' },
 });

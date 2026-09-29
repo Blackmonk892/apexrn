@@ -1,6 +1,6 @@
 import { PressableProps, StyleProp, StyleSheet, Text, ViewStyle } from 'react-native';
 
-import { spacing, typography } from '../lib/colors';
+import { shadowOffset, spacing, typography } from '../lib/colors';
 import { useTheme } from '../lib/theme';
 import BrutalSurface from './brutal_surface';
 
@@ -22,7 +22,7 @@ export interface FABProps extends Omit<PressableProps, 'style' | 'disabled'> {
    */
   disabled?: boolean;
   /**
-   * Diameter of the circular icon button.
+   * Side length of the square icon button (label mode uses it as the minimum height).
    * @default 56
    */
   size?: number;
@@ -32,7 +32,7 @@ export interface FABProps extends Omit<PressableProps, 'style' | 'disabled'> {
 // ---------------------------------------------------------------------------
 // Design tokens
 // ---------------------------------------------------------------------------
-const SHADOW_OFFSET_ELEVATED = 6;
+const SHADOW_OFFSET_ELEVATED = shadowOffset.elevated.width;
 const FAB_SIZE = 56;
 
 // ---------------------------------------------------------------------------
@@ -51,11 +51,11 @@ export default function FAB({
 
   return (
     <BrutalSurface
-      style={[styles.portalAnchor, style]}
+      style={[styles.portalAnchor, { bottom: spacing['2xl'], right: spacing['2xl'] }, style]}
       surfaceStyle={[
         styles.surface,
-        // Icon mode stays circular; label mode becomes an extended pill
-        // with padding so text is never clipped by the fixed 56px box.
+        // Icon mode is a fixed square; label mode extends horizontally with
+        // padding so text is never clipped by the fixed box.
         isExtended
           ? { minHeight: size, paddingHorizontal: spacing.lg }
           : { width: size, height: size },
@@ -76,8 +76,12 @@ export default function FAB({
     >
       {isExtended ? (
         <Text
-          style={[styles.text, { color: disabled ? colors.mutedForeground : colors.primaryForeground }]}
+          style={[
+            styles.text,
+            { fontSize: typography.lg, color: disabled ? colors.mutedForeground : colors.primaryForeground },
+          ]}
           numberOfLines={1}
+          maxFontSizeMultiplier={1.3}
         >
           {label}
         </Text>
@@ -94,8 +98,6 @@ export default function FAB({
 const styles = StyleSheet.create({
   portalAnchor: {
     position: 'absolute',
-    bottom: spacing['2xl'],
-    right: spacing['2xl'],
     zIndex: 999,
     elevation: 6,
   },
@@ -104,7 +106,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   text: {
-    fontSize: typography.lg,
     fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 0.4,

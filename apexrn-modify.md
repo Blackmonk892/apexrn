@@ -307,14 +307,16 @@ Rules of engagement:
 | 0 | 0.7 Lab shell + ErrorBoundary + registry | TODO | |
 | 0 | 0.8 Jest + RNTL smoke harness | TODO | |
 | 0 | 0.9 Move unverified components to `_legacy/` | TODO | |
-| 1 | tokens + metrics | TODO | render-time reads |
-| 1 | theme | TODO | |
-| 1 | cn / usePressPhysics | TODO | |
-| 1 | BrutalSurface | TODO | |
-| 2 | Button · Label · Separator · Badge · Avatar · Skeleton · Progress · Alert · Card · ListItem · FAB | TODO | one row each when started |
-| 3 | Input · Textarea · Checkbox · Switch · RadioGroup · Slider · InputOTP | TODO | |
-| 4 | Marquee · Carousel · Accordion · Tabs · Toast | TODO | |
-| 5 | Sheet · Dialog · AlertDialog · DropdownMenu · Select · DatePicker | TODO | Sheet first (GHRV-in-Modal). |
+| 1 | tokens + metrics | WIP | Added `touchTarget`, `controlHeight`, `opacity`, `motion`, `scrim`. Web-checked only. |
+| 1 | theme | WIP | Unchanged. |
+| 1 | cn / usePressPhysics | WIP | `usePressPhysics` now honours reduced motion. |
+| 1 | BrutalSurface | WIP | Dropped the `void _x` hack; unchanged behaviour. |
+| 2 | Button · Label · Separator · Badge · Avatar · Skeleton · Progress · Alert · Card · ListItem · FAB | WIP | Reworked + demo screens. Web-verified in headless Chrome (light + dark); not run on a device. |
+| 3 | Input · Textarea · Checkbox · Switch · RadioGroup · Slider · InputOTP | WIP | Reworked + demos. Real mouse drag/tap/typing tested on web; keyboard/IME behaviour untested on device. |
+| 4 | Marquee · Carousel · Accordion · Tabs · Toast | WIP | Reworked + demos. Carousel swipe/snap **not** exercised (web export only). |
+| 5 | Sheet · Dialog · AlertDialog · DropdownMenu · Select · DatePicker | WIP | Reworked + demos. Sheet now has its own `GestureHandlerRootView` in the Modal and a handle-only dismiss pan; **Android Modal/gesture behaviour is unverified**. |
+
+> **Not done for any row above (so none is `VERIFIED`):** device run (Android + iOS), screen-reader pass, Jest smoke tests (Wave 0.8 not built), per-component commit. Web checks were scripted with headless Chrome over CDP (mouse events, DOM/aria assertions, console-error capture); the scripts are not in the repo.
 
 ---
 

@@ -1,48 +1,66 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { Slider, useTheme } from '@apexrn/ui';
 import Layout from '../components/Layout';
-import { useShowcaseTheme } from '../context/ThemeContext';
-import Slider from '@ui/components/slider';
+import Section, { Caption } from '../components/Section';
+
+function Readout({ label, value }: { label: string; value: string | number }) {
+  const { colors } = useTheme();
+  return (
+    <View style={styles.readout}>
+      <Text style={[styles.readLabel, { color: colors.mutedForeground }]}>{label}</Text>
+      <Text style={[styles.readValue, { color: colors.foreground }]} testID={`readout-${label}`}>
+        {value}
+      </Text>
+    </View>
+  );
+}
 
 export default function SliderScreen({ onBack }: { onBack: () => void }) {
-  const { isDark } = useShowcaseTheme();
-  const textColor = isDark ? '#FFF' : '#000';
-
-  const [value1, setValue1] = useState(50);
-  const [value2, setValue2] = useState(25);
+  const [live, setLive] = useState(50);
+  const [done, setDone] = useState<number | null>(null);
+  const [stepped, setStepped] = useState(25);
+  const [free, setFree] = useState(0);
 
   return (
-    <Layout title="SLIDER COMPONENT" onBack={onBack}>
-      <View style={styles.section}>
-        <View style={styles.header}>
-          <Text style={[styles.label, { color: textColor }]}>DEFAULT (0-100)</Text>
-          <Text style={[styles.valueText, { color: textColor }]}>{Math.round(value1)}</Text>
-        </View>
-        <Slider value={value1} onValueChange={setValue1} min={0} max={100} />
-      </View>
+    <Layout title="SLIDER" onBack={onBack}>
+      <Section
+        title="Controlled"
+        note="onValueChange fires live while dragging; onSlidingComplete fires once when the finger lifts."
+      >
+        <Readout label="live" value={live} />
+        <Readout label="complete" value={done ?? 'none'} />
+        <Slider value={live} onValueChange={setLive} onSlidingComplete={setDone} accessibilityLabel="Volume" />
+        <Caption>Tap the track to jump; drag the thumb; the filled bar follows it.</Caption>
+      </Section>
 
-      <View style={styles.section}>
-        <View style={styles.header}>
-          <Text style={[styles.label, { color: textColor }]}>CUSTOM RANGE (0-50), STEP=5</Text>
-          <Text style={[styles.valueText, { color: textColor }]}>{Math.round(value2)}</Text>
-        </View>
-        <Slider value={value2} onValueChange={setValue2} min={0} max={50} step={5} />
-      </View>
+      <Section title="Range and step" note="min 0, max 50, step 5: the value snaps to multiples of 5.">
+        <Readout label="value" value={stepped} />
+        <Slider value={stepped} onValueChange={setStepped} min={0} max={50} step={5} accessibilityLabel="Quantity" />
+      </Section>
 
-      <View style={styles.section}>
-        <View style={styles.header}>
-          <Text style={[styles.label, { color: textColor }]}>DISABLED STATE</Text>
-          <Text style={[styles.valueText, { color: isDark ? '#666' : '#999' }]}>30</Text>
-        </View>
-        <Slider value={30} onValueChange={() => {}} min={0} max={100} disabled />
-      </View>
+      <Section title="Fractional" note="step 0.1 over 0 to 1.">
+        <Readout label="value" value={free.toFixed(1)} />
+        <Slider value={free} onValueChange={setFree} min={0} max={1} step={0.1} accessibilityLabel="Opacity" />
+      </Section>
+
+      <Section title="Uncontrolled" note="defaultValue keeps its own state.">
+        <Slider defaultValue={70} accessibilityLabel="Brightness" />
+      </Section>
+
+      <Section title="Disabled" note="Muted track and thumb, no fill, no shadow, no gestures.">
+        <Slider value={40} disabled accessibilityLabel="Locked setting" />
+      </Section>
+
+      <Section title="Edge cases" note="max equal to min collapses to a no-op instead of producing NaN.">
+        <Slider value={5} min={5} max={5} accessibilityLabel="Degenerate range" />
+      </Section>
     </Layout>
   );
 }
 
 const styles = StyleSheet.create({
-  section: { marginBottom: 36 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  label: { fontSize: 12, fontWeight: '700', letterSpacing: 1 },
-  valueText: { fontSize: 16, fontWeight: '900' }
+  readout: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
+  readLabel: { fontSize: 12, fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase' },
+  readValue: { fontSize: 20, fontWeight: '900' },
 });

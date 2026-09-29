@@ -1,5 +1,6 @@
 import { useRef, useState, type ReactNode } from 'react';
 import {
+  type AccessibilityActionEvent,
   FlatList,
   StyleSheet,
   useWindowDimensions,
@@ -83,10 +84,24 @@ export default function Carousel<T>({
     settleIndex(event.nativeEvent.contentOffset.x);
   };
 
+  // Screen-reader adjust gestures (swipe up/down on the adjustable node).
+  // Programmatic scrolls don't reliably fire momentum-end, so the index is
+  // committed here directly.
+  const handleAccessibilityAction = (event: AccessibilityActionEvent) => {
+    const delta = event.nativeEvent.actionName === 'increment' ? 1 : -1;
+    const next = Math.max(0, Math.min(activeIndex + delta, data.length - 1));
+    if (next === activeIndex) return;
+    flatListRef.current?.scrollToOffset({ offset: next * (itemWidth + gap), animated: true });
+    setActiveIndex(next);
+    onActiveIndexChange?.(next);
+  };
+
   return (
     <View
-      style={cn(styles.container, style)}
+      style={cn(styles.container, { marginBottom: spacing.sm }, style)}
       accessibilityRole="adjustable"
+      accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
+      onAccessibilityAction={handleAccessibilityAction}
       accessibilityLabel={`Carousel, item ${Math.min(activeIndex + 1, Math.max(data.length, 1))} of ${data.length}`}
       {...props}
     >
@@ -97,13 +112,14 @@ export default function Carousel<T>({
         showsHorizontalScrollIndicator={false}
         // `pagingEnabled` overrides `snapToInterval` on iOS — snap alone
         // gives the peek-and-settle physics this carousel is designed for.
+        getItemLayout={(_, index) => ({ length: itemWidth + gap, offset: (itemWidth + gap) * index, index })}
         snapToInterval={itemWidth + gap}
         snapToAlignment="start"
         decelerationRate="fast"
         disableIntervalMomentum
         contentContainerStyle={[
           styles.contentContainer,
-          { paddingHorizontal: spacing.xl, gap }
+          { paddingHorizontal: spacing.xl, paddingVertical: spacing.sm, gap }
         ]}
         keyExtractor={(item, index) => keyExtractor?.(item, index) ?? index.toString()}
         renderItem={({ item, index }) => (
@@ -118,7 +134,7 @@ export default function Carousel<T>({
         // Dots are decorative: the outer label announces position so
         // screen readers don't hear N unlabeled dots.
         <View
-          style={styles.indicatorsContainer}
+          style={[styles.indicatorsContainer, { gap: spacing.sm, marginTop: spacing.sm }]}
           accessible={false}
           importantForAccessibility="no-hide-descendants"
         >
@@ -143,20 +159,16 @@ export default function Carousel<T>({
 // ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
   container: {
-    width: '100%',
+    alignSelf: 'stretch',
     flexDirection: 'column',
-    marginBottom: spacing.sm,
   },
   contentContainer: {
     alignItems: 'center',
-    paddingVertical: spacing.sm,
   },
   indicatorsContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: spacing.sm,
-    marginTop: spacing.sm,
   },
   dot: {
     width: 12,

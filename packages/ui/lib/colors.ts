@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import { moderateScale, normalize } from './metrics';
 
 export interface ColorScheme {
@@ -19,6 +20,8 @@ export interface ColorScheme {
   successForeground: string;
   border: string;
   shadow: string;
+  /** Backdrop behind overlays. Black in both themes: a white scrim would glow, not dim. */
+  scrim: string;
 }
 
 export const colors: { light: ColorScheme; dark: ColorScheme } = {
@@ -41,6 +44,7 @@ export const colors: { light: ColorScheme; dark: ColorScheme } = {
     successForeground: '#FFFFFF',
     border: '#000000',
     shadow: '#000000',
+    scrim: '#000000',
   },
   dark: {
     background: '#1A1A1A',
@@ -61,6 +65,7 @@ export const colors: { light: ColorScheme; dark: ColorScheme } = {
     successForeground: '#000000',
     border: '#FFFFFF',
     shadow: '#FFFFFF',
+    scrim: '#000000',
   },
 };
 
@@ -104,4 +109,28 @@ export const shadowOffset = {
   subtle: { width: 2, height: 2 },
   standard: { width: 4, height: 4 },
   elevated: { width: 6, height: 6 },
+} as const;
+
+/** Minimum comfortable touch target: 44pt (iOS HIG) / 48dp (Material). */
+export const touchTarget = Platform.OS === 'android' ? 48 : 44;
+
+/** Control heights shared by pressable controls so rows of mixed controls align. */
+export const controlHeight = {
+  sm: 40,
+  md: 48,
+  lg: 56,
+} as const;
+
+export const opacity = {
+  /** Non-interactive content that must still be legible. */
+  disabled: 0.6,
+  /** Placeholder / secondary chrome. */
+  subtle: 0.75,
+} as const;
+
+/** Press-physics timing. Springs are stiff so a tap reads as an impact. */
+export const motion = {
+  spring: { damping: 15, stiffness: 400, mass: 0.5 },
+  /** Distance the surface travels into its shadow, per shadowOffset token. */
+  squash: 0.03,
 } as const;
