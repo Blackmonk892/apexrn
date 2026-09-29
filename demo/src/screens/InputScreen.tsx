@@ -45,10 +45,10 @@ export default function InputScreen({ onBack }: { onBack: () => void }) {
 
       <View style={styles.section}>
         <Text style={[styles.label, { color: textColor }]}>CUSTOM STYLE (ERROR)</Text>
-        <Input 
-          placeholder="Error state" 
+        <Input
+          placeholder="Error state"
           inputStyle={{ color: '#FF5252' }}
-          style={{ borderColor: '#FF5252' }}
+          surfaceStyle={{ borderColor: '#FF5252' }}
         />
         <Text style={styles.errorText}>This field is required.</Text>
       </View>

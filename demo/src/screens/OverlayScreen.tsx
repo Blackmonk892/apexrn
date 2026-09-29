@@ -41,9 +41,9 @@ export default function OverlayScreen({ onBack }: { onBack: () => void }) {
       <Button title="Open Sheet" onPress={() => setSheetOpen(true)} />
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         {() => (
-          <SheetContent PointHeight={300}>
-            <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#000' }}>BOTTOM SHEET</Text>
-            <Text style={{ marginTop: 16, color: '#000' }}>You can swipe me down to close.</Text>
+          <SheetContent sheetHeight={300}>
+            <Text style={{ fontSize: 24, fontWeight: 'bold', color: textColor }}>BOTTOM SHEET</Text>
+            <Text style={{ marginTop: 16, color: textColor }}>You can swipe me down to close.</Text>
           </SheetContent>
         )}
       </Sheet>

@@ -1,29 +1,11 @@
 {
   "name": "@apexrn/ui",
   "version": "1.0.0",
-  "description": "Production-grade neo-brutalist component library for React Native & Expo",
+  "private": true,
+  "description": "ApexRN neo-brutalist component library. Source only: no dependencies are installed here, they live in demo/.",
   "main": "index.ts",
-  "types": "index.ts",
-  "exports": {
-    ".": {
-      "types": "./index.ts",
-      "react-native": "./index.ts",
-      "default": "./index.ts"
-    },
-    "./package.json": "./package.json"
-  },
-  "files": [
-    "index.ts",
-    "lib/**/*",
-    "components/**/*"
-  ],
-  "scripts": {
-    "typecheck": "tsc --noEmit"
-  },
   "peerDependencies": {
-    "expo": ">=50.0.0",
-    "expo-haptics": ">=12.0.0",
-    "expo-modules-core": ">=1.0.0",
+    "expo-haptics": "*",
     "react": ">=18.0.0",
     "react-native": ">=0.73.0",
     "react-native-gesture-handler": ">=2.0.0",

@@ -1,18 +1,5 @@
 module.exports = function (api) {
   api.cache(true);
-
-  return {
-    presets: ["babel-preset-expo"],
-    plugins: [
-      [
-        "module-resolver",
-        {
-          alias: {
-            "@ui": "../packages/ui"
-          }
-        }
-      ],
-      "react-native-worklets/plugin"
-    ]
-  };
+  // babel-preset-expo auto-adds the worklets plugin; do not list it manually.
+  return { presets: ['babel-preset-expo'] };
 };

@@ -1,26 +1,31 @@
 const { getDefaultConfig } = require('expo/metro-config');
 const path = require('path');
 
-// 1. Find the directories
 const projectRoot = __dirname;
-const workspaceRoot = path.resolve(projectRoot, '..');
+const uiRoot = path.resolve(projectRoot, '../packages/ui');
 
 const config = getDefaultConfig(projectRoot);
 
-// 2. Watch all files in the entire workspace (which includes packages/ui)
-config.watchFolders = [workspaceRoot];
+config.watchFolders = [uiRoot];
 
-// 3. Force Metro to resolve dependencies accurately
-config.resolver.nodeModulesPaths = [
-  path.resolve(projectRoot, 'node_modules'),
-  path.resolve(workspaceRoot, 'node_modules'),
-];
+// packages/ui has no node_modules: every bare import from it resolves here,
+// so the lib and the demo always share ONE react / reanimated / svg.
+config.resolver.nodeModulesPaths = [path.resolve(projectRoot, 'node_modules')];
 
-// 4. Resolve `@ui` at the Metro level too (not just via babel), so bundles
-// don't depend on babel cache state to find the workspace package.
-config.resolver.extraNodeModules = {
-  ...config.resolver.extraNodeModules,
-  '@ui': path.resolve(workspaceRoot, 'packages/ui'),
+// Aliases (extraNodeModules can't map scoped subpaths like @ui/lib/theme).
+config.resolver.resolveRequest = (context, moduleName, platform) => {
+  if (moduleName === '@apexrn/ui') {
+    return context.resolveRequest(context, path.join(uiRoot, 'index.ts'), platform);
+  }
+  // Transitional: deep imports used by the old demo screens.
+  if (moduleName.startsWith('@ui/')) {
+    return context.resolveRequest(context, path.join(uiRoot, moduleName.slice(4)), platform);
+  }
+  return context.resolveRequest(context, moduleName, platform);
 };
+
+// If a node_modules ever reappears in the lib, Metro must never see it.
+const esc = uiRoot.replace(/[\/]/g, '[\\/]');
+config.resolver.blockList = [new RegExp(`${esc}[\\/]node_modules[\\/].*`)];
 
 module.exports = config;

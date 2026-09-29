@@ -5,7 +5,6 @@ import Animated, {
   useSharedValue,
   withTiming,
   Easing,
-  runOnJS,
 } from 'react-native-reanimated';
 
 import { spacing, typography } from '../lib/colors';
@@ -73,6 +72,11 @@ export default function Toast({
     onDismissRef.current = onDismiss;
   }, [onDismiss]);
 
+  // Timeout for the dismiss notification. Cleared/replaced on every hide and
+  // on unmount so a stale notification can never fire after dismissal.
+  const notifyTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => clearTimeout(notifyTimeout.current), []);
+
   const variants = {
     default: {
       surface: { backgroundColor: colors.foreground },
@@ -91,15 +95,17 @@ export default function Toast({
   const activeVariant = variants[variant];
 
   const hideToast = useCallback(() => {
-    translateY.value = withTiming(
-      -150,
-      { duration: 250, easing: Easing.in(Easing.quad) },
-      (finished) => {
-        if (finished) {
-          runOnJS(() => onDismissRef.current())();
-        }
-      }
-    );
+    translateY.value = withTiming(-150, {
+      duration: 250,
+      easing: Easing.in(Easing.quad),
+    });
+    // Notify on the JS thread after the slide-out finishes, reading the
+    // latest `onDismiss` there. (A worklet completion callback cannot see
+    // fresh JS closures, so it must not be the notification path.)
+    clearTimeout(notifyTimeout.current);
+    notifyTimeout.current = setTimeout(() => {
+      onDismissRef.current();
+    }, 260);
   }, [translateY]);
 
   useEffect(() => {

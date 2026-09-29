@@ -124,6 +124,10 @@ export default function Slider({
 
   const pan = Gesture.Pan()
     .enabled(!disabled && trackWidth > 0 && validRange > 0)
+    // Horizontal-only: vertical drags belong to the parent ScrollView and
+    // must not move the thumb or trap scrolling.
+    .activeOffsetX([-10, 10])
+    .failOffsetY([-10, 10])
     .onStart(() => {
       isDraggingSV.value = true;
       gestureOffset.value = translateX.value;

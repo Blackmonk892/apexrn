@@ -5,7 +5,11 @@
     "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "paths": {
-      "@ui/*": ["../packages/ui/*"]
+      "@apexrn/ui": ["../packages/ui/index.ts"],
+      "@ui/*": ["../packages/ui/*"],
+      "*": ["./node_modules/@types/*", "./node_modules/*"]
     }
-  }
+  },
+  "include": ["**/*.ts", "**/*.tsx", "../packages/ui/**/*.ts", "../packages/ui/**/*.tsx"],
+  "exclude": ["node_modules", "dist", "../packages/ui/node_modules"]
 }

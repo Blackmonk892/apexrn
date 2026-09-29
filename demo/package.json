@@ -6,10 +6,11 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "typecheck": "tsc --noEmit",
+    "doctor": "node scripts/doctor.js"
   },
   "dependencies": {
-    "@apexrn/ui": "file:../packages/ui",
     "babel-preset-expo": "^57.0.13",
     "expo": "^57.0.0",
     "expo-asset": "~57.0.18",
@@ -30,7 +31,6 @@
   },
   "devDependencies": {
     "@types/react": "~19.2.4",
-    "babel-plugin-module-resolver": "^5.0.3",
     "typescript": "~6.0.3"
   },
   "private": true
