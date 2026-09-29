@@ -41,6 +41,11 @@ import FABScreen from './src/screens/FABScreen';
 import LabelScreen from './src/screens/LabelScreen';
 import InputOTPScreen from './src/screens/InputOTPScreen';
 import TextareaScreen from './src/screens/TextareaScreen';
+import AppBarScreen from './src/screens/AppBarScreen';
+import DrawerScreen from './src/screens/DrawerScreen';
+import BottomNavScreen from './src/screens/BottomNavScreen';
+import SearchBarScreen from './src/screens/SearchBarScreen';
+import ChipScreen from './src/screens/ChipScreen';
 
 // Web only: `#button` opens the Button screen directly, `#button:light` also forces
 // the theme (used for headless checks).
@@ -116,6 +121,11 @@ function AppShell() {
       case 'label': return <LabelScreen onBack={() => setCurrentScreen('home')} />;
       case 'input_otp': return <InputOTPScreen onBack={() => setCurrentScreen('home')} />;
       case 'textarea': return <TextareaScreen onBack={() => setCurrentScreen('home')} />;
+      case 'appbar': return <AppBarScreen onBack={() => setCurrentScreen('home')} />;
+      case 'drawer': return <DrawerScreen onBack={() => setCurrentScreen('home')} />;
+      case 'bottomnav': return <BottomNavScreen onBack={() => setCurrentScreen('home')} />;
+      case 'searchbar': return <SearchBarScreen onBack={() => setCurrentScreen('home')} />;
+      case 'chip': return <ChipScreen onBack={() => setCurrentScreen('home')} />;
 
       default:
         return <HomeScreen onNavigate={(screen) => setCurrentScreen(screen)} />;

@@ -46,6 +46,11 @@ const GROUPS: { title: string; items: { id: string; name: string }[] }[] = [
       { id: 'accordion', name: 'Accordion' },
       { id: 'tabs', name: 'Tabs' },
       { id: 'toast', name: 'Toast' },
+      { id: 'appbar', name: 'App bar' },
+      { id: 'drawer', name: 'Drawer' },
+      { id: 'bottomnav', name: 'Bottom nav' },
+      { id: 'searchbar', name: 'Search bar' },
+      { id: 'chip', name: 'Chip' },
     ],
   },
   {

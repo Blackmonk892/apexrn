@@ -30,3 +30,8 @@ export { Select, SelectTrigger, SelectContent, SelectItem, type SelectProps, typ
 export { DatePicker, DatePickerTrigger, DatePickerContent, formatLocalDate, type DatePickerProps, type DatePickerTriggerProps } from './datepicker';
 export { Accordion, AccordionItem, AccordionTrigger, AccordionContent, type AccordionProps, type AccordionItemProps, type AccordionTriggerProps } from './accordion';
 export { Tabs, TabsList, TabsTrigger, TabsContent, type TabsProps, type TabsTriggerProps, type TabsContentProps } from './tabs';
+export { AppBar, AppBarAction, type AppBarProps, type AppBarActionProps } from './app-bar';
+export { Drawer, DrawerTrigger, DrawerContent, DrawerHeader, DrawerItem, type DrawerProps, type DrawerContentProps, type DrawerHeaderProps, type DrawerItemProps } from './drawer';
+export { BottomNav, BottomNavItem, type BottomNavProps, type BottomNavItemProps } from './bottom-nav';
+export { default as SearchBar, type SearchBarProps } from './search-bar';
+export { default as Chip, type ChipProps } from './chip';

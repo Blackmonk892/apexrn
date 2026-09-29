@@ -4,6 +4,7 @@ export { colors, spacing, typography, borderWidths, shadowOffset, touchTarget, c
 export { scale, verticalScale, moderateScale, normalize, screenWidth, screenHeight } from './lib/metrics';
 export { usePressPhysics, type UsePressPhysicsOptions, type PressPhysicsConfig } from './lib/usePressPhysics';
 export { cn } from './lib/utils';
+export { MenuIcon, BackIcon, CloseIcon, SearchIcon, CheckIcon, HomeIcon, BellIcon, UserIcon, type IconProps } from './lib/icons';
 
 // Components
 export * from './components';
