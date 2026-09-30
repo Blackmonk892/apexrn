@@ -31,14 +31,14 @@ The site does five jobs:
 
 ## 3. Decisions
 
-| Decision | Choice | Why |
-|---|---|---|
-| Location | `website/` in this repo | One PR changes component, preview, props and docs together; the registry deploys from the same build. Same layout shadcn uses. |
-| Live preview | **iframe of the Lab's web export**, inside a phone frame | Overlays (Dialog, Sheet, Drawer, Toast) stay inside the phone; keeps React/Reanimated out of the docs framework (no duplicate trees); the heavy bundle loads lazily. |
-| Framework | **Astro** (Starlight for docs pages, custom pages for landing) | Static output, MDX, fast, deploys anywhere. Interactivity is mostly the iframe, so Next.js is not needed. Fumadocs on Next.js is the fallback if we want heavy in-page interactivity. |
-| Hosting | One static host (GitHub Pages, Cloudflare Pages or Vercel) | The registry is static JSON, so no server. |
-| Domain | **Open: choose before publishing the CLI** | The registry URL is baked into the CLI (`DEFAULT_REGISTRY`). |
-| Look | The site itself is brutalist, built to show the library off | Use the `frontend-design` and `ui-ux-pro-max` skills for the design pass. |
+| Decision     | Choice                                                         | Why                                                                                                                                                                                   |
+| ------------ | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Location     | `website/` in this repo                                        | One PR changes component, preview, props and docs together; the registry deploys from the same build. Same layout shadcn uses.                                                        |
+| Live preview | **iframe of the Lab's web export**, inside a phone frame       | Overlays (Dialog, Sheet, Drawer, Toast) stay inside the phone; keeps React/Reanimated out of the docs framework (no duplicate trees); the heavy bundle loads lazily.                  |
+| Framework    | **Next.js, App Router, `output: 'export'`** (fully static, no server/API routes) | Static output, deploys anywhere. Interactivity is mostly the iframe, so no server is needed; static export keeps hosting free and usage-risk-free. |
+| Hosting      | One static host (GitHub Pages, Cloudflare Pages or Vercel)     | The registry is static JSON, so no server.                                                                                                                                            |
+| Domain       | **Open: choose before publishing the CLI**                     | The registry URL is baked into the CLI (`DEFAULT_REGISTRY`).                                                                                                                          |
+| Look         | The site itself is brutalist, built to show the library off    | Use the `frontend-design` and `ui-ux-pro-max` skills for the design pass.                                                                                                             |
 
 ## 4. Architecture
 
@@ -49,7 +49,7 @@ apexrn/
 ├── registry/           # unchanged; build.mjs -> registry/public
 ├── demo/               # the Lab. Gains an "embed mode" (section 6). Only place with RN deps.
 ├── docs/               # components.md (snippets) — the site reads these
-└── website/            # NEW: Astro site. Own package.json + lockfile. NO react-native deps.
+└── website/            # Next.js (static export) site. Own package.json + lockfile. NO react-native deps.
     ├── src/ (pages, components, content)
     ├── scripts/        # generators (section 7)
     └── public/         # lab/ and r/ are copied in at build time, gitignored
@@ -95,13 +95,13 @@ Test the embed on web only through the recipe in `memory/web-verification-recipe
 
 ## 7. Generated content (never hand-edited)
 
-| Source | Generates |
-|---|---|
-| `registry/public/index.json` | the component list, descriptions, `add` commands, dependency lists (which peers to install) |
-| `docs/components.md` | per-component code snippets. Split by heading; these are already typechecked in CI, so they cannot drift |
+| Source                                             | Generates                                                                                                                                                                                         |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `registry/public/index.json`                       | the component list, descriptions, `add` commands, dependency lists (which peers to install)                                                                                                       |
+| `docs/components.md`                               | per-component code snippets. Split by heading; these are already typechecked in CI, so they cannot drift                                                                                          |
 | TypeScript types of `packages/ui/components/*.tsx` | props tables (name, type, default, description from the JSDoc). Use the TypeScript compiler API or `react-docgen-typescript`, run with `demo/`'s TS configuration so `react-native` types resolve |
-| `CHANGELOG.md` | the changelog page |
-| `packages/ui/lib/colors.ts` | the token tables and the defaults for the token editor (parse the same way `registry/check-contrast.mjs` does) |
+| `CHANGELOG.md`                                     | the changelog page                                                                                                                                                                                |
+| `packages/ui/lib/colors.ts`                        | the token tables and the defaults for the token editor (parse the same way `registry/check-contrast.mjs` does)                                                                                    |
 
 Rules: a generator failing fails the build (no silent empty tables), and every component in the registry must have a page (build check).
 
@@ -113,6 +113,7 @@ Rules: a generator failing fails the build (no silent empty tables), and every c
 - **Component page:** live phone with a light/dark toggle; variants and states shown by choosing the matching Lab specimen; tabs for "Preview / Code"; install command; usage snippet; props table; accessibility notes (role, state, hit target, screen-reader behaviour); related components.
 - **Theming:** the token editor (colour pickers per token, light and dark, live in the phone) with a contrast readout using the same 4.5:1 math as `registry/check-contrast.mjs`, warnings when a pair fails, and a "copy `colors.ts`" button.
 - **Changelog** and a short **Known limits** box on each preview: "Rendered on the web with react-native-web. Haptics, Android Modal windows and native gestures behave differently on a device."
+- **AEO mirror:** alongside each component's HTML page, generate a plain-Markdown mirror (e.g. `/docs/components/<name>/llms.txt`) with the same real name/props/usage snippet, from the same source data — never hand-authored separately. Crawlers and AI agents read static text, not the iframe.
 
 ### Design direction
 
@@ -143,58 +144,66 @@ Before step 4 you can show the site with a "coming soon" note on the install box
 Sizes: S = a focused session, M = a few sessions, L = a large chunk of work.
 
 ### Phase 0 — Decide (S)
-- [ ] Pick framework (default: Astro + Starlight), host, and domain.
+
+- [x] Pick framework: **Next.js, App Router, `output: 'export'`**. Host/domain still open — choose before publishing the CLI (section 9).
 - [ ] Decide whether the Lab lives under `/lab/` (needs `baseUrl`) or a subdomain.
 - [ ] Choose the phone frame style and the landing showcase screen.
 
 ### Phase 1 — Embed mode in the Lab (M)
-- [ ] `?embed=1` chrome-less rendering for every specimen.
+
+- [ ] `?embed=1` chrome-less rendering for every specimen. **Not started** — no `embed` handling exists in `demo/App.tsx` or `demo/src` yet (confirmed by repo audit).
 - [ ] `postMessage` protocol: theme, tokens, ready; origin checks.
 - [ ] Verify the `baseUrl` question (section 6); keep `doctor`, typecheck and export green.
 - [ ] Test on web with the Chrome recipe, light and dark, reduced motion.
 - [ ] Confirm nothing changed for device builds (start in Expo Go once).
 
 ### Phase 2 — Scaffold and pipeline (M)
-- [ ] Create `website/` with its own `package.json` and lockfile; no RN deps; add the no-RN guard.
-- [ ] Ignore generated output in `.gitignore`.
+
+- [x] Create `website/` with its own `package.json` and lockfile; no RN deps. Scaffolded with `create-next-app` (App Router, TS, ESLint, `src/`), `output: 'export'` set immediately, builds clean (`npm run build` → `website/out/`). Isolated install, not an npm workspace — matches how `demo/` and `packages/cli` already install independently.
+- [x] Ignore generated output in `.gitignore` (`.next/`, `out/` added; `node_modules/` already covered globally).
 - [ ] Build script implementing section 4 locally (`npm run build` at the repo root or in `website/`).
 - [ ] `PhoneFrame` component: responsive, lazy-loaded iframe, loading state, light/dark toggle, ready handshake, `title` for accessibility, and a static fallback image for no-JS.
 
 ### Phase 3 — Generated docs (M)
+
 - [ ] Component pages from the registry index with the snippets from `docs/components.md`.
 - [ ] Props tables from TypeScript types (section 7); build fails on missing pages or empty tables.
 - [ ] Getting-started, changelog and components-index pages.
 
 ### Phase 4 — Design and landing (L)
+
 - [ ] Design pass with the two skills; tokens for the site itself.
 - [ ] Landing page with the live phone and copy-to-clipboard command.
 - [ ] Responsive layouts (phone-width first), dark mode for the site, keyboard and screen-reader pass on the site itself.
 
 ### Phase 5 — Token editor (M)
+
 - [ ] Colour controls wired to `apexrn:tokens`; contrast readout; "copy `colors.ts`".
 - [ ] Reset to defaults; persist nothing server-side.
 
 ### Phase 6 — Hosting and CI (S)
+
 - [ ] One workflow: build Lab, registry and site, deploy; path-filtered.
 - [ ] Verify `/index.json` and `/r/*.json` from the deployed URL.
 - [ ] Set `DEFAULT_REGISTRY` and update `docs/releasing.md` and `shipping.md`.
 
 ### Phase 7 — Launch (S)
+
 - [ ] Follow the launch order in section 9.
 
 ## 11. Risks and mitigations
 
-| Risk | Mitigation |
-|---|---|
-| Lab bundle is heavy (RN-web + Reanimated) | Lazy-load iframes when scrolled into view; one shared warm iframe for the landing page; show a light placeholder first; cache long. |
-| Base path breaks assets under `/lab/` | Verify in Phase 1; fall back to a subdomain. |
-| Preview looks different from a device | Visible "Known limits" note; never claim device behaviour from the site (`CLAUDE.md` rule 6). |
-| Site drifts from the library | Generated content, typechecked snippets, build fails on missing pages; same-repo PRs. |
-| Someone adds RN deps to `website/` | The no-RN guard in CI. |
-| Token overrides leak into the Lab's normal use | Overrides apply only in embed mode and reset on reload. |
-| `postMessage` abuse | Strict message schema and origin check; ignore everything else. |
-| SEO: previews are client-rendered | Docs text, code and props are static HTML; previews have a static poster image. |
-| Registry URL changes after the CLI ships | Pick the domain first; keep `/r` paths stable and versioned (`index.json` has a `version`). |
+| Risk                                           | Mitigation                                                                                                                          |
+| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Lab bundle is heavy (RN-web + Reanimated)      | Lazy-load iframes when scrolled into view; one shared warm iframe for the landing page; show a light placeholder first; cache long. |
+| Base path breaks assets under `/lab/`          | Verify in Phase 1; fall back to a subdomain.                                                                                        |
+| Preview looks different from a device          | Visible "Known limits" note; never claim device behaviour from the site (`CLAUDE.md` rule 6).                                       |
+| Site drifts from the library                   | Generated content, typechecked snippets, build fails on missing pages; same-repo PRs.                                               |
+| Someone adds RN deps to `website/`             | The no-RN guard in CI.                                                                                                              |
+| Token overrides leak into the Lab's normal use | Overrides apply only in embed mode and reset on reload.                                                                             |
+| `postMessage` abuse                            | Strict message schema and origin check; ignore everything else.                                                                     |
+| SEO: previews are client-rendered              | Docs text, code and props are static HTML; previews have a static poster image.                                                     |
+| Registry URL changes after the CLI ships       | Pick the domain first; keep `/r` paths stable and versioned (`index.json` has a `version`).                                         |
 
 ## 12. Definition of done (v1)
 

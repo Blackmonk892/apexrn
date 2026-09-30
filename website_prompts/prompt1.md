@@ -68,7 +68,7 @@ AUDIT THE REPOSITORY
 
 Inspect, and record findings for:
 
-- package manager and workspace structure at the repo root (does a root `package.json` with workspaces exist yet? what needs adding for `website/` to join it cleanly?)
+- package manager and workspace structure at the repo root: confirm there is **no** npm workspaces setup today — `demo/` and `packages/cli` are each independently installed (own `package.json` + own `package-lock.json`, no root lockfile). `website/` must follow that same isolated-install pattern, NOT a root `"workspaces"` array — adding one would change install behavior for the whole repo and risk touching `demo`'s dependency tree, which is explicitly against `CLAUDE.md` hard rule 1.
 - `packages/ui`: exported components, props, variants, themes, tokens — the real inventory, from source, not from `apexrn-docs.md` (which is known to overclaim in places, see `apexrn-modify.md` §2.7)
 - `demo/`: does an "embed mode" (`?embed=1`, `postMessage` handshake, hash routing to a specimen) already exist, or is it still to be built (`website.md` §6, Phase 1)? What specimens exist per component under `demo/src/screens/`?
 - `registry/`: does `registry/public/index.json` and per-component JSON already build cleanly (`node registry/build.mjs`)? Is it something `website/` can copy at build time?
@@ -77,14 +77,40 @@ Inspect, and record findings for:
 - Existing tests, CI workflows (`.github/workflows/*`), and whether any assume the old Astro plan (replace references) or the old "no-RN-deps guard" (`website.md` §5.7 — this guard is now unnecessary since `website/` never gets RN deps in the first place; check nothing enforces the opposite).
 
 ==================================================
+SCAFFOLD THE WEBSITE FOLDER (do this in this pass)
+==================================================
+
+After the audit, create a working `website/` folder so subsequent prompts have somewhere to build, without touching anything that currently works.
+
+1. `mkdir website`. Do NOT add a `"workspaces"` field to the root `package.json` (see above) — `website/` is a fully independent, isolated package, exactly like `demo/` and `packages/cli` already are.
+2. `cd website && npx create-next-app@latest . --typescript --app --eslint --no-tailwind --src-dir --import-alias "@/*"` (or hand-write an equivalent minimal `package.json` + `tsconfig.json` + `next.config.js` + `src/app/` if you prefer full control — either way, the result must be a self-contained Next.js App Router project with its own `package-lock.json`).
+3. In `website/next.config.js`, set `output: 'export'` immediately, even before any pages exist, so the static-export constraint is enforced from commit one (no accidental server/API-route usage creeping in later).
+4. `website/package.json` must NOT list react-native, react-native-web, react-native-reanimated, react-native-gesture-handler, react-native-svg, react-native-worklets, or expo-haptics as dependencies — that's the whole point of the hybrid-iframe architecture. Confirm this stays true after `create-next-app` runs (it won't add them, but double-check nothing else does).
+5. Add `website/node_modules`, `website/.next`, and `website/out` (or whatever the export output dir is) to the root `.gitignore` if not already covered by existing patterns.
+6. `cd website && npm install` — this must only touch `website/node_modules`/`website/package-lock.json`. It must NOT run in `packages/ui`, and must NOT be an `npm install` invoked from the repo root.
+7. Add one placeholder page (`website/src/app/page.tsx`) so `npm run build` (static export) succeeds end to end as a smoke test.
+
+==================================================
+VERIFY NOTHING ELSE BROKE
+==================================================
+
+Before finishing, confirm the new folder is genuinely additive and isolated:
+
+- `cd demo && npm run doctor` and `npm run typecheck` still pass (unchanged, since `website/` has its own dependency tree entirely).
+- `node registry/build.mjs` and `node registry/check-contrast.mjs` from the repo root still run the same as before.
+- `packages/cli`'s tests (`npm test --prefix packages/cli`) still pass.
+- `git status` shows only new files under `website/` (plus `.gitignore` edits) — nothing existing was modified except that.
+
+==================================================
 OUTPUT
 ==================================================
 
 Produce a concise report:
 
 1. repository findings (what exists today vs. what the plan assumes)
-2. gaps that block Phase 1 (Lab embed mode) or Phase 2 (site scaffold) of `website.md`
-3. any place `website.md` itself is now stale and needs a small edit (make the edit)
-4. implementation order for the next several sessions, matching `website.md`'s phases
+2. confirmation the `website/` folder now exists, builds (`next build` with static export), and is isolated per the checks above
+3. gaps that block Phase 1 (Lab embed mode) or later phases of `website.md`
+4. any place `website.md` itself is now stale and needs a small edit (make the edit)
+5. implementation order for the next several sessions, matching `website.md`'s phases
 
 Do not modify the component library during this stage unless absolutely necessary for the embed-mode integration, and even then keep it to `demo/` only (never `packages/ui` for the site's sake — see `website.md` §5.6).

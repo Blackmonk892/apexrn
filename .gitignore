@@ -85,3 +85,9 @@ Thumbs.db
 # Generated registry (node registry/build.mjs)
 # ==========================
 registry/public/
+
+# ==========================
+# Next.js (website/)
+# ==========================
+.next/
+out/
