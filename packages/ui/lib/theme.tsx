@@ -17,7 +17,7 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ApexRNProvider({
   children,
-  defaultMode = 'light',
+  defaultMode = 'system',
 }: {
   children: React.ReactNode;
   defaultMode?: ThemeMode;
