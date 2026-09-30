@@ -47,11 +47,21 @@ import BottomNavScreen from './src/screens/BottomNavScreen';
 import SearchBarScreen from './src/screens/SearchBarScreen';
 import ChipScreen from './src/screens/ChipScreen';
 
-// Web only: `#button` opens the Button screen directly, `#button:light` also forces
-// the theme (used for headless checks).
+import ShowcaseScreen from './src/screens/ShowcaseScreen';
+import PlaygroundScreen from './src/screens/PlaygroundScreen';
+
+// Web only: `#button` opens the Button screen directly, `#button:light` also forces the theme
+// (used for headless checks). `#playground:<component>:<theme?>` opens a single controllable
+// live instance of that component instead of the states-matrix specimen.
 function initialScreen(): string {
   if (Platform.OS !== 'web' || typeof window === 'undefined') return 'home';
   return window.location.hash.replace('#', '').split(':')[0] || 'home';
+}
+
+function initialPlaygroundComponent(): string {
+  if (Platform.OS !== 'web' || typeof window === 'undefined') return '';
+  const parts = window.location.hash.replace('#', '').split(':');
+  return parts[0] === 'playground' ? parts[1] ?? '' : '';
 }
 
 export default function App() {
@@ -67,8 +77,46 @@ export default function App() {
 }
 
 function AppShell() {
-  const { isDark } = useShowcaseTheme();
+  const { isDark, setMode } = useShowcaseTheme();
   const [currentScreen, setCurrentScreen] = useState<string>(initialScreen);
+  const [playgroundComponent, setPlaygroundComponent] = useState<string>(initialPlaygroundComponent);
+
+  // Web window listeners for embed postMessage and hash changes
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined') return;
+
+    const handleHashChange = () => {
+      const parts = window.location.hash.replace('#', '').split(':');
+      const scr = parts[0];
+      if (!scr) return;
+      setCurrentScreen(scr);
+      if (scr === 'playground') setPlaygroundComponent(parts[1] ?? '');
+    };
+
+    const handleMessage = (e: MessageEvent) => {
+      if (!e.data || typeof e.data !== 'object') return;
+      if (e.data.type === 'apexrn:theme' && (e.data.mode === 'light' || e.data.mode === 'dark')) {
+        setMode(e.data.mode);
+      }
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    window.addEventListener('message', handleMessage);
+
+    // Post ready signal to parent window if embedded
+    if (window.parent && window.parent !== window) {
+      try {
+        window.parent.postMessage({ type: 'apexrn:ready' }, '*');
+      } catch {
+        // Ignore cross-origin error
+      }
+    }
+
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+      window.removeEventListener('message', handleMessage);
+    };
+  }, [setMode]);
 
   // Android hardware back navigates home instead of exiting the demo.
   useEffect(() => {
@@ -85,6 +133,12 @@ function AppShell() {
   // Simple state router rendering one screen per component
   const renderScreen = () => {
     switch (currentScreen) {
+      case 'playground':
+        return (
+          <PlaygroundScreen componentId={playgroundComponent} onBack={() => setCurrentScreen('home')} />
+        );
+      case 'showcase': return <ShowcaseScreen onBack={() => setCurrentScreen('home')} />;
+      case 'hero': return <ShowcaseScreen onBack={() => setCurrentScreen('home')} />;
       case 'button': return <ButtonScreen onBack={() => setCurrentScreen('home')} />;
       case 'card': return <CardScreen onBack={() => setCurrentScreen('home')} />;
       case 'forms': return <FormsScreen onBack={() => setCurrentScreen('home')} />;

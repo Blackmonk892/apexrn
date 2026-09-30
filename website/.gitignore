@@ -13,9 +13,15 @@
 # testing
 /coverage
 
-# next.js
+# next.js & generated assets
 /.next/
 /out/
+/public/lab/
+/public/r/
+/public/index.json
+/public/llms.txt
+/public/docs/
+/src/generated/
 
 # production
 /build

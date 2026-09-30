@@ -14,6 +14,18 @@ interface LayoutProps {
 /** Demo chrome. Every colour comes from the library theme, so a broken theme looks broken here. */
 export default function Layout({ title, children, onBack, overlay }: LayoutProps) {
   const { colors, isDark, toggleTheme } = useTheme();
+  const isEmbed = typeof window !== 'undefined' && (window.location.search.includes('embed=1') || window.location.search.includes('frame=0'));
+
+  if (isEmbed) {
+    return (
+      <SafeAreaView style={[styles.root, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
+        <ScrollView contentContainerStyle={[styles.container, { padding: 14 }]} keyboardShouldPersistTaps="handled">
+          {children}
+        </ScrollView>
+        {overlay}
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>

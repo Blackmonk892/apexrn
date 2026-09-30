@@ -1,49 +1,125 @@
+@import "tailwindcss";
+
+/*
+  Token system, echoing the actual @apexrn/ui brand palette
+  (packages/ui/lib/colors.ts: coral primary, cobalt secondary, signal-yellow accent)
+  rather than inventing a separate marketing palette.
+*/
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #0d0d0e;
+  --surface: #151517;
+  --surface-raised: #1b1b1d;
+  --fg: #f4f2ed;
+  --fg-muted: #93928f;
+  --edge: #f4f2ed;
+  --hairline: #29292b;
+  --coral: #ff5c5c;
+  --coral-ink: #1a0503;
+  --cobalt: #5b6cff;
+  --signal: #ffd600;
+  --signal-ink: #1a1400;
+  --focus: var(--cobalt);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-html {
-  height: 100%;
-}
-
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
-}
-
-body {
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+[data-theme="light"] {
+  --bg: #f2efe6;
+  --surface: #ffffff;
+  --surface-raised: #ffffff;
+  --fg: #111110;
+  --fg-muted: #5c5a54;
+  --edge: #111110;
+  --hairline: #d9d5c7;
+  --coral: #e0402a;
+  --coral-ink: #ffffff;
+  --cobalt: #2f3fd6;
+  --signal: #b99600;
+  --signal-ink: #ffffff;
+  --focus: var(--cobalt);
 }
 
 * {
   box-sizing: border-box;
-  padding: 0;
-  margin: 0;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+html {
+  scroll-behavior: smooth;
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-reduced-motion: reduce) {
   html {
-    color-scheme: dark;
+    scroll-behavior: auto;
   }
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+.font-display {
+  font-family: var(--font-display), var(--font-body), sans-serif;
+}
+
+.font-mono {
+  font-family: var(--font-mono), monospace;
+}
+
+::selection {
+  background: var(--coral);
+  color: var(--coral-ink);
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Structural grid backdrop — bookends the page (hero, final CTA), not tiled through every section. */
+.bg-grid {
+  background-size: 64px 64px;
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--fg) 6%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--fg) 6%, transparent) 1px, transparent 1px);
+}
+
+/* Hard block shadow: offset by the edge color, not a soft grey blur. */
+.edge-block {
+  border: 2px solid var(--edge);
+  box-shadow: 6px 6px 0 0 var(--edge);
+}
+
+.edge-block-sm {
+  border: 2px solid var(--edge);
+  box-shadow: 3px 3px 0 0 var(--edge);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .press-block {
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+  }
+
+  .press-block:active {
+    transform: translate(3px, 3px);
+    box-shadow: 0 0 0 0 var(--edge);
+  }
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--hairline);
+  border: 2px solid var(--bg);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--fg-muted);
 }

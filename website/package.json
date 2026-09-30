@@ -3,15 +3,24 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "node scripts/generate-docs.mjs",
     "dev": "next dev",
+    "prebuild": "node scripts/generate-docs.mjs",
     "build": "next build",
+    "postbuild": "node scripts/build-search-index.mjs",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "clsx": "^2.1.1",
+    "framer-motion": "^13.4.6",
+    "lucide-react": "^1.49.0",
     "next": "16.3.7",
+    "postcss": "^8.5.28",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
     "@types/node": "^20",
@@ -19,6 +28,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.7",
+    "pagefind": "^1.5.2",
     "typescript": "^5"
   }
 }

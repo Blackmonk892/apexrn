@@ -31,7 +31,8 @@
       "expo-asset"
     ],
     "experiments": {
-      "tsconfigPaths": false
+      "tsconfigPaths": false,
+      "baseUrl": "/lab"
     }
   }
 }
