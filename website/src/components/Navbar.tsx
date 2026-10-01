@@ -6,9 +6,8 @@ import GithubIcon from "./GithubIcon";
 import { useSiteTheme } from "@/context/ThemeContext";
 
 const LINKS = [
-  { href: "#phone", label: "Preview" },
-  { href: "#code", label: "Code" },
-  { href: "#components", label: "Components" },
+  { href: "#explore", label: "Explore" },
+  { href: "#install", label: "Install" },
   { href: "/docs", label: "Docs" },
 ];
 

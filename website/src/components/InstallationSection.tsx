@@ -37,8 +37,6 @@ export default function InstallationSection() {
     <section id="install" className="relative w-full py-24">
       <div className="mx-auto max-w-4xl px-5 sm:px-8">
         <SectionHeading
-          index="05"
-          label="Setup"
           title="Three commands."
           description="No account, no config wizard. The CLI is a zero-dependency Node script that copies files."
           className="max-w-md"

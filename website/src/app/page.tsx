@@ -1,8 +1,7 @@
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
-import PhoneStorySection from "@/components/PhoneStorySection";
-import CodeSection from "@/components/CodeSection";
-import ComponentShowcase from "@/components/ComponentShowcase";
+import ComponentTicker from "@/components/ComponentTicker";
+import ExploreSection from "@/components/ExploreSection";
 import PhilosophySection from "@/components/PhilosophySection";
 import InstallationSection from "@/components/InstallationSection";
 import FinalCTA from "@/components/FinalCTA";
@@ -16,9 +15,8 @@ export default function Home() {
         <Navbar />
         <main className="flex-1">
           <HeroSection />
-          <PhoneStorySection />
-          <CodeSection />
-          <ComponentShowcase />
+          <ComponentTicker />
+          <ExploreSection />
           <PhilosophySection />
           <InstallationSection />
           <FinalCTA />

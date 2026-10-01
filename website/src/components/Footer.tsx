@@ -8,10 +8,9 @@ export default function Footer() {
         <p className="text-sm text-[var(--fg-muted)]">ApexRN — MIT licensed, open source.</p>
 
         <nav className="flex flex-wrap items-center justify-center gap-6 text-sm text-[var(--fg-muted)]">
-          <a href="#phone" className="hover:text-[var(--fg)]">Preview</a>
-          <a href="#code" className="hover:text-[var(--fg)]">Code</a>
-          <a href="#components" className="hover:text-[var(--fg)]">Components</a>
+          <a href="#explore" className="hover:text-[var(--fg)]">Explore</a>
           <a href="#install" className="hover:text-[var(--fg)]">Install</a>
+          <a href="/docs" className="hover:text-[var(--fg)]">Docs</a>
         </nav>
 
         <a

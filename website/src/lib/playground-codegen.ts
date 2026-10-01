@@ -30,5 +30,5 @@ export function generatePlaygroundCode(pc: PlaygroundComponent, values: Playgrou
     ? `${openTag}>\n  ${children}\n</${component.name}>`
     : `${openTag}/>`;
 
-  return `import { ${component.name} } from '@apexrn/ui';\n\nfunction Example() {\n  return (\n    ${element.replace(/\n/g, "\n    ")}\n  );\n}`;
+  return `import { ${component.name} } from '@/components/apexrn';\n\nfunction Example() {\n  return (\n    ${element.replace(/\n/g, "\n    ")}\n  );\n}`;
 }

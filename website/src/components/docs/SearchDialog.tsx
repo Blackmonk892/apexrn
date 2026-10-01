@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
+import { useDismissableOverlay } from "@/lib/use-dismissable-overlay";
 
 interface PagefindResultData {
   url: string;
@@ -52,19 +53,24 @@ export default function SearchDialog() {
   const [activeIdx, setActiveIdx] = useState(0);
   const [unavailable, setUnavailable] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const listboxId = useId();
 
+  // Global ⌘K/Ctrl+K toggle only; Escape-to-close, Tab trapping and scroll lock live in
+  // useDismissableOverlay below (shared with the mobile nav drawers).
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
         setOpen((v) => !v);
       }
-      if (e.key === "Escape") setOpen(false);
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
   }, []);
+
+  useDismissableOverlay(open, () => setOpen(false), panelRef);
 
   useEffect(() => {
     if (open) setTimeout(() => inputRef.current?.focus(), 30);
@@ -126,6 +132,7 @@ export default function SearchDialog() {
       {open && (
         <div className="fixed inset-0 z-[100] flex items-start justify-center bg-black/60 p-4 pt-[12vh]" onClick={() => setOpen(false)}>
           <div
+            ref={panelRef}
             role="dialog"
             aria-modal="true"
             aria-label="Search documentation"
@@ -140,6 +147,11 @@ export default function SearchDialog() {
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Search components, docs, headings…"
+                role="combobox"
+                aria-expanded={results.length > 0}
+                aria-controls={listboxId}
+                aria-activedescendant={results[activeIdx] ? `${listboxId}-${results[activeIdx].id}` : undefined}
+                aria-autocomplete="list"
                 className="flex-1 bg-transparent text-sm outline-none placeholder:text-[var(--fg-muted)]"
               />
               <button onClick={() => setOpen(false)} aria-label="Close search" className="text-[var(--fg-muted)] hover:text-[var(--fg)]">
@@ -154,13 +166,18 @@ export default function SearchDialog() {
                 </p>
               )}
               {!unavailable && query.trim() && results.length === 0 && (
-                <p className="p-4 text-sm text-[var(--fg-muted)]">No results for &ldquo;{query}&rdquo;.</p>
+                <p role="status" className="p-4 text-sm text-[var(--fg-muted)]">
+                  No results for &ldquo;{query}&rdquo;.
+                </p>
               )}
-              <ul>
+              <ul id={listboxId} role="listbox" aria-label="Search results">
                 {results.map((r, i) => (
-                  <li key={r.id}>
+                  <li key={r.id} role="presentation">
                     <a
+                      id={`${listboxId}-${r.id}`}
                       href={r.url}
+                      role="option"
+                      aria-selected={i === activeIdx}
                       className={`block border-b border-[var(--hairline)] px-4 py-3 ${i === activeIdx ? "bg-[var(--surface)]" : ""}`}
                       onMouseEnter={() => setActiveIdx(i)}
                     >

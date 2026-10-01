@@ -29,27 +29,21 @@ export default function PhilosophySection() {
     <section className="relative w-full bg-[var(--surface)] py-24">
       <div className="mx-auto max-w-6xl px-5 sm:px-8">
         <SectionHeading
-          index="04"
-          label="Why another kit"
-          title="Why another component library?"
-          description="Most React Native UI kits converge on the same rounded, soft-shadow look. ApexRN is a deliberate departure — and a few decisions about how it's built."
+          title="Most kits converge on the same look. This one doesn't."
+          description="Rounded corners, soft grey shadows and a pastel accent are the default everywhere. ApexRN is a deliberate departure — and a few decisions about how it's built."
           className="max-w-lg"
         />
 
         <div className="mt-12 grid grid-cols-1 gap-8 lg:grid-cols-[1fr_1fr]">
-          <Reveal className="edge-block bg-[var(--surface-raised)] p-7">
-            <span className="font-mono text-xs font-semibold tracking-[0.2em] text-[var(--coral)]">01</span>
-            <h3 className="font-display mt-3 text-2xl font-semibold leading-snug">{LEAD.title}</h3>
+          <Reveal className="border-[3px] border-[var(--edge)] bg-[var(--surface-raised)] p-7 shadow-[7px_7px_0_0_var(--edge)]">
+            <h3 className="font-display text-2xl font-semibold leading-snug">{LEAD.title}</h3>
             <p className="mt-3 max-w-sm text-sm leading-relaxed text-[var(--fg-muted)]">{LEAD.desc}</p>
           </Reveal>
 
           <div className="flex flex-col gap-8">
             {PRINCIPLES.map((p, i) => (
               <Reveal key={p.title} delay={(i + 1) * 0.08} className="border-l-2 border-[var(--hairline)] pl-5">
-                <span className="font-mono text-xs font-medium text-[var(--fg-muted)]">
-                  {String(i + 2).padStart(2, "0")}
-                </span>
-                <h3 className="font-display mt-1 text-lg font-semibold">{p.title}</h3>
+                <h3 className="font-display text-lg font-semibold">{p.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-[var(--fg-muted)]">{p.desc}</p>
               </Reveal>
             ))}

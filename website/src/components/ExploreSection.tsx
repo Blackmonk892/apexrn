@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Check, Copy } from "lucide-react";
 import PhoneFrame from "./PhoneFrame";
@@ -8,9 +9,7 @@ import SectionHeading from "./SectionHeading";
 import Reveal from "./Reveal";
 import { highlightLine } from "@/lib/highlight";
 
-/**
- * Verbatim snippets from docs/components.md — kept in sync with that file, never hand-written.
- */
+/** Verbatim snippets from docs/components.md — kept in sync with that file, never hand-written. */
 const SPECIMENS = [
   {
     name: "Button",
@@ -82,7 +81,7 @@ export function SettingsRow() {
   },
 ];
 
-export default function CodeSection() {
+export default function ExploreSection() {
   const [activeIdx, setActiveIdx] = useState(0);
   const [copied, setCopied] = useState(false);
   const active = SPECIMENS[activeIdx];
@@ -95,13 +94,11 @@ export default function CodeSection() {
   };
 
   return (
-    <section id="code" className="relative w-full py-24">
+    <section id="explore" className="relative w-full py-24">
       <div className="mx-auto max-w-6xl px-5 sm:px-8">
         <SectionHeading
-          index="02"
-          label="Source, not a black box"
-          title="Real source, live result."
-          description="Every snippet below is copied straight from the repository's component docs — paired with the same specimen running live, on the right."
+          title="The code you'll actually ship."
+          description="Pick a component below. The snippet on the left is copied straight from the repository's docs — the phone on the right is that same code, compiled and running."
         />
 
         <Reveal delay={0.1} className="mt-8 flex flex-wrap gap-2">
@@ -162,6 +159,14 @@ export default function CodeSection() {
           <div className="flex justify-center">
             <PhoneFrame screen={active.screen} maxWidth={260} />
           </div>
+        </Reveal>
+
+        <Reveal delay={0.2} className="mt-5 text-sm text-[var(--fg-muted)]">
+          36 components live in the registry — these four are a sample. The full set is in the{" "}
+          <Link href="/docs/components" className="text-[var(--fg)] underline decoration-2 underline-offset-2 decoration-[var(--coral)]">
+            component docs
+          </Link>
+          .
         </Reveal>
       </div>
     </section>

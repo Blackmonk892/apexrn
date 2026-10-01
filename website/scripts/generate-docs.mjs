@@ -14,7 +14,6 @@ import ts from "typescript";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, "..", "..");
 const UI_COMPONENTS_DIR = join(ROOT, "packages", "ui", "components");
-const UI_BARREL = join(UI_COMPONENTS_DIR, "index.ts");
 const REGISTRY_INDEX = join(ROOT, "registry", "public", "index.json");
 const COMPONENTS_MD = join(ROOT, "docs", "components.md");
 const COLORS_FILE = join(ROOT, "packages", "ui", "lib", "colors.ts");

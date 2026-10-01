@@ -1,16 +1,24 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Menu, Sun, Moon, X } from "lucide-react";
 import GithubIcon from "@/components/GithubIcon";
 import { useSiteTheme } from "@/context/ThemeContext";
+import { useDismissableOverlay } from "@/lib/use-dismissable-overlay";
 import SearchDialog from "@/components/docs/SearchDialog";
 import PlaygroundSidebar from "./PlaygroundSidebar";
 
 export default function PlaygroundHeader() {
   const { theme, toggleTheme } = useSiteTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+
+  useDismissableOverlay(mobileOpen, () => setMobileOpen(false), panelRef);
+  useEffect(() => {
+    if (mobileOpen) closeButtonRef.current?.focus();
+  }, [mobileOpen]);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b-2 border-[var(--edge)] bg-[var(--bg)]/95 backdrop-blur-sm">
@@ -56,11 +64,22 @@ export default function PlaygroundHeader() {
 
       {mobileOpen && (
         <div className="fixed inset-0 z-[90] lg:hidden">
-          <div className="absolute inset-0 bg-black/60" onClick={() => setMobileOpen(false)} />
-          <div className="relative flex h-full w-[86%] max-w-xs flex-col border-r-2 border-[var(--edge)] bg-[var(--bg)] p-5 overflow-y-auto">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setMobileOpen(false)} aria-hidden="true" />
+          <div
+            ref={panelRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Playground navigation"
+            className="relative flex h-full w-[86%] max-w-xs flex-col border-r-2 border-[var(--edge)] bg-[var(--bg)] p-5 overflow-y-auto"
+          >
             <div className="mb-4 flex items-center justify-between">
               <span className="font-display text-sm font-semibold">Playground</span>
-              <button onClick={() => setMobileOpen(false)} aria-label="Close navigation" className="text-[var(--fg-muted)] hover:text-[var(--fg)]">
+              <button
+                ref={closeButtonRef}
+                onClick={() => setMobileOpen(false)}
+                aria-label="Close navigation"
+                className="text-[var(--fg-muted)] hover:text-[var(--fg)]"
+              >
                 <X size={18} />
               </button>
             </div>
