@@ -11,11 +11,12 @@ interface PlaygroundPreviewProps {
   /** Lab hash route id, e.g. "button". */
   slug: string;
   values: PlaygroundValues;
+  theme: "light" | "dark";
+  onThemeChange: (theme: "light" | "dark") => void;
 }
 
-export default function PlaygroundPreview({ slug, values }: PlaygroundPreviewProps) {
+export default function PlaygroundPreview({ slug, values, theme, onThemeChange }: PlaygroundPreviewProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [theme, setTheme] = useState<"light" | "dark">("dark");
   const [isReady, setIsReady] = useState(false);
   const [failed, setFailed] = useState(false);
   // Bumping this changes the iframe's `src`/`key`, which is the only thing that reloads it —
@@ -73,7 +74,7 @@ export default function PlaygroundPreview({ slug, values }: PlaygroundPreviewPro
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center border-2 border-[var(--hairline)]">
           <button
-            onClick={() => setTheme("light")}
+            onClick={() => onThemeChange("light")}
             aria-pressed={theme === "light"}
             className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors ${
               theme === "light" ? "bg-[var(--fg)] text-[var(--bg)]" : "text-[var(--fg-muted)] hover:text-[var(--fg)]"
@@ -82,7 +83,7 @@ export default function PlaygroundPreview({ slug, values }: PlaygroundPreviewPro
             <Sun size={13} /> Light
           </button>
           <button
-            onClick={() => setTheme("dark")}
+            onClick={() => onThemeChange("dark")}
             aria-pressed={theme === "dark"}
             className={`flex items-center gap-1.5 border-l-2 border-[var(--hairline)] px-3 py-1.5 text-xs font-medium transition-colors ${
               theme === "dark" ? "bg-[var(--fg)] text-[var(--bg)]" : "text-[var(--fg-muted)] hover:text-[var(--fg)]"

@@ -1,6 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ExternalLink } from "lucide-react";
 import Breadcrumbs from "@/components/docs/Breadcrumbs";
 import TableOfContents, { type TocEntry } from "@/components/docs/TableOfContents";
 import PrevNextNav from "@/components/docs/PrevNextNav";
@@ -164,8 +165,19 @@ export default async function ComponentPage({ params }: { params: Promise<{ comp
 
         <section id="props" className="mt-10">
           <h2 className="font-display text-lg font-semibold">API / Props</h2>
-          <p className="mt-2 text-sm text-[var(--fg-muted)]">
-            Extracted from <code>{component.name}Props</code> in <code>packages/ui/components/{component.slug}.tsx</code>.
+          <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-[var(--fg-muted)]">
+            <span>
+              Extracted from <code>{component.name}Props</code> in{" "}
+              <code>packages/ui/components/{component.slug}.tsx</code>.
+            </span>
+            <a
+              href={`https://github.com/Blackmonk892/apexrn/blob/main/packages/ui/components/${component.slug}.tsx`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 font-mono text-xs text-[var(--fg)] underline decoration-[var(--hairline)] hover:decoration-[var(--fg)]"
+            >
+              View source <ExternalLink size={11} />
+            </a>
           </p>
           <div className="mt-3">
             <PropsTable props={component.props} />

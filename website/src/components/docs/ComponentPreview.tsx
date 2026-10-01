@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ExternalLink, Sun, Moon } from "lucide-react";
+import { useQueryState } from "@/lib/use-query-state";
 
 interface ComponentPreviewProps {
   /** Lab hash route id, e.g. "button", "alertdialog". */
@@ -11,12 +12,20 @@ interface ComponentPreviewProps {
   fallbackNote?: string;
 }
 
+const THEME_DEFAULTS = { theme: "dark" as "light" | "dark" };
+
 export default function ComponentPreview({ screen, isFallback, fallbackNote }: ComponentPreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [shouldMount, setShouldMount] = useState(false);
   const [isReady, setIsReady] = useState(false);
-  const [theme, setTheme] = useState<"light" | "dark">("dark");
+
+  const decodeTheme = useCallback((params: URLSearchParams) => {
+    const raw = params.get("theme");
+    return raw === "light" || raw === "dark" ? { theme: raw as "light" | "dark" } : {};
+  }, []);
+  const [{ theme }, updateTheme] = useQueryState(THEME_DEFAULTS, decodeTheme);
+  const setTheme = (mode: "light" | "dark") => updateTheme({ theme: mode }, { push: true });
 
   useEffect(() => {
     const el = containerRef.current;
