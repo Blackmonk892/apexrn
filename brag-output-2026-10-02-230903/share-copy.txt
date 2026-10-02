@@ -1,0 +1,2 @@
+Introducing ApexRN: a brutalist component library for React Native and Expo — thick borders, hard offset shadows, real press physics, one token file for light and dark.
+Copy the actual component source into your app with npx apexrn init. No package to patch around — you own the code.

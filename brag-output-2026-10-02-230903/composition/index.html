@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en" data-resolution="landscape">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>ApexRN — brag</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #0a0a0a;
+      }
+      #root {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        font-family: Arial, Helvetica, sans-serif;
+        background: #0a0a0a;
+      }
+      .clip {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+      }
+      .scene-inner {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* ---- shared "phone" frame: hard border + offset shadow, zero radius ---- */
+      .phone-frame {
+        position: relative;
+        width: 420px;
+        height: 908px;
+        border: 6px solid #000;
+        outline: 2px solid #fff;
+        outline-offset: -10px;
+        box-shadow: 16px 16px 0 0 #ff5252;
+        background: #0a0a0a;
+        overflow: hidden;
+      }
+      .shot {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      /* ---- scene 1: hook ---- */
+      #s1-crop {
+        position: relative;
+        width: 760px;
+        height: 560px;
+        border: 6px solid #000;
+        outline: 2px solid #fff;
+        outline-offset: -10px;
+        box-shadow: 18px 18px 0 0 #ffd600;
+        overflow: hidden;
+        background: #0a0a0a;
+      }
+      #s1-crop img {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: 54.5% 24.1%;
+        display: block;
+      }
+      #hook-line {
+        margin-top: 44px;
+        max-width: 820px;
+        text-align: center;
+        color: #f4f4f5;
+        font-size: 42px;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+        line-height: 1.25;
+        opacity: 0;
+      }
+
+      /* ---- scene 4: outro ---- */
+      #s4-inner {
+        gap: 28px;
+      }
+      .terminal {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        background: #111214;
+        border: 4px solid #fff;
+        padding: 22px 32px;
+        font-family: "Courier New", Courier, monospace;
+        font-size: 36px;
+        color: #f4f4f5;
+      }
+      .terminal .prompt {
+        color: #ffd600;
+        font-weight: 700;
+      }
+      .ch {
+        opacity: 0;
+      }
+      #cursor {
+        color: #ff5252;
+        opacity: 1;
+      }
+      #tagline {
+        font-size: 44px;
+        font-weight: 800;
+        color: #f4f4f5;
+        letter-spacing: -0.01em;
+        opacity: 0;
+      }
+      #wordmark {
+        margin-top: 6px;
+        font-size: 26px;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        color: #ff5252;
+        opacity: 0;
+      }
+
+      .fade-wrap {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="21"
+      data-width="1920"
+      data-height="1080"
+    >
+      <!-- Scene 1 — Hook — 0.0 - 3.0 -->
+      <div id="scene-1-hook" class="clip" data-start="0" data-duration="3" data-track-index="0">
+        <div class="scene-inner">
+          <div class="fade-wrap" id="s1-fade">
+            <div id="s1-crop">
+              <img id="btn-idle" src="assets/captures/button-idle.png" style="opacity: 1" />
+              <img id="btn-pressed" src="assets/captures/button-pressed.png" style="opacity: 0" />
+              <img id="btn-released" src="assets/captures/button-released.png" style="opacity: 0" />
+            </div>
+            <div id="hook-line">Every rounded corner is a decision you didn&rsquo;t make.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scene 2 — Product reveal + live Dialog — 3.0 - 9.0 -->
+      <div id="scene-2-reveal" class="clip" data-start="3" data-duration="6" data-track-index="0">
+        <div class="scene-inner">
+          <div class="fade-wrap" id="s2-fade">
+            <div class="phone-frame">
+              <img id="sc-light" class="shot" src="assets/captures/showcase-light.png" style="opacity: 1" />
+              <img id="sc-actions" class="shot" src="assets/captures/showcase-actions.png" style="opacity: 0" />
+              <img id="sc-dialog" class="shot" src="assets/captures/showcase-dialog-open.png" style="opacity: 0" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scene 3 — Theme flip + fast component cuts — 9.0 - 16.0 -->
+      <div id="scene-3-flip" class="clip" data-start="9" data-duration="7" data-track-index="0">
+        <div class="scene-inner">
+          <div class="fade-wrap" id="s3-fade">
+            <div class="phone-frame">
+              <img id="sc-dark" class="shot" src="assets/captures/showcase-dark.png" style="opacity: 1" />
+              <img id="chip-m" class="shot" src="assets/captures/chip-matrix.png" style="opacity: 0; object-position: 50% 0%" />
+              <img id="check-m" class="shot" src="assets/captures/checkbox-matrix.png" style="opacity: 0; object-position: 50% 0%" />
+              <img id="switch-m" class="shot" src="assets/captures/switch-matrix.png" style="opacity: 0; object-position: 50% 0%" />
+              <img id="prog-m" class="shot" src="assets/captures/progress-matrix.png" style="opacity: 0; object-position: 50% 0%" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scene 4 — Outro / CTA — 16.0 - 21.0 -->
+      <div id="scene-4-outro" class="clip" data-start="16" data-duration="5" data-track-index="0">
+        <div class="scene-inner" id="s4-inner">
+          <div class="terminal">
+            <span class="prompt">$</span>
+            <span id="typed">
+              <span class="ch">n</span><span class="ch">p</span><span class="ch">x</span><span class="ch">&nbsp;</span
+              ><span class="ch">a</span><span class="ch">p</span><span class="ch">e</span><span class="ch">x</span
+              ><span class="ch">r</span><span class="ch">n</span><span class="ch">&nbsp;</span><span class="ch">i</span
+              ><span class="ch">n</span><span class="ch">i</span><span class="ch">t</span>
+            </span>
+            <span id="cursor">&#9612;</span>
+          </div>
+          <div id="tagline">You own the code.</div>
+          <div id="wordmark">APEXRN</div>
+        </div>
+      </div>
+
+      <!-- Music -->
+      <audio
+        id="bg-music"
+        data-start="0"
+        data-duration="21"
+        data-track-index="10"
+        data-volume="0.32"
+        src="assets/music/happy-beats-business-moves-vol-12-by-ende-dot-app.mp3"
+      ></audio>
+
+      <!-- SFX -->
+      <audio id="sfx-press" data-start="1.0" data-duration="0.6" data-track-index="11" data-volume="0.75" src="assets/sfx/impact/impactSoft_medium_000.ogg"></audio>
+      <audio id="sfx-dialog" data-start="8.24" data-duration="0.6" data-track-index="12" data-volume="0.65" src="assets/sfx/interface/drop_001.ogg"></audio>
+      <audio id="sfx-flip" data-start="9.0" data-duration="0.5" data-track-index="13" data-volume="0.7" src="assets/sfx/interface/switch_001.ogg"></audio>
+      <audio id="sfx-settle" data-start="17.3" data-duration="0.6" data-track-index="14" data-volume="0.65" src="assets/sfx/impact/impactSoft_medium_002.ogg"></audio>
+    </div>
+
+    <script>
+      const tl = gsap.timeline({ paused: true });
+
+      // ===== Scene 1 — Hook (0 - 3) =====
+      // press-down at 1.0 (hard swap), release/settle at 1.3, headline in after release.
+      tl.to("#btn-idle", { opacity: 0, duration: 0.01 }, 1.0);
+      tl.to("#btn-pressed", { opacity: 1, duration: 0.01 }, 1.0);
+      tl.to("#s1-crop", { scale: 0.97, duration: 0.12, ease: "power1.out" }, 1.0);
+      tl.to("#btn-pressed", { opacity: 0, duration: 0.01 }, 1.3);
+      tl.to("#btn-released", { opacity: 1, duration: 0.01 }, 1.3);
+      tl.to("#s1-crop", { scale: 1, duration: 0.3, ease: "back.out(2.2)" }, 1.3);
+      tl.fromTo("#hook-line", { y: 14 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, 1.55);
+      tl.to("#s1-fade", { opacity: 0, duration: 0.25, ease: "power1.in" }, 2.75);
+
+      // ===== Scene 2 — Product reveal + live Dialog (3 - 9) =====
+      tl.fromTo("#s2-fade", { opacity: 0 }, { opacity: 1, duration: 0.35, ease: "power1.out" }, 3.0);
+      // hero card / overview holds 3.0 - 6.4
+      tl.to("#sc-light", { opacity: 0, duration: 0.01 }, 6.4);
+      tl.to("#sc-actions", { opacity: 1, duration: 0.01 }, 6.4);
+      // actions tab holds 6.4 - 7.6
+      tl.to("#sc-actions", { opacity: 0, duration: 0.01 }, 7.6);
+      // dialog pops in, settling exactly on the 8.74s strong cue // beat-locked: 8.74s
+      tl.fromTo("#sc-dialog", { opacity: 0, scale: 0.94 }, { opacity: 1, scale: 1, duration: 0.5, ease: "back.out(1.6)" }, 8.24);
+      tl.to("#s2-fade", { opacity: 0, duration: 0.01 }, 8.999);
+
+      // ===== Scene 3 — Theme flip + fast component cuts (9 - 16) =====
+      // hard snap: no fade, instant swap to dark — the one deliberate hard cut.
+      tl.set("#s3-fade", { opacity: 1 }, 9.0);
+      tl.to("#sc-dark", { opacity: 1, duration: 0.01 }, 9.0);
+      // fast cuts, snapped to the beat grid // beat-grid: chip 9.83s, checkbox 12.02s, switch 13.64s, progress 15.29s
+      tl.to("#sc-dark", { opacity: 0, duration: 0.01 }, 9.83);
+      tl.fromTo("#chip-m", { opacity: 0, scale: 1 }, { opacity: 1, scale: 1.06, duration: 1.0, ease: "power1.out" }, 9.83);
+      tl.to("#chip-m", { opacity: 0, duration: 0.01 }, 12.02);
+      tl.fromTo("#check-m", { opacity: 0, scale: 1 }, { opacity: 1, scale: 1.06, duration: 1.0, ease: "power1.out" }, 12.02);
+      tl.to("#check-m", { opacity: 0, duration: 0.01 }, 13.64);
+      tl.fromTo("#switch-m", { opacity: 0, scale: 1 }, { opacity: 1, scale: 1.06, duration: 1.0, ease: "power1.out" }, 13.64);
+      tl.to("#switch-m", { opacity: 0, duration: 0.01 }, 15.29);
+      tl.fromTo("#prog-m", { opacity: 0, scale: 1 }, { opacity: 1, scale: 1.06, duration: 1.0, ease: "power1.out" }, 15.29);
+      tl.to("#s3-fade", { opacity: 0, duration: 0.01 }, 15.999);
+
+      // ===== Scene 4 — Outro / CTA (16 - 21) =====
+      const chars = gsap.utils.toArray("#typed .ch");
+      tl.to(chars, { opacity: 1, duration: 0.01, stagger: 0.086 }, 16.0);
+      // two quick blinks on the cursor after typing completes
+      tl.to("#cursor", { opacity: 0, duration: 0.01 }, 17.33);
+      tl.to("#cursor", { opacity: 1, duration: 0.01 }, 17.45);
+      // tagline settles on the 17.47s strong cue // beat-locked: 17.47s
+      tl.fromTo("#tagline", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.17, ease: "power2.out" }, 17.3);
+      tl.fromTo("#wordmark", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power1.out" }, 17.75);
+      tl.to("#s4-inner", { opacity: 0, duration: 0.6, ease: "power1.in" }, 20.3);
+
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>
