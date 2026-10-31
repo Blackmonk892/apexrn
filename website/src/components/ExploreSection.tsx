@@ -29,16 +29,18 @@ export function SaveButton() {
   {
     name: "Card",
     screen: "card",
-    code: `import { Button, Card, CardFooter, CardHeader, CardText } from '@/components/apexrn';
+    code: `import { Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Text } from '@/components/apexrn';
 
 export function PlanCard() {
   return (
-    <Card variant="accent">
+    <Card>
       <CardHeader>
-        <CardText tone="title">Pro plan</CardText>
+        <CardTitle>Pro plan</CardTitle>
+        <CardDescription>Billed monthly.</CardDescription>
       </CardHeader>
-      <CardText tone="title">$9 / month</CardText>
-      <CardText tone="muted">Unlimited projects.</CardText>
+      <CardContent>
+        <Text variant="mono">$9 / month</Text>
+      </CardContent>
       <CardFooter>
         <Button variant="primary">Upgrade</Button>
       </CardFooter>

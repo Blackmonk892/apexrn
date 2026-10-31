@@ -81,7 +81,7 @@ describe('Card', () => {
   });
 
   describe('status', () => {
-    it('default shows no status icon or label', async () => {
+    it('default shows no status icon or band', async () => {
       await renderWithTheme(<Composed />);
       for (const status of statuses) expect(screen.queryByTestId(`status-icon-${status}`, hidden)).toBeNull();
       expect(screen.queryByTestId('card-status-rule', hidden)).toBeNull();
@@ -91,35 +91,48 @@ describe('Card', () => {
       ['destructive', 'Error'],
       ['success', 'Success'],
       ['warning', 'Warning'],
-    ] as const)('%s renders its icon and the label %s in the header', async (variant, label) => {
-      await renderWithTheme(<Composed variant={variant} />);
+    ] as const)('%s band carries its icon and the word %s without a CardHeader', async (variant, word) => {
+      await renderWithTheme(
+        <Card variant={variant}>
+          <CardContent>
+            <CardDescription>Body</CardDescription>
+          </CardContent>
+        </Card>,
+      );
       expect(screen.getByTestId(`status-icon-${variant}`, hidden)).toBeTruthy();
-      expect(screen.getByText(label)).toBeTruthy();
+      expect(screen.getByText(word)).toBeTruthy();
     });
 
-    it('draws the top rule in the status colour', async () => {
+    it('fills the band with the status colour and the word with its pair', async () => {
       await renderWithTheme(<Composed variant="destructive" />, { mode: 'dark', preset: 'raw' });
-      const rule = screen.getByTestId('card-status-rule', hidden);
-      expect(StyleSheet.flatten(rule.props.style).backgroundColor).toBe(presets.raw.dark.destructive);
+      const band = screen.getByTestId('card-status-rule', hidden);
+      expect(StyleSheet.flatten(band.props.style).backgroundColor).toBe(presets.raw.dark.destructive);
+      expect(StyleSheet.flatten(screen.getByText('Error').props.style).color).toBe(
+        presets.raw.dark.destructiveForeground,
+      );
     });
 
     it('accepts a custom status label', async () => {
       await renderWithTheme(
-        <Card variant="warning">
-          <CardHeader>
-            <CardTitle>Payment due</CardTitle>
-          </CardHeader>
-        </Card>,
-      );
-      expect(screen.getByText('Warning')).toBeTruthy();
-      await renderWithTheme(
         <Card variant="warning" statusLabel="Overdue">
-          <CardHeader>
-            <CardTitle>Payment due</CardTitle>
-          </CardHeader>
+          <CardContent>
+            <CardDescription>Body</CardDescription>
+          </CardContent>
         </Card>,
       );
       expect(screen.getByText('Overdue')).toBeTruthy();
+      expect(screen.queryByText('Warning')).toBeNull();
+    });
+
+    it('prefixes the status word onto a pressable card label', async () => {
+      await renderWithTheme(
+        <Card variant="warning" onPress={() => {}} accessibilityLabel="Open billing">
+          <CardContent>
+            <CardDescription>Body</CardDescription>
+          </CardContent>
+        </Card>,
+      );
+      expect(screen.getByLabelText('Warning. Open billing')).toBeTruthy();
     });
   });
 

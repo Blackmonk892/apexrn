@@ -13,8 +13,8 @@ type Variant = 'default' | 'destructive' | 'success' | 'warning';
 export interface CardProps extends Omit<ViewProps, 'children'> {
   children: ReactNode;
   /**
-   * Status variants add a top rule in the status colour; the icon and label
-   * appear in `CardHeader`, so a status card needs one to carry its meaning.
+   * Status variants add a full-width band at the top with the status colour,
+   * icon and word, so colour is never the only signal.
    * @default 'default'
    */
   variant?: Variant;
@@ -41,7 +41,6 @@ export type CardTitleProps = Omit<TextProps, 'variant' | 'tone'>;
 export type CardDescriptionProps = Omit<TextProps, 'variant' | 'tone'>;
 
 const ICON_SIZE = 14;
-const GLYPH_SIZE = 20;
 
 const STATUS = {
   destructive: { Icon: CloseIcon, word: 'Error' },
@@ -64,7 +63,7 @@ const look = variants({
   defaultVariants: { variant: 'default' },
 });
 
-type CardContextValue = { variant: Variant; statusLabel?: string };
+type CardContextValue = { variant: Variant };
 
 const CardContext = createContext<CardContextValue | null>(null);
 
@@ -80,15 +79,18 @@ export function Card({
   statusLabel,
   onPress,
   disabled,
+  accessibilityLabel,
   style,
   ...props
 }: CardProps) {
   const { colors } = useTheme();
   const { tone } = look({ variant });
   const isPressable = !!onPress;
+  const status = variant === 'default' ? null : STATUS[variant];
+  const word = statusLabel ?? status?.word;
 
   return (
-    <CardContext.Provider value={{ variant, statusLabel }}>
+    <CardContext.Provider value={{ variant }}>
       <BrutalSurface
         style={style}
         elevation="card"
@@ -96,15 +98,25 @@ export function Card({
         disabled={disabled}
         onPress={onPress}
         accessibilityRole={isPressable ? 'button' : undefined}
+        // The band's word would otherwise be replaced by the consumer's label.
+        accessibilityLabel={word && accessibilityLabel ? `${word}. ${accessibilityLabel}` : accessibilityLabel}
         {...props}
       >
-        {tone.rule ? (
+        {status && tone.rule && tone.ink ? (
           <View
             testID="card-status-rule"
-            style={{ height: borderWidths.container, backgroundColor: colors[tone.rule] }}
-            importantForAccessibility="no-hide-descendants"
-            accessibilityElementsHidden
-          />
+            style={[
+              styles.band,
+              { backgroundColor: colors[tone.rule], paddingHorizontal: spacing.lg, paddingVertical: spacing.xs, gap: spacing.xs },
+            ]}
+          >
+            <View testID={`status-icon-${variant}`} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+              <status.Icon size={ICON_SIZE} color={colors[tone.ink]} />
+            </View>
+            <Text variant="label" tone="inherit" style={{ color: colors[tone.ink] }}>
+              {word}
+            </Text>
+          </View>
         ) : null}
         <View style={{ padding: spacing.lg }}>{children}</View>
       </BrutalSurface>
@@ -116,9 +128,7 @@ export function Card({
 // edge instead of floating inside the content inset.
 export function CardHeader({ children, style, ...props }: CardHeaderProps) {
   const { colors } = useTheme();
-  const { variant, statusLabel } = useCard('CardHeader');
-  const { tone } = look({ variant });
-  const status = variant === 'default' ? null : STATUS[variant];
+  useCard('CardHeader');
 
   return (
     <View
@@ -138,19 +148,6 @@ export function CardHeader({ children, style, ...props }: CardHeaderProps) {
       ]}
       {...props}
     >
-      {status && tone.rule && tone.ink ? (
-        <View style={[styles.statusRow, { gap: spacing.xs }]}>
-          <View
-            testID={`status-icon-${variant}`}
-            style={[styles.glyph, { backgroundColor: colors[tone.rule] }]}
-            importantForAccessibility="no-hide-descendants"
-            accessibilityElementsHidden
-          >
-            <status.Icon size={ICON_SIZE} color={colors[tone.ink]} />
-          </View>
-          <Text variant="label">{statusLabel ?? status.word}</Text>
-        </View>
-      ) : null}
       {children}
     </View>
   );
@@ -200,8 +197,7 @@ export function CardFooter({ children, style, ...props }: CardFooterProps) {
 const styles = StyleSheet.create({
   header: { borderBottomWidth: borderWidths.control },
   footer: { borderTopWidth: borderWidths.control },
-  statusRow: { flexDirection: 'row', alignItems: 'center' },
-  glyph: { width: GLYPH_SIZE, height: GLYPH_SIZE, alignItems: 'center', justifyContent: 'center' },
+  band: { flexDirection: 'row', alignItems: 'center' },
 });
 
 export default Card;
