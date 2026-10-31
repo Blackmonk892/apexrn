@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import Svg, { Path, Rect } from 'react-native-svg';
+import Svg, { Circle, Path } from 'react-native-svg';
 
 // 24x24 glyphs with a 2px stroke, the same weight as the control border, so
 // icons and the blocks around them read as one line weight. Decorative: the
@@ -50,8 +50,8 @@ export const CloseIcon = (p: IconProps) => (
 
 export const SearchIcon = (p: IconProps) => (
   <Icon {...p}>
-    <Rect x="4" y="4" width="11" height="11" />
-    <Path d="M15 15L21 21" />
+    <Circle cx="10" cy="10" r="6" />
+    <Path d="M14.24 14.24L21 21" />
   </Icon>
 );
 
@@ -75,7 +75,7 @@ export const BellIcon = (p: IconProps) => (
 
 export const UserIcon = (p: IconProps) => (
   <Icon {...p}>
-    <Rect x="8" y="3" width="8" height="8" />
+    <Circle cx="12" cy="7" r="4" />
     <Path d="M4 21V16H20V21" />
   </Icon>
 );
