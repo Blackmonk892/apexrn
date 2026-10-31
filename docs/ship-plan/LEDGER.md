@@ -45,3 +45,18 @@ Parallel tasks and their files (recorded retroactively for A5/A6, which were dis
 - Parallel (2026-10-31): A4 (`packages/ui/lib/theme.tsx`, `demo/jest.setup.ts`, `demo/__tests__/theme-provider-warning.test.tsx`) ∥ A3 (files above). No overlap.
 - Parallel: none during the final-review fix wave (one agent: CLAUDE.md, both workflows, `demo/__tests__/{harness,theme-provider-warning,native-globals}.test.tsx`, `demo/jest.config.js`); the controller edits only this ledger.
 - CI flake (run 41203078985): website `next build` failed resolving `next/font/google` (Google Fonts fetch at build time); rerun of the failed job green, no code change. Ruling: the Phase D site uses system fonts only (matches ORCHESTRATOR §1.4), which removes the build's network dependency — cost if wrong: site loses Space Grotesk/Inter/JetBrains Mono (being rebuilt anyway).
+
+## Phase B0 — design system first (PR: pending) — serial, owner sign-off at end
+
+| # | Task | Status | Commit | Verified | Not verified |
+|---|---|---|---|---|---|
+| B0-1 | Colour roles, neo + raw presets, provider `preset`, contrast gate | DONE | 697edca, 79eb871 | tokens:check (4 palettes, text ≥4.5, border/ring ≥3, shadow ≥1.5); tokens:test 3 (RED via stub); 11 theme/harness tests incl. nested providers + fallback; typecheck; generate-docs; website tsc | Values are start values until B0-7; no device run |
+| B0-2 | `lib/variants.ts` + `lib/motion.ts` | DONE | f462442, f9f86be | 7 variants tests (defaults, unknown/null/inherited-key fallback, no base mutation); motion values + useMotion reduced path; typecheck; registry build (44 items) | Easing curves not visually checked until B0-6 |
+| B0-3 | BrutalSurface on the depth ladder; press, ring, disabled, invalid | WIP | | | |
+| B0-4 | `Text` primitive + loading blocks | TODO | | | |
+| B0-5 | Icons on the §5 grid | TODO | | | |
+| B0-6 | Specimen board | TODO | | | |
+| B0-7 | Tune and lock values | TODO | | | |
+- Ruling: B0-1 keeps BrutalSurface's `offset` prop (only token reads migrate); B0-3 owns the BrutalSurface API change — keeps tasks reviewable separately — cost if wrong: none.
+- Ruling: raw `ring` = the ink foreground (light `#111111`, dark `#F2F0EB`), not the signal red — in raw, red already means error/destructive, so a red focus ring would read as an error state; the 2px offset gap distinguishes the ring from the border — cost if wrong: focus is less loud in raw (tunable on the specimen board).
+- Ruling: neo dark `background` stays `#1A1A1A` (current palette, DESIGN §1.1 tunes the shadow against it); only `surface` is `#222222` — cost if wrong: none.
