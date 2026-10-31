@@ -7,7 +7,7 @@ export { scale, verticalScale, moderateScale, normalize, screenWidth, screenHeig
 export { usePressPhysics, type UsePressPhysicsOptions } from './lib/use-press-physics';
 export { LoadingBlocks } from './lib/loading-blocks';
 export { cn } from './lib/utils';
-export { MenuIcon, BackIcon, CloseIcon, SearchIcon, CheckIcon, HomeIcon, BellIcon, UserIcon, WarningIcon, InfoIcon, type IconProps } from './lib/icons';
+export { MenuIcon, BackIcon, CloseIcon, SearchIcon, CheckIcon, HomeIcon, BellIcon, UserIcon, WarningIcon, InfoIcon, PlusIcon, type IconProps } from './lib/icons';
 
 // Components
 export * from './components';
