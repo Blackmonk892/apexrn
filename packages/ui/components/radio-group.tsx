@@ -78,8 +78,7 @@ const RadioContext = createContext<RadioContextValue | null>(null);
 // ---------------------------------------------------------------------------
 const RADIO_SIZE = 24;
 const DOT_SIZE = 12;
-// Radios stay round on purpose: circle vs. square is how people tell a
-// single-choice control from a checkbox, so this is a functional radius.
+// Only the inner dot is round; the surface follows the zero-radius rule.
 const RADIO_RADIUS = 999;
 
 // ---------------------------------------------------------------------------

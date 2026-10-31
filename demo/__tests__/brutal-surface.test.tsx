@@ -1,4 +1,7 @@
-import { Text } from 'react-native';
+import { Text, StyleSheet } from 'react-native';
+import { useReducedMotion } from 'react-native-reanimated';
+import * as Reanimated from 'react-native-reanimated';
+import { usePressPhysics } from '@apexrn/ui';
 import { fireEvent, screen } from '@testing-library/react-native';
 import * as Haptics from 'expo-haptics';
 import { BrutalSurface, presets } from '@apexrn/ui';
@@ -76,5 +79,60 @@ describe('BrutalSurface', () => {
     expect(screen.getByTestId('brutal-surface-ring', HIDDEN)).toBeTruthy();
     await fireEvent(screen.getByTestId('s'), 'blur');
     expect(screen.queryByTestId('brutal-surface-ring', HIDDEN)).toBeNull();
+  });
+
+  it('reserves the same layout margin enabled and disabled', async () => {
+    const margins = async (disabled: boolean) => {
+      await renderWithTheme(
+        <BrutalSurface disabled={disabled} testID={`s-${disabled}`}><Text>x</Text></BrutalSurface>,
+      );
+      const root = screen.getByTestId(`s-${disabled}`).parent;
+      const flat = StyleSheet.flatten(root?.props.style) as { marginRight: number; marginBottom: number };
+      return [flat.marginRight, flat.marginBottom];
+    };
+    expect(await margins(true)).toEqual(await margins(false));
+    expect(await margins(true)).toEqual([4, 4]);
+  });
+
+  it('shows no ring on a disabled surface', async () => {
+    await renderWithTheme(<BrutalSurface disabled focused><Text>x</Text></BrutalSurface>);
+    expect(screen.queryByTestId('brutal-surface-ring', HIDDEN)).toBeNull();
+  });
+});
+
+describe('usePressPhysics', () => {
+  type Api = ReturnType<typeof usePressPhysics>;
+  let api: Api;
+  const Probe = ({ disabled = false }: { disabled?: boolean }) => {
+    api = usePressPhysics({ depth: 4, disabled });
+    return null;
+  };
+
+  it('sinks by the depth on press-in and returns on press-out', async () => {
+    await renderWithTheme(<Probe />);
+    api.handlePressIn();
+    expect(api.pressed.value).toBe(1);
+    api.handlePressOut();
+    expect(api.pressed.value).toBe(0);
+  });
+
+  it('sets the value instantly under reduced motion', async () => {
+    jest.mocked(useReducedMotion).mockReturnValue(true);
+    const spring = jest.spyOn(Reanimated, 'withSpring');
+    await renderWithTheme(<Probe />);
+    api.handlePressIn();
+    expect(api.pressed.value).toBe(1);
+    expect(spring).not.toHaveBeenCalled();
+    spring.mockRestore();
+  });
+
+  it('resets when disabled flips mid-press', async () => {
+    const { rerender } = await renderWithTheme(<Probe />);
+    api.handlePressIn();
+    expect(api.pressed.value).toBe(1);
+    await rerender(<Probe disabled />);
+    expect(api.pressed.value).toBe(0);
+    api.handlePressIn();
+    expect(api.pressed.value).toBe(0);
   });
 });

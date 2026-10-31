@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import {
   Pressable,
   type GestureResponderEvent,
@@ -72,10 +72,18 @@ export function BrutalSurface({
   const [hasFocus, setHasFocus] = useState(false);
   const isDisabled = !!disabled;
   const isInteractive = pressable && !isDisabled;
+  // Margin is reserved from the full depth so disabling a control never changes its layout.
+  const reserved = theme.elevation[elevation];
   // A disabled surface sits flat on the page: a shadow would still read as raised.
-  const depth = isDisabled ? 0 : theme.elevation[elevation];
+  const depth = isDisabled ? 0 : reserved;
   const bw = borderWidths[borderWidth];
+  const ringInset = focusRing.offset + focusRing.width;
   const edge = borderColor ?? theme.colors.border;
+
+  // Focus can't survive the surface going disabled, and onBlur won't fire for it.
+  useEffect(() => {
+    if (isDisabled) setHasFocus(false);
+  }, [isDisabled]);
 
   const { animatedSurfaceStyle, handlePressIn, handlePressOut } =
     usePressPhysics({ depth, disabled: !isInteractive, haptics });
@@ -102,7 +110,7 @@ export function BrutalSurface({
   };
 
   return (
-    <View style={[styles.root, { marginBottom: depth, marginRight: depth }, style]}>
+    <View style={[styles.root, { marginBottom: reserved, marginRight: reserved }, style]}>
       {depth > 0 && (
         <Animated.View
           testID="brutal-surface-shadow"
@@ -151,7 +159,7 @@ export function BrutalSurface({
       )}
 
       {/* A sibling of the surface so the sinking press never drags the ring with it. */}
-      {(focused || hasFocus) && (
+      {!isDisabled && (focused || hasFocus) && (
         <View
           testID="brutal-surface-ring"
           pointerEvents="none"
@@ -161,7 +169,10 @@ export function BrutalSurface({
           style={[
             styles.ring,
             {
-              inset: -(focusRing.offset + focusRing.width),
+              top: -ringInset,
+              left: -ringInset,
+              right: -ringInset,
+              bottom: -ringInset,
               borderWidth: focusRing.width,
               borderColor: theme.colors.ring,
             },

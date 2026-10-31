@@ -22,7 +22,10 @@ export function usePressPhysics({ depth, disabled = false, haptics = true }: Use
   const pressed = useSharedValue(0);
   // Reduced motion keeps the sink (it is state feedback) but makes it instant.
   const reduceMotion = useReducedMotion();
-  const animate = (to: number) => (reduceMotion ? to : withSpring(to, motion.press));
+  const animate = useCallback(
+    (to: number) => (reduceMotion ? to : withSpring(to, motion.press)),
+    [reduceMotion],
+  );
 
   // A surface that turns non-interactive mid-gesture would otherwise stay sunk.
   useEffect(() => {
@@ -35,12 +38,12 @@ export function usePressPhysics({ depth, disabled = false, haptics = true }: Use
     if (haptics) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     }
-  }, [disabled, haptics, pressed, reduceMotion]);
+  }, [disabled, haptics, pressed, animate]);
 
   const handlePressOut = useCallback(() => {
     if (disabled) return;
     pressed.value = animate(0);
-  }, [disabled, pressed, reduceMotion]);
+  }, [disabled, pressed, animate]);
 
   const animatedSurfaceStyle = useAnimatedStyle(() => ({
     transform: [
