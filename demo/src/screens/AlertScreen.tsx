@@ -18,7 +18,7 @@ function Swatch() {
 
 export default function AlertScreen({ onBack }: { onBack: () => void }) {
   return (
-    <Layout title="ALERT" onBack={onBack}>
+    <Layout id="alert" title="ALERT" onBack={onBack}>
       <Section
         title="Variants"
         note="Severity is never colour-only: each variant has its own glyph, and screen readers hear the severity first."

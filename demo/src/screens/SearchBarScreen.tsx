@@ -9,7 +9,7 @@ export default function SearchBarScreen({ onBack }: { onBack: () => void }) {
   const [cancelled, setCancelled] = useState(0);
 
   return (
-    <Layout title="SEARCH BAR" onBack={onBack}>
+    <Layout id="searchbar" title="SEARCH BAR" onBack={onBack}>
       <Section title="Controlled" note="Clear appears once there is text and keeps the keyboard up. The search key submits and dismisses.">
         <SearchBar value={query} onValueChange={setQuery} onSubmit={setSubmitted} placeholder="Search components" />
         <Caption>{`Query: "${query}". Submitted: ${submitted}`}</Caption>

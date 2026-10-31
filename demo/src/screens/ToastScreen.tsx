@@ -49,7 +49,7 @@ function ControlledToastScreen({ onBack }: { onBack: () => void }) {
   const content = active ? CONTENT[active] : CONTENT.default;
 
   return (
-    <Layout
+    <Layout id="toast"
       title="TOAST"
       onBack={onBack}
       overlay={

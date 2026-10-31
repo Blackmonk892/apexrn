@@ -12,7 +12,7 @@ export default function ChipScreen({ onBack }: { onBack: () => void }) {
   const [taps, setTaps] = useState(0);
 
   return (
-    <Layout title="CHIP" onBack={onBack}>
+    <Layout id="chip" title="CHIP" onBack={onBack}>
       <Section title="Filter chips (toggle)" note="Selected is an inverted block plus a check mark, so state does not rely on colour. Controlled here.">
         <View style={styles.wrap}>
           {TAGS.map((t) => (

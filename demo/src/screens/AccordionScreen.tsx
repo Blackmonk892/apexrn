@@ -13,7 +13,7 @@ export default function AccordionScreen({ onBack }: { onBack: () => void }) {
   const [open, setOpen] = useState<string>('shipping');
 
   return (
-    <Layout title="ACCORDION" onBack={onBack}>
+    <Layout id="accordion" title="ACCORDION" onBack={onBack}>
       <Section title="Single, controlled" note="type single (default): opening one closes the others. value + onValueChange.">
         <Accordion type="single" value={open} onValueChange={(v) => setOpen(v as string)}>
           <AccordionItem value="shipping">

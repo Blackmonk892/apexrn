@@ -10,7 +10,7 @@ export default function BadgeScreen({ onBack }: { onBack: () => void }) {
   const { colors } = useTheme();
 
   return (
-    <Layout title="BADGE" onBack={onBack}>
+    <Layout id="badge" title="BADGE" onBack={onBack}>
       <Section title="Variants">
         <View style={styles.row}>
           {VARIANTS.map((v) => (

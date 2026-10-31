@@ -9,7 +9,7 @@ export default function SeparatorScreen({ onBack }: { onBack: () => void }) {
   const text = { color: colors.foreground, fontWeight: '700' as const };
 
   return (
-    <Layout title="SEPARATOR" onBack={onBack}>
+    <Layout id="separator" title="SEPARATOR" onBack={onBack}>
       <Section title="Horizontal">
         <Text style={text}>Above the line</Text>
         <Separator />

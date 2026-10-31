@@ -11,7 +11,7 @@ export default function AppBarScreen({ onBack }: { onBack: () => void }) {
   const frame = { borderWidth: 2, borderColor: colors.border, backgroundColor: colors.muted };
 
   return (
-    <Layout title="APP BAR" onBack={onBack}>
+    <Layout id="appbar" title="APP BAR" onBack={onBack}>
       <Section title="Back + actions" note="onBack fills the leading slot. Actions are icon-only, so label is required.">
         <View style={frame}>
           <AppBar

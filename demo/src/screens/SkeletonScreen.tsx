@@ -6,7 +6,7 @@ import Section, { Caption } from '../components/Section';
 
 export default function SkeletonScreen({ onBack }: { onBack: () => void }) {
   return (
-    <Layout title="SKELETON" onBack={onBack}>
+    <Layout id="skeleton" title="SKELETON" onBack={onBack}>
       <Section title="Text lines" note="Sweeps a highlight across the block. Sized entirely through style.">
         <View style={styles.stack}>
           <Skeleton style={styles.line} />

@@ -8,7 +8,7 @@ const SIZES = ['sm', 'md', 'lg'] as const;
 
 export default function AvatarScreen({ onBack }: { onBack: () => void }) {
   return (
-    <Layout title="AVATAR" onBack={onBack}>
+    <Layout id="avatar" title="AVATAR" onBack={onBack}>
       <Section title="Sizes" note="40 / 56 / 80. Square block; the initials fallback is the default.">
         <View style={styles.row}>
           {SIZES.map((size, i) => (

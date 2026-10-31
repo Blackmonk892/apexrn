@@ -9,7 +9,7 @@ export default function FeedbackScreen({ onBack }: { onBack: () => void }) {
   const [toastVisible, setToastVisible] = useState(false);
 
   return (
-    <Layout title="FEEDBACK" onBack={onBack}>
+    <Layout id="feedback" title="FEEDBACK" onBack={onBack}>
       <Text style={[styles.label, { color: textColor }]}>BADGES</Text>
       <View style={styles.row}>
         <Badge label="Default" />

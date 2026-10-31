@@ -16,7 +16,7 @@ export default function FABScreen({ onBack }: { onBack: () => void }) {
   const plus = <Text style={[styles.plus, { color: colors.primaryForeground }]}>+</Text>;
 
   return (
-    <Layout title="FAB" onBack={onBack}>
+    <Layout id="fab" title="FAB" onBack={onBack}>
       <Section title="Icon" note="Anchored bottom-right of its parent. Override position with style.">
         <Stage>
           <FAB accessibilityLabel="Add item" onPress={() => setCount((n) => n + 1)}>

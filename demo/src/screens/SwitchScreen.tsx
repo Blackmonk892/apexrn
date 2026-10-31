@@ -20,7 +20,7 @@ export default function SwitchScreen({ onBack }: { onBack: () => void }) {
   const [last, setLast] = useState('none');
 
   return (
-    <Layout title="SWITCH" onBack={onBack}>
+    <Layout id="switch" title="SWITCH" onBack={onBack}>
       <Section title="Controlled" note="checked + onCheckedChange. Position tells on from off, not just colour.">
         <Row label="Airplane mode">
           <Switch checked={airplane} onCheckedChange={setAirplane} accessibilityLabel="Airplane mode" />

@@ -17,7 +17,7 @@ export default function TabsScreen({ onBack }: { onBack: () => void }) {
   const [tab, setTab] = useState('profile');
 
   return (
-    <Layout title="TABS" onBack={onBack}>
+    <Layout id="tabs" title="TABS" onBack={onBack}>
       <Section title="Controlled" note="value + onValueChange. The selected tab is an inverted block, not just a colour change.">
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList>

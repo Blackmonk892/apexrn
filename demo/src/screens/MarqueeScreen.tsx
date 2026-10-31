@@ -5,7 +5,7 @@ import Section, { Caption } from '../components/Section';
 
 export default function MarqueeScreen({ onBack }: { onBack: () => void }) {
   return (
-    <Layout title="MARQUEE" onBack={onBack}>
+    <Layout id="marquee" title="MARQUEE" onBack={onBack}>
       <Section title="Default" note="60 px per second, repeating with a bullet divider.">
         <Marquee text="Breaking news" />
       </Section>

@@ -20,7 +20,7 @@ export default function CheckboxScreen({ onBack }: { onBack: () => void }) {
   const [events, setEvents] = useState('none');
 
   return (
-    <Layout title="CHECKBOX" onBack={onBack}>
+    <Layout id="checkbox" title="CHECKBOX" onBack={onBack}>
       <Section title="Controlled" note="checked + onCheckedChange.">
         <Row label="Accept terms and conditions">
           <Checkbox checked={terms} onCheckedChange={setTerms} accessibilityLabel="Accept terms and conditions" />

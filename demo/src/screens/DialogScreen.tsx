@@ -18,7 +18,7 @@ export default function DialogScreen({ onBack }: { onBack: () => void }) {
   const [interactions, setInteractions] = useState(0);
 
   return (
-    <Layout title="DIALOG" onBack={onBack}>
+    <Layout id="dialog" title="DIALOG" onBack={onBack}>
       <Section title="Uncontrolled" note="DialogTrigger asChild wraps your own button. Close with the backdrop, Android back or Escape.">
         <View style={styles.row}>
           <Dialog>

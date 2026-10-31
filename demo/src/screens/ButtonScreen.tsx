@@ -14,7 +14,7 @@ const Dot = () => {
 
 export default function ButtonScreen({ onBack }: { onBack: () => void }) {
   const { colors } = useTheme();
-  const [presses, setPresses] = useState(0);
+  const [pressed, setPressed] = useState('none');
   const [saving, setSaving] = useState(false);
 
   const save = () => {
@@ -23,7 +23,7 @@ export default function ButtonScreen({ onBack }: { onBack: () => void }) {
   };
 
   return (
-    <Layout title="BUTTON" onBack={onBack}>
+    <Layout id="button" title="BUTTON" onBack={onBack}>
       <Text style={[styles.lede, { color: colors.foreground }]}>
         Press to see the block sink into its shadow. Every cell below is the real component.
       </Text>
@@ -31,10 +31,12 @@ export default function ButtonScreen({ onBack }: { onBack: () => void }) {
       <Section title="Variants">
         <View style={styles.row}>
           {VARIANTS.map((v) => (
-            <Button key={v} variant={v} onPress={() => setPresses((n) => n + 1)}>{v}</Button>
+            <View key={v} testID={`button-${v}`}>
+              <Button variant={v} onPress={() => setPressed(v)}>{v}</Button>
+            </View>
           ))}
         </View>
-        <Caption>{`Presses: ${presses}`}</Caption>
+        <Caption>{`Pressed: ${pressed}`}</Caption>
       </Section>
 
       <Section title="Sizes" note="Heights 40 / 48 / 56. Small buttons extend their hit area to the platform touch target.">

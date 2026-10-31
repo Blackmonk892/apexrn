@@ -23,7 +23,7 @@ export default function SliderScreen({ onBack }: { onBack: () => void }) {
   const [free, setFree] = useState(0);
 
   return (
-    <Layout title="SLIDER" onBack={onBack}>
+    <Layout id="slider" title="SLIDER" onBack={onBack}>
       <Section
         title="Controlled"
         note="onValueChange fires live while dragging; onSlidingComplete fires once when the finger lifts."

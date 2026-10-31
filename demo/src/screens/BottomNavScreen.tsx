@@ -13,7 +13,7 @@ export default function BottomNavScreen({ onBack }: { onBack: () => void }) {
   const frame = { borderWidth: 2, borderColor: colors.border };
 
   return (
-    <Layout title="BOTTOM NAV" onBack={onBack}>
+    <Layout id="bottomnav" title="BOTTOM NAV" onBack={onBack}>
       <Section title="Controlled, four items" note="The selected block slides (transform only). Labels are always visible.">
         <View style={frame}>
           <BottomNav

@@ -9,7 +9,7 @@ export default function SelectScreen({ onBack }: { onBack: () => void }) {
   const [picked, setPicked] = useState('none');
 
   return (
-    <Layout title="SELECT" onBack={onBack}>
+    <Layout id="select" title="SELECT" onBack={onBack}>
       <Section title="Controlled" note="value + onValueChange. The trigger shows the item's label, not its value.">
         <View>
           <Label>Framework</Label>

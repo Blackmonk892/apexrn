@@ -19,7 +19,7 @@ export default function RadioGroupScreen({ onBack }: { onBack: () => void }) {
   const [plan, setPlan] = useState('none');
 
   return (
-    <Layout title="RADIO GROUP" onBack={onBack}>
+    <Layout id="radiogroup" title="RADIO GROUP" onBack={onBack}>
       <Section title="Controlled" note="value + onValueChange. Selection is a filled dot, not just colour.">
         <RadioGroup value={flavor} onValueChange={setFlavor}>
           <Option value="vanilla" label="Vanilla" />

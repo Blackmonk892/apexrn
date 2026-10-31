@@ -24,7 +24,7 @@ export default function CarouselScreen({ onBack }: { onBack: () => void }) {
   );
 
   return (
-    <Layout title="CAROUSEL" onBack={onBack}>
+    <Layout id="carousel" title="CAROUSEL" onBack={onBack}>
       <Section title="Default" note="Items are 80% of the screen; the next one peeks in. Swipe to snap.">
         <Carousel data={slides} keyExtractor={(s) => s.id} renderItem={renderSlide} />
       </Section>

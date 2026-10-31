@@ -14,7 +14,7 @@ export default function InputOTPScreen({ onBack }: { onBack: () => void }) {
   const wrong = submitted && otp6 !== CORRECT;
 
   return (
-    <Layout title="INPUT OTP" onBack={onBack}>
+    <Layout id="input_otp" title="INPUT OTP" onBack={onBack}>
       <Section title="Four digits" note="Tap the blocks to focus. The active block shows a cursor and its shadow.">
         <InputOTP value={otp4} onChangeText={setOtp4} length={4} />
         <Caption>{`Value: ${otp4 || 'empty'}`}</Caption>

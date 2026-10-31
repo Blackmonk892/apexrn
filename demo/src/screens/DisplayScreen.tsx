@@ -14,7 +14,7 @@ export default function DisplayScreen({ onBack }: { onBack: () => void }) {
   ];
 
   return (
-    <Layout title="DATA DISPLAY" onBack={onBack}>
+    <Layout id="display" title="DATA DISPLAY" onBack={onBack}>
       <Text style={[styles.label, { color: textColor }]}>AVATAR</Text>
       <View style={styles.row}>
         <Avatar initials="JD" withShadow />

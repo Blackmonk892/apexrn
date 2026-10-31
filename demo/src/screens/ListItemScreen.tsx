@@ -10,7 +10,7 @@ export default function ListItemScreen({ onBack }: { onBack: () => void }) {
   const list = [styles.list, { borderColor: colors.border }];
 
   return (
-    <Layout title="LIST ITEM" onBack={onBack}>
+    <Layout id="listitem" title="LIST ITEM" onBack={onBack}>
       <Section title="Static" note="Without onPress an item is plain content: no button role, no press feedback.">
         <View style={list}>
           <ListItem title="Notifications" />

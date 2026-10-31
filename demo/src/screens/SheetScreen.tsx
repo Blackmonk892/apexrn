@@ -15,7 +15,7 @@ export default function SheetScreen({ onBack }: { onBack: () => void }) {
   const body = [styles.body, { color: colors.foreground }];
 
   return (
-    <Layout title="SHEET" onBack={onBack}>
+    <Layout id="sheet" title="SHEET" onBack={onBack}>
       <Section
         title="Standard"
         note="Slides up from the bottom. Close with the button, the backdrop, a downward drag, the Android back button or Escape."

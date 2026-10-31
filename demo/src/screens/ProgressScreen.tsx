@@ -9,7 +9,7 @@ export default function ProgressScreen({ onBack }: { onBack: () => void }) {
   const [value, setValue] = useState(40);
 
   return (
-    <Layout title="PROGRESS" onBack={onBack}>
+    <Layout id="progress" title="PROGRESS" onBack={onBack}>
       <Section title="Values" note="Track fills from the left; 0, 50 and 100.">
         {[0, 50, 100].map((v) => (
           <View key={v} style={styles.item}>

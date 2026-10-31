@@ -13,7 +13,7 @@ export default function OverlayScreen({ onBack }: { onBack: () => void }) {
   const [date, setDate] = useState<Date | null>(null);
 
   return (
-    <Layout title="OVERLAYS & MENUS" onBack={onBack}>
+    <Layout id="overlay" title="OVERLAYS & MENUS" onBack={onBack}>
       <Text style={[styles.label, { color: textColor }]}>DIALOG</Text>
       <Dialog>
         <DialogTrigger asChild>

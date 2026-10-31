@@ -9,7 +9,7 @@ export default function DatePickerScreen({ onBack }: { onBack: () => void }) {
   const [picked, setPicked] = useState('none');
 
   return (
-    <Layout title="DATE PICKER" onBack={onBack}>
+    <Layout id="datepicker" title="DATE PICKER" onBack={onBack}>
       <Section title="Controlled" note="value + onChange. Pick a day, then confirm. Reopening returns to the selected month.">
         <View>
           <Label>Delivery date</Label>

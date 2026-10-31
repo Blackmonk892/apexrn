@@ -12,7 +12,7 @@ export default function FormsScreen({ onBack }: { onBack: () => void }) {
   const [sliderVal, setSliderVal] = useState(50);
 
   return (
-    <Layout title="FORMS & INPUTS" onBack={onBack}>
+    <Layout id="forms" title="FORMS & INPUTS" onBack={onBack}>
       <Text style={[styles.label, { color: textColor }]}>INPUT FIELD</Text>
       <Input placeholder="Enter your text here..." />
       <View style={{ height: 16 }} />

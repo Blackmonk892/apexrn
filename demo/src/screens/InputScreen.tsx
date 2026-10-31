@@ -14,7 +14,7 @@ export default function InputScreen({ onBack }: { onBack: () => void }) {
   const invalid = email.length > 0 && !email.includes('@');
 
   return (
-    <Layout title="INPUT" onBack={onBack}>
+    <Layout id="input" title="INPUT" onBack={onBack}>
       <Section title="Default" note="Focus the field: the hard shadow fades in and the size never changes.">
         <Input placeholder="Enter your text" onFocus={() => setLog('focus')} onBlur={() => setLog('blur')} />
         <Caption>{`Last event: ${log}`}</Caption>

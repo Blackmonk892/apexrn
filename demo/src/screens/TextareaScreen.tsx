@@ -12,7 +12,7 @@ export default function TextareaScreen({ onBack }: { onBack: () => void }) {
   const over = bio.length > LIMIT;
 
   return (
-    <Layout title="TEXTAREA" onBack={onBack}>
+    <Layout id="textarea" title="TEXTAREA" onBack={onBack}>
       <Section title="Default" note="Always multiline, text starts at the top.">
         <Textarea placeholder="Write a description" />
       </Section>

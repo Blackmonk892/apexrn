@@ -8,7 +8,7 @@ export default function LabelScreen({ onBack }: { onBack: () => void }) {
   const [email, setEmail] = useState('');
 
   return (
-    <Layout title="LABEL" onBack={onBack}>
+    <Layout id="label" title="LABEL" onBack={onBack}>
       <Section title="Default">
         <Label>Email address</Label>
         <Caption>Names a form control.</Caption>

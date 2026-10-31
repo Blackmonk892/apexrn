@@ -17,7 +17,7 @@ export default function DropdownScreen({ onBack }: { onBack: () => void }) {
   const [picked, setPicked] = useState('none');
 
   return (
-    <Layout title="DROPDOWN MENU" onBack={onBack}>
+    <Layout id="dropdown" title="DROPDOWN MENU" onBack={onBack}>
       <Section title="Uncontrolled" note="Anchored under the trigger. Close with an item, the backdrop, Android back or Escape.">
         <View style={styles.row}>
           <DropdownMenu>

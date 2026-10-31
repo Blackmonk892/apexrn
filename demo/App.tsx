@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { BackHandler, Platform } from 'react-native';
+import { BackHandler, Linking, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider, useShowcaseTheme } from './src/context/ThemeContext';
-import HomeScreen from './src/screens/HomeScreen';
+import HomeScreen, { SCREEN_IDS } from './src/screens/HomeScreen';
+import { screenFromUrl } from './src/deep-link';
 import ButtonScreen from './src/screens/ButtonScreen';
 import CardScreen from './src/screens/CardScreen';
 import FormsScreen from './src/screens/FormsScreen';
@@ -118,6 +119,17 @@ function AppShell() {
       window.removeEventListener('message', handleMessage);
     };
   }, [setMode]);
+
+  // Maestro and `adb` open screens with apexrn-demo://c/<id>, at launch or while the app runs.
+  useEffect(() => {
+    const open = (url: string | null) => {
+      const id = screenFromUrl(url, SCREEN_IDS);
+      if (id) setCurrentScreen(id);
+    };
+    Linking.getInitialURL().then(open, () => {});
+    const sub = Linking.addEventListener('url', ({ url }) => open(url));
+    return () => sub.remove();
+  }, []);
 
   // Android hardware back navigates home instead of exiting the demo.
   useEffect(() => {

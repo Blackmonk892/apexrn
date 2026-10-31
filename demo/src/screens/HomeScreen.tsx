@@ -80,11 +80,13 @@ const GROUPS: { title: string; items: { id: string; name: string }[] }[] = [
   },
 ];
 
+export const SCREEN_IDS = GROUPS.flatMap((group) => group.items.map((item) => item.id));
+
 export default function HomeScreen({ onNavigate }: HomeScreenProps) {
   const { colors } = useTheme();
 
   return (
-    <Layout title="APEXRN">
+    <Layout id="home" title="APEXRN">
       <View testID="home-screen">
         <Text style={[styles.lede, { color: colors.foreground }]}>
           Every screen renders the real component from the library barrel, with its variants and states.

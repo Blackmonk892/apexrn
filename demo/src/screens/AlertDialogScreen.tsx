@@ -9,7 +9,7 @@ export default function AlertDialogScreen({ onBack }: { onBack: () => void }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <Layout title="ALERT DIALOG" onBack={onBack}>
+    <Layout id="alertdialog" title="ALERT DIALOG" onBack={onBack}>
       <Section
         title="Destructive (default)"
         note="Tapping the backdrop does nothing: the user has to choose. The Android back button and Escape count as Cancel."

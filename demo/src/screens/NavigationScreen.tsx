@@ -11,7 +11,7 @@ export default function NavigationScreen({ onBack }: { onBack: () => void }) {
   const [otp, setOtp] = useState('');
 
   return (
-    <Layout title="NAV & LAYOUT" onBack={onBack}>
+    <Layout id="navigation" title="NAV & LAYOUT" onBack={onBack}>
       <Text style={[styles.label, { color: textColor }]}>TABS</Text>
       <Tabs value={tabValue} onValueChange={setTabValue}>
         <TabsList>

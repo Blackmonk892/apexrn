@@ -10,7 +10,7 @@ export default function CardScreen({ onBack }: { onBack: () => void }) {
   const [taps, setTaps] = useState(0);
 
   return (
-    <Layout title="CARD" onBack={onBack}>
+    <Layout id="card" title="CARD" onBack={onBack}>
       <Section title="Variants">
         <View style={styles.stack}>
           {VARIANTS.map((v) => (

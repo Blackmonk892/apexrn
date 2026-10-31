@@ -46,7 +46,7 @@ export default function DrawerScreen({ onBack }: { onBack: () => void }) {
   const [state, setState] = useState('closed');
 
   return (
-    <Layout title="DRAWER" onBack={onBack}>
+    <Layout id="drawer" title="DRAWER" onBack={onBack}>
       <Section title="Left, uncontrolled" note="DrawerTrigger opens it. Items close it unless closeOnPress is false.">
         <Drawer onOpenChange={(o) => setState(o ? 'opened' : 'closed')}>
           <DrawerTrigger asChild>
