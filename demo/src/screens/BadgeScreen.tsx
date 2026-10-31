@@ -1,14 +1,12 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { Badge, BrutalSurface, textStyles, useTheme } from '@apexrn/ui';
+import { StyleSheet, View } from 'react-native';
+import { Badge, BrutalSurface, Text } from '@apexrn/ui';
 import Layout from '../components/Layout';
 import Section, { Caption } from '../components/Section';
 
 const VARIANTS = ['default', 'primary', 'outline', 'accent', 'destructive', 'success', 'warning'] as const;
 
 export default function BadgeScreen({ onBack }: { onBack: () => void }) {
-  const { colors } = useTheme();
-
   return (
     <Layout id="badge" title="BADGE" onBack={onBack}>
       <Section title="Variants" note="Destructive, success and warning carry an icon as well as colour.">
@@ -29,23 +27,15 @@ export default function BadgeScreen({ onBack }: { onBack: () => void }) {
         </View>
       </Section>
 
-      <Section title="States" note="A badge is static content: no press, focus or disabled state.">
-        <View style={styles.row}>
-          <Badge variant="success" label="Paid" />
-          <Badge variant="warning" label="Overdue" />
-          <Badge variant="destructive" label="Failed" />
-        </View>
-      </Section>
-
       <Section title="In context">
         <BrutalSurface pressable={false} surfaceStyle={styles.card}>
           <View style={styles.cardHead}>
-            <Text style={[textStyles.title, { color: colors.foreground }]}>Invoice 2041</Text>
+            <Text variant="title">Invoice 2041</Text>
             <Badge variant="success" label="Paid" />
           </View>
-          <Text style={[textStyles.body, { color: colors.mutedForeground }]}>Studio retainer, October</Text>
+          <Text variant="body" tone="muted">Studio retainer, October</Text>
           <View style={styles.cardHead}>
-            <Text style={[textStyles.mono, { color: colors.foreground }]}>EUR 4,200.00</Text>
+            <Text variant="mono">EUR 4,200.00</Text>
             <Badge count={3} variant="accent" accessibilityLabel="3 comments" />
           </View>
         </BrutalSurface>

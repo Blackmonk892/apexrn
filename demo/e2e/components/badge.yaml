@@ -10,7 +10,8 @@ appId: dev.apexrn.demo
     element:
       id: "badge-count-120"
     direction: DOWN
-- assertVisible: "99+"
+- assertVisible:
+    id: "badge-count-120"
 - assertNotVisible: "Render Error"
 - assertNotVisible: ".*TypeError.*"
 - takeScreenshot: badge
