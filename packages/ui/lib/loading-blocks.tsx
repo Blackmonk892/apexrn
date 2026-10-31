@@ -7,12 +7,13 @@ import Animated, {
   useSharedValue,
   withRepeat,
   withTiming,
+  type SharedValue,
 } from 'react-native-reanimated';
 import { motion, useMotion } from './motion';
 
 const STEPS = 3;
 
-function Block({ index, step, color, size, still }: { index: number; step: { value: number }; color: string; size: number; still: boolean }) {
+function Block({ index, step, color, size, still }: { index: number; step: SharedValue<number>; color: string; size: number; still: boolean }) {
   // Opacity of the fill layer is animated; the outline stays put so layout never changes.
   const fill = useAnimatedStyle(() => ({ opacity: still ? (index === 1 ? 1 : 0) : Math.floor(step.value) === index ? 1 : 0 }));
   return (

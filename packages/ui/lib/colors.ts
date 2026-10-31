@@ -199,8 +199,9 @@ export const typography: Record<'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl'
 
 export type TextVariant = 'display' | 'title' | 'body' | 'label' | 'mono';
 
+// Firefox ignores the bare ui-monospace keyword and would fall back to a serif, so web gets a stack.
 export const fontFamilies = {
-  mono: Platform.select({ ios: 'Menlo', android: 'monospace', default: 'ui-monospace' }),
+  mono: Platform.select({ ios: 'Menlo', android: 'monospace', default: 'ui-monospace, Menlo, Consolas, monospace' }),
 };
 
 // Sizes are fixed numbers: OS font scaling is applied by Text, capped by maxFontSizeMultiplier.
