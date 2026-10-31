@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { StyleSheet, Text, View, ViewProps } from 'react-native';
 
 import { spacing, typography } from '../lib/colors';
+import { CheckIcon, CloseIcon, InfoIcon, WarningIcon } from '../lib/icons';
 import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
 import BrutalSurface from './brutal-surface';
@@ -24,7 +25,7 @@ export interface AlertProps extends ViewProps {
    */
   description?: string;
   /**
-   * Replaces the built-in severity glyph. Decorative — hidden from
+   * Replaces the built-in severity icon. Decorative — hidden from
    * screen readers (the title/description carry the announcement).
    */
   icon?: ReactNode;
@@ -34,13 +35,14 @@ export interface AlertProps extends ViewProps {
 // Design tokens
 // ---------------------------------------------------------------------------
 const GLYPH_SIZE = 22;
+const ICON_SIZE = 16;
 
-// Severity is never colour-only: each variant has its own glyph and spoken prefix.
+// Severity is never colour-only: each variant has its own icon and spoken prefix.
 const SEVERITY = {
-  default: { glyph: 'i', spoken: '' },
-  destructive: { glyph: '✕', spoken: 'Error. ' },
-  warning: { glyph: '!', spoken: 'Warning. ' },
-  success: { glyph: '✓', spoken: 'Success. ' },
+  default: { Icon: InfoIcon, name: 'info', spoken: '' },
+  destructive: { Icon: CloseIcon, name: 'destructive', spoken: 'Error. ' },
+  warning: { Icon: WarningIcon, name: 'warning', spoken: 'Warning. ' },
+  success: { Icon: CheckIcon, name: 'success', spoken: 'Success. ' },
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -89,8 +91,8 @@ export function Alert({
         importantForAccessibility="no-hide-descendants"
       >
         {icon ?? (
-          <View style={[styles.glyph, { backgroundColor: fg }]}>
-            <Text style={[styles.glyphText, { color: bg }]}>{severity.glyph}</Text>
+          <View testID={`status-icon-${severity.name}`} style={[styles.glyph, { backgroundColor: fg }]}>
+            <severity.Icon size={ICON_SIZE} color={bg} />
           </View>
         )}
       </View>
@@ -137,11 +139,6 @@ const styles = StyleSheet.create({
     height: GLYPH_SIZE,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  glyphText: {
-    fontSize: 14,
-    fontWeight: '900',
-    lineHeight: 16,
   },
   contentContainer: {
     flex: 1,

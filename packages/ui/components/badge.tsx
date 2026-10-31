@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
-import { StyleSheet, Text, ViewProps } from 'react-native';
+import { StyleSheet, Text, View, ViewProps } from 'react-native';
 
 import { spacing, typography } from '../lib/colors';
+import { CheckIcon, CloseIcon, WarningIcon } from '../lib/icons';
 import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
 import BrutalSurface from './brutal-surface';
@@ -30,6 +31,10 @@ export interface BadgeProps extends ViewProps {
    */
   children?: ReactNode;
 }
+
+const ICON_SIZE = 14;
+
+const STATUS_ICONS = { destructive: CloseIcon, success: CheckIcon, warning: WarningIcon } as const;
 
 // ---------------------------------------------------------------------------
 // Component
@@ -63,7 +68,7 @@ export function Badge({
       surface: { backgroundColor: colors.accent },
       text: { color: colors.accentForeground },
     },
-    // Status fills. The label text carries the meaning, so colour is never the only signal.
+    // Status fills. Icon and label carry the meaning, so colour is never the only signal.
     destructive: {
       surface: { backgroundColor: colors.destructive },
       text: { color: colors.destructiveForeground },
@@ -80,6 +85,7 @@ export function Badge({
 
   const activeVariant = VARIANTS[variant];
   const content = children ?? label ?? '';
+  const StatusIcon = variant in STATUS_ICONS ? STATUS_ICONS[variant as keyof typeof STATUS_ICONS] : null;
 
   return (
     <BrutalSurface
@@ -96,6 +102,16 @@ export function Badge({
       accessibilityRole="text"
       {...props}
     >
+      {StatusIcon ? (
+        <View
+          testID={`status-icon-${variant}`}
+          style={{ marginRight: spacing.xs }}
+          importantForAccessibility="no-hide-descendants"
+          accessibilityElementsHidden
+        >
+          <StatusIcon size={ICON_SIZE} color={activeVariant.text.color} />
+        </View>
+      ) : null}
       {typeof content === 'string' ? (
         <Text
           style={cn(styles.label, { fontSize: typography.xs }, activeVariant.text)}

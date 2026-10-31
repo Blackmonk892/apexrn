@@ -135,6 +135,7 @@ Add a `Text` primitive whose `variant` is one of the roles below. Components nev
 | Selected / active | Inverted block: `foreground` fill with `background` text. Or the `accent` block for navigation. Not a tint. |
 | Disabled | `opacity.disabled`, dashed border, no shadow, no haptic. Still readable. |
 | Error | Border becomes `destructive`. A message appears below in `label` style with a ✕ glyph drawn as an icon. Colour is never the only signal. |
+| Status | Every `destructive`, `success` and `warning` variant (and `info`, once one exists) renders its icon from `lib/icons` (check for success, warning mark, close for destructive, info) and a visible text label. Colour is never the only signal. In `raw`, success and warning share one neutral fill, so the icon is what tells them apart. |
 | Loading | Width is kept. The label is replaced by a 3-block stepping indicator. The control does not change size. |
 | Empty / long content | Every list or text slot defines both cases (empty state, two-line truncation rule). |
 
