@@ -112,13 +112,14 @@ For each component, in dependency order (primitives → atoms → inputs → mot
 ```bash
 npm run doctor                     # env sanity: no duplicate dependency trees
 npm run typecheck                  # tsc — covers packages/ui AND the demo
+npm test                           # jest-expo + RNTL smoke tests (demo/__tests__)
 npx expo export --platform web     # bundle check
 npx expo start --web               # fast iteration
 npx expo start                     # device (Expo Go / dev build)
 npx expo install --check           # SDK version alignment
 ```
 
-Before declaring a component done: `doctor` + `typecheck` + `expo export` green **and** it has been exercised in the Lab on a device. Say plainly what was and wasn't verified; don't claim device behavior from a web run.
+Before declaring a component done: `doctor` + `typecheck` + `test` + `expo export` green **and** it has been exercised in the Lab on a device. Say plainly what was and wasn't verified; don't claim device behavior from a web run.
 
 ## When something renders wrong
 

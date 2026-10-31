@@ -1,4 +1,6 @@
-import { screen } from '@testing-library/react-native';
+import { Text } from 'react-native';
+import { render, screen } from '@testing-library/react-native';
+import { useReducedMotion } from 'react-native-reanimated';
 import { Button } from '@apexrn/ui';
 import { renderWithTheme } from './utils/render';
 
@@ -19,5 +21,20 @@ describe('test harness', () => {
   it('renders in dark mode', async () => {
     await renderWithTheme(<Button>Save</Button>, { mode: 'dark' });
     expect(screen.getByRole('button', { name: 'Save' })).toBeTruthy();
+  });
+});
+
+describe('useReducedMotion mock', () => {
+  const Probe = () => <Text>{useReducedMotion() ? 'reduced' : 'full'}</Text>;
+
+  it('can be overridden per test', async () => {
+    jest.mocked(useReducedMotion).mockReturnValue(true);
+    const screen = await render(<Probe />);
+    expect(screen.getByText('reduced')).toBeTruthy();
+  });
+
+  it('defaults to false again on the next test', async () => {
+    const screen = await render(<Probe />);
+    expect(screen.getByText('full')).toBeTruthy();
   });
 });

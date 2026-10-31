@@ -4,7 +4,6 @@ module.exports = {
   preset: 'jest-expo',
   roots: ['<rootDir>/__tests__'],
   testMatch: ['**/*.test.tsx'],
-  testPathIgnorePatterns: ['/node_modules/', '/__tests__/utils/'],
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   moduleNameMapper: {
     '^@apexrn/ui$': '<rootDir>/../packages/ui/index.ts',

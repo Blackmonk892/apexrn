@@ -37,7 +37,7 @@ describe('native globals', () => {
   });
 
   it('PlaygroundScreen mounts on native without window.addEventListener', async () => {
-    setWindow('location', { search: '' });
+    setWindow('location', undefined);
     setWindow('addEventListener', undefined);
     await renderWithTheme(<PlaygroundScreen componentId="button" onBack={() => {}} />);
     expect(screen.getByText('PLAYGROUND · BUTTON')).toBeTruthy();

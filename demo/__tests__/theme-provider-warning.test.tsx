@@ -1,6 +1,4 @@
 import { Text } from 'react-native';
-import { render } from '@testing-library/react-native';
-import { useReducedMotion } from 'react-native-reanimated';
 
 type Fresh = {
   render: typeof import('@testing-library/react-native/pure').render;
@@ -82,20 +80,5 @@ describe('useTheme outside ApexRNProvider', () => {
     const Probe = () => <Text>{ui.useTheme().colorScheme}</Text>;
     const screen = await render(<Probe />);
     expect(screen.getByText('light')).toBeTruthy();
-  });
-});
-
-describe('useReducedMotion mock', () => {
-  const Probe = () => <Text>{useReducedMotion() ? 'reduced' : 'full'}</Text>;
-
-  it('can be overridden per test', async () => {
-    jest.mocked(useReducedMotion).mockReturnValue(true);
-    const screen = await render(<Probe />);
-    expect(screen.getByText('reduced')).toBeTruthy();
-  });
-
-  it('defaults to false again on the next test', async () => {
-    const screen = await render(<Probe />);
-    expect(screen.getByText('full')).toBeTruthy();
   });
 });
