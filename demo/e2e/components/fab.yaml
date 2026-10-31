@@ -1,0 +1,12 @@
+appId: dev.apexrn.demo
+---
+- runFlow:
+    file: ../_open.yaml
+    env:
+      ID: fab
+- tapOn:
+    id: "fab-compose"
+- assertVisible: "Composed"
+- assertNotVisible: "Render Error"
+- assertNotVisible: ".*TypeError.*"
+- takeScreenshot: fab

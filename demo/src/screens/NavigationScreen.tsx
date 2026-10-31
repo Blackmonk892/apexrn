@@ -42,7 +42,7 @@ export default function NavigationScreen({ onBack }: { onBack: () => void }) {
       <Textarea placeholder="Type your message..." />
 
       {/* FAB is absolute positioned */}
-      <FAB label="+" onPress={() => console.log('FAB pressed')} />
+      <FAB accessibilityLabel="Add item" label="Add" onPress={() => console.log('FAB pressed')} />
     </Layout>
   );
 }
