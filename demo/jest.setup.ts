@@ -1,3 +1,4 @@
+import 'react-native-gesture-handler/jestSetup';
 import { useReducedMotion } from 'react-native-reanimated';
 
 jest.mock('react-native-worklets', () => require('react-native-worklets/lib/module/mock'));
