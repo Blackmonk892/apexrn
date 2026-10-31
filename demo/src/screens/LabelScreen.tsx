@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Input, Label } from '@apexrn/ui';
+import { Input, Label, spacing } from '@apexrn/ui';
 import Layout from '../components/Layout';
 import Section, { Caption } from '../components/Section';
 
@@ -22,7 +22,7 @@ export default function LabelScreen({ onBack }: { onBack: () => void }) {
       </Section>
 
       <Section title="In context">
-        <View style={styles.field}>
+        <View style={{ marginBottom: spacing.md }}>
           <Label required nativeID="label-email">Email address</Label>
           <Input
             value={email}
@@ -31,7 +31,7 @@ export default function LabelScreen({ onBack }: { onBack: () => void }) {
             accessibilityLabelledBy="label-email"
           />
         </View>
-        <View style={styles.field}>
+        <View style={{ marginBottom: spacing.md }}>
           <Label disabled>Username</Label>
           <Input value="apex_user" editable={false} />
         </View>
@@ -48,6 +48,5 @@ export default function LabelScreen({ onBack }: { onBack: () => void }) {
 }
 
 const styles = StyleSheet.create({
-  field: { marginBottom: 12 },
   narrow: { width: 180 },
 });

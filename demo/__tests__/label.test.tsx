@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 import { screen } from '@testing-library/react-native';
 import { Label, presets } from '@apexrn/ui';
 import { renderInPalettes, renderWithTheme } from './utils/render';
@@ -42,13 +42,36 @@ describe('Label', () => {
     expect(screen.getByTestId('l').props.nativeID).toBe('email-label');
   });
 
-  it('mutes the colour when disabled', async () => {
-    await renderWithTheme(<Label testID="l" disabled>Username</Label>);
-    expect(flat('l').color).toBe(presets.neo.light.mutedForeground);
+  it('does not append ", required" when the label text already says it', async () => {
+    await renderWithTheme(<Label testID="l" required>Email (Required)</Label>);
+    expect(screen.getByTestId('l').props.accessibilityLabel).toBeUndefined();
+    expect(screen.getByTestId('l').props.accessibilityHint).toBeUndefined();
   });
 
-  it('uses foreground by default', async () => {
-    await renderWithTheme(<Label testID="l">Username</Label>, { mode: 'dark' });
-    expect(flat('l').color).toBe(presets.neo.dark.foreground);
+  it('hints "Required" when no string label can be derived', async () => {
+    await renderWithTheme(<Label testID="l" required><Text>Name</Text></Label>);
+    expect(screen.getByTestId('l').props.accessibilityHint).toBe('Required');
+    expect(screen.getByTestId('l').props.accessibilityLabel).toBeUndefined();
+  });
+
+  it('hints "Required" for array children', async () => {
+    await renderWithTheme(<Label testID="l" required>{'Name'}{' (legal)'}</Label>);
+    expect(screen.getByTestId('l').props.accessibilityHint).toBe('Required');
+  });
+
+  it('colours text from its own pair in every palette', async () => {
+    const results = await renderInPalettes(
+      <>
+        <Label testID="on">Username</Label>
+        <Label testID="off" disabled>Username</Label>
+      </>,
+    );
+    const palettes = { 'neo-light': ['neo', 'light'], 'neo-dark': ['neo', 'dark'], 'raw-light': ['raw', 'light'], 'raw-dark': ['raw', 'dark'] } as const;
+    for (const { palette, view } of results) {
+      const [preset, mode] = palettes[palette as keyof typeof palettes];
+      const colors = presets[preset][mode];
+      expect(StyleSheet.flatten(view.getByTestId('on').props.style).color).toBe(colors.foreground);
+      expect(StyleSheet.flatten(view.getByTestId('off').props.style).color).toBe(colors.mutedForeground);
+    }
   });
 });
