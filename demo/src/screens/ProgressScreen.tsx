@@ -1,55 +1,77 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Button, Progress, useTheme } from '@apexrn/ui';
+import { Button, Card, Progress, useTheme } from '@apexrn/ui';
 import Layout from '../components/Layout';
 import Section, { Caption } from '../components/Section';
 
 export default function ProgressScreen({ onBack }: { onBack: () => void }) {
   const { colors } = useTheme();
-  const [value, setValue] = useState(40);
+  const [value, setValue] = useState(25);
+  const [log, setLog] = useState('Value: 25');
+
+  const advance = () => {
+    const next = Math.min(100, value + 25);
+    setValue(next);
+    setLog(`Value: ${next}`);
+  };
 
   return (
     <Layout id="progress" title="PROGRESS" onBack={onBack}>
-      <Section title="Values" note="Track fills from the left; 0, 50 and 100.">
-        {[0, 50, 100].map((v) => (
-          <View key={v} style={styles.item}>
-            <Caption>{`${v}%`}</Caption>
-            <Progress value={v} />
-          </View>
-        ))}
+      <Section title="Variants" note="Determinate fills from the left. Without a value the bar steps through three blocks.">
+        <Progress value={60} label="Uploading photos" />
+        <Progress value={3} max={5} label="Step 3 of 5" />
+        <Progress label="Syncing" />
       </Section>
 
-      <Section title="Hard shadow">
-        <Progress value={75} withShadow />
-      </Section>
-
-      <Section title="Custom max" note="value 3 of max 5 fills 60%.">
-        <Progress value={3} max={5} />
-      </Section>
-
-      <Section title="Interactive">
-        <Progress value={value} withShadow />
-        <Text style={[styles.readout, { color: colors.foreground }]}>{`${value}%`}</Text>
-        <View style={styles.row}>
-          <Button title="-20" size="sm" onPress={() => setValue((v) => Math.max(0, v - 20))} />
-          <Button title="+20" size="sm" variant="primary" onPress={() => setValue((v) => Math.min(100, v + 20))} />
-          <Button title="Reset" size="sm" variant="outline" onPress={() => setValue(0)} />
-        </View>
-      </Section>
-
-      <Section title="Edge cases" note="Out-of-range and non-finite values are clamped.">
+      <Section title="States" note="Values outside 0 to max are clamped.">
         <View style={styles.item}>
-          <Caption>value 150 (clamped to 100%)</Caption>
+          <Caption>0%</Caption>
+          <Progress value={0} />
+        </View>
+        <View style={styles.item}>
+          <Caption>100%</Caption>
+          <Progress value={100} />
+        </View>
+        <View style={styles.item}>
+          <Caption>value 150, clamped to 100%</Caption>
           <Progress value={150} />
         </View>
         <View style={styles.item}>
-          <Caption>value -20 (clamped to 0%)</Caption>
+          <Caption>value -20, clamped to 0%</Caption>
           <Progress value={-20} />
         </View>
-        <View style={styles.item}>
-          <Caption>value NaN (0%)</Caption>
-          <Progress value={NaN} />
+      </Section>
+
+      <Section title="Interactive">
+        <Progress value={value} label="Export" testID="progress-live" />
+        <View style={styles.row}>
+          <Button title="Advance 25" testID="progress-advance" onPress={advance} />
+          <Button
+            title="Reset"
+            variant="outline"
+            onPress={() => {
+              setValue(0);
+              setLog('Value: 0');
+            }}
+          />
         </View>
+        <Text style={{ color: colors.foreground }}>{log}</Text>
+      </Section>
+
+      <Section title="In context">
+        <Card>
+          <View style={styles.card}>
+            <Text style={[styles.title, { color: colors.foreground }]}>Backup in progress</Text>
+            <Progress value={42} label="2.1 of 5.0 GB" />
+          </View>
+        </Card>
+      </Section>
+
+      <Section title="Edge cases">
+        <View style={styles.narrow}>
+          <Progress value={64} label="A very long label that has to truncate before it reaches the percentage" />
+        </View>
+        <Progress value={NaN} label="Not a number falls back to 0%" />
       </Section>
     </Layout>
   );
@@ -58,5 +80,7 @@ export default function ProgressScreen({ onBack }: { onBack: () => void }) {
 const styles = StyleSheet.create({
   item: { gap: 6 },
   row: { flexDirection: 'row', gap: 14, flexWrap: 'wrap' },
-  readout: { fontSize: 16, fontWeight: '900' },
+  card: { gap: 12 },
+  title: { fontWeight: '900', fontSize: 16 },
+  narrow: { width: 280 },
 });

@@ -15,7 +15,7 @@ type Renderer = (props: PlaygroundProps) => React.ReactNode;
 export const PLAYGROUND_RENDERERS: Record<string, Renderer> = {
   button: (p) => (
     <Button
-      variant={(p.variant as 'default' | 'primary' | 'outline' | 'destructive') ?? 'default'}
+      variant={(p.variant as 'primary' | 'secondary' | 'outline' | 'ghost' | 'destructive' | 'success' | 'warning') ?? 'primary'}
       size={(p.size as 'sm' | 'md' | 'lg') ?? 'md'}
       disabled={!!p.disabled}
       loading={!!p.loading}
@@ -27,7 +27,6 @@ export const PLAYGROUND_RENDERERS: Record<string, Renderer> = {
   badge: (p) => (
     <Badge
       variant={(p.variant as 'default' | 'primary' | 'outline' | 'accent' | 'destructive' | 'success' | 'warning') ?? 'default'}
-      withShadow={!!p.withShadow}
       label="Badge"
     />
   ),
@@ -36,10 +35,10 @@ export const PLAYGROUND_RENDERERS: Record<string, Renderer> = {
   checkbox: (p) => <Checkbox checked={!!p.checked} disabled={!!p.disabled} />,
   progress: (p) => (
     <View style={{ width: 220 }}>
-      <Progress value={typeof p.value === 'number' ? p.value : 60} withShadow={!!p.withShadow} />
+      <Progress value={typeof p.value === 'number' ? p.value : 60} />
     </View>
   ),
-  avatar: (p) => <Avatar initials="AR" size={(p.size as 'sm' | 'md' | 'lg') ?? 'md'} withShadow={!!p.withShadow} />,
+  avatar: (p) => <Avatar initials="AR" size={(p.size as 'sm' | 'md' | 'lg') ?? 'md'} />,
   alert: (p) => (
     <Alert
       variant={(p.variant as 'default' | 'destructive' | 'warning' | 'success') ?? 'default'}
