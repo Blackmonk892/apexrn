@@ -1,0 +1,18 @@
+appId: dev.apexrn.demo
+---
+- runFlow:
+    file: ../_open.yaml
+    env:
+      ID: alert
+- assertVisible:
+    id: "alert-destructive"
+- scrollUntilVisible:
+    element:
+      id: "alert-retry"
+    direction: DOWN
+- tapOn:
+    id: "alert-retry"
+- assertVisible: "Retried"
+- assertNotVisible: "Render Error"
+- assertNotVisible: ".*TypeError.*"
+- takeScreenshot: alert
