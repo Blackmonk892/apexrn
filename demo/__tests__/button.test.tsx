@@ -80,14 +80,21 @@ describe('Button', () => {
     expect(style.textTransform).toBeUndefined();
   });
 
-  it('shows a pressed fill on ghost while held', async () => {
+  it('shows the muted pair on ghost while held', async () => {
     await renderWithTheme(<Button variant="ghost" testID="g">Skip</Button>);
-    const read = () => StyleSheet.flatten(screen.getByTestId('g').props.style).backgroundColor;
-    const idle = read();
+    const fill = () => StyleSheet.flatten(screen.getByTestId('g').props.style).backgroundColor;
+    const ink = () => StyleSheet.flatten(screen.getByText('Skip').props.style).color;
+    const idle = fill();
     await fireEvent(screen.getByTestId('g'), 'pressIn');
-    expect(read()).not.toBe(idle);
+    expect(fill()).toBe(presets.neo.light.muted);
+    expect(ink()).toBe(presets.neo.light.mutedForeground);
     await fireEvent(screen.getByTestId('g'), 'pressOut');
-    expect(read()).toBe(idle);
+    expect(fill()).toBe(idle);
+  });
+
+  it('keeps the dashed border on a disabled ghost', async () => {
+    await renderWithTheme(<Button variant="ghost" disabled>Skip</Button>);
+    expect(StyleSheet.flatten(screen.getByRole('button').props.style).borderStyle).toBe('dashed');
   });
 
   describe('loading', () => {
@@ -114,6 +121,32 @@ describe('Button', () => {
       expect(StyleSheet.flatten(label.parent!.props.style).opacity).toBe(0);
     });
 
+    it('positions the blocks absolutely over a label that stays mounted', async () => {
+      await renderWithTheme(<Button loading>Save changes</Button>);
+      const block = screen.getAllByTestId('loading-block', HIDDEN)[0];
+      let node = block.parent;
+      let absolute = false;
+      while (node && node !== screen.getByRole('button')) {
+        if (StyleSheet.flatten(node.props.style)?.position === 'absolute') absolute = true;
+        node = node.parent;
+      }
+      expect(absolute).toBe(true);
+      expect(screen.getByText('Save changes', HIDDEN)).toBeTruthy();
+    });
+
+    it('keeps the action as its accessible name and does not announce Loading', async () => {
+      await renderWithTheme(<Button loading>Save changes</Button>);
+      expect(screen.getByRole('button', { name: 'Save changes' })).toBeTruthy();
+      expect(screen.queryByText('Loading')).toBeNull();
+      expect(screen.queryByLabelText('Loading')).toBeNull();
+      expect(screen.queryByRole('progressbar')).toBeNull();
+    });
+
+    it('falls back to title when children is not a string', async () => {
+      await renderWithTheme(<Button title="Save changes"><View /></Button>);
+      expect(screen.getByRole('button', { name: 'Save changes' })).toBeTruthy();
+    });
+
     it('draws no blocks when idle', async () => {
       await renderWithTheme(<Button>Save changes</Button>);
       expect(screen.queryAllByTestId('loading-block', HIDDEN)).toHaveLength(0);
@@ -132,10 +165,27 @@ describe('Button', () => {
       }
     });
 
-    it('a custom icon replaces the status icon', async () => {
-      await renderWithTheme(<Button variant="success" icon={<View testID="mine" />}>Done</Button>);
-      expect(screen.queryByTestId('status-icon-success', HIDDEN)).toBeNull();
+    it('a custom icon sits beside the status icon, never in place of it', async () => {
+      await renderWithTheme(<Button variant="success" icon={<View testID="mine" />} iconPosition="right">Done</Button>);
+      expect(screen.getByTestId('status-icon-success', HIDDEN)).toBeTruthy();
       expect(screen.getByTestId('mine', HIDDEN)).toBeTruthy();
+    });
+
+    it('hands a function icon each variant label colour', async () => {
+      const pairs = {
+        primary: 'primaryForeground',
+        secondary: 'secondaryForeground',
+        outline: 'foreground',
+        ghost: 'foreground',
+        destructive: 'destructiveForeground',
+        success: 'successForeground',
+        warning: 'warningForeground',
+      } as const;
+      for (const variant of Object.keys(pairs) as (keyof typeof pairs)[]) {
+        const icon = jest.fn(() => null);
+        await renderWithTheme(<Button variant={variant} icon={icon}>Go</Button>, { preset: 'raw', mode: 'light' });
+        expect(icon).toHaveBeenCalledWith(presets.raw.light[pairs[variant]]);
+      }
     });
 
     it('plain variants carry no status icon', async () => {

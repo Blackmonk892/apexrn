@@ -32,8 +32,8 @@ export interface ButtonProps {
   disabled?: boolean;
   /** Swaps the label for loading blocks without changing the width. Presses are ignored; the look stays live. */
   loading?: boolean;
-  /** Replaces the status icon on `destructive`, `success` and `warning`. */
-  icon?: ReactNode;
+  /** Decorative. A function receives the label colour. Sits beside, never in place of, a status icon. */
+  icon?: ReactNode | ((color: string) => ReactNode);
   /** @default 'left' */
   iconPosition?: 'left' | 'right';
   /** Outer wrapper style. */
@@ -116,24 +116,25 @@ export function Button({
 
   const fg = look.label.color as string;
   const StatusIcon = variant in STATUS_ICONS ? STATUS_ICONS[variant as keyof typeof STATUS_ICONS] : null;
-  const leading =
-    icon != null && iconPosition === 'left' ? icon : icon == null && StatusIcon ? (
-      <View testID={`status-icon-${variant}`}>
-        <StatusIcon size={ICON_SIZE} color={fg} />
-      </View>
-    ) : null;
-  const trailing = icon != null && iconPosition === 'right' ? icon : null;
+  const custom = typeof icon === 'function' ? icon(fg) : icon;
+  const status = StatusIcon ? (
+    <View testID={`status-icon-${variant}`}>
+      <StatusIcon size={ICON_SIZE} color={fg} />
+    </View>
+  ) : null;
 
   // Ghost has no shadow to sink into, so a fill is its only press feedback.
   const ghostPressed = variant === 'ghost' && held && !disabled && !loading;
-  const surfaceFill = ghostPressed ? { backgroundColor: colors.secondary } : null;
-  const labelColor = ghostPressed ? colors.secondaryForeground : fg;
+  // A disabled ghost shows its dashed border like every other disabled control.
+  const inkBorder = { borderColor: colors.border };
+  const surfaceFill = ghostPressed ? { backgroundColor: colors.muted } : null;
+  const labelColor = ghostPressed ? colors.mutedForeground : fg;
 
   return (
     <BrutalSurface
       testID={testID}
       style={[styles.root, style]}
-      surfaceStyle={[look.surface, surfaceFill]}
+      surfaceStyle={[look.surface, disabled && variant === 'ghost' && inkBorder, surfaceFill]}
       elevation={look.depth.elevation}
       borderWidth="control"
       disabled={disabled}
@@ -143,19 +144,20 @@ export function Button({
       onPressOut={() => setHeld(false)}
       hitSlop={Math.max(0, Math.ceil((touchTarget - height) / 2))}
       accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel ?? (typeof label === 'string' || typeof label === 'number' ? String(label) : undefined)}
+      accessibilityLabel={accessibilityLabel ?? (typeof label === 'string' || typeof label === 'number' ? String(label) : title)}
       accessibilityHint={accessibilityHint}
       accessibilityState={{ disabled, busy: loading }}
     >
       {/* Stays laid out while loading so the blocks never change the button's width. */}
       <View style={[styles.content, loading && styles.hidden]}>
-        {leading ? <View style={styles.iconLeading} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>{leading}</View> : null}
+        {status ? <View style={styles.iconLeading} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>{status}</View> : null}
+        {custom != null && iconPosition === 'left' ? <View style={styles.iconLeading} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>{custom}</View> : null}
         {hasLabel ? (
           <Text variant="title" tone="inherit" accessibilityRole="none" numberOfLines={1} style={[look.label, { color: labelColor }]}>
             {label}
           </Text>
         ) : null}
-        {trailing ? <View style={styles.iconTrailing} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>{trailing}</View> : null}
+        {custom != null && iconPosition === 'right' ? <View style={styles.iconTrailing} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>{custom}</View> : null}
       </View>
       {loading ? (
         <View style={styles.blocks} pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>

@@ -50,7 +50,7 @@ export default function DrawerScreen({ onBack }: { onBack: () => void }) {
       <Section title="Left, uncontrolled" note="DrawerTrigger opens it. Items close it unless closeOnPress is false.">
         <Drawer onOpenChange={(o) => setState(o ? 'opened' : 'closed')}>
           <DrawerTrigger asChild>
-            <Button title="Open menu" icon={<MenuIcon size={18} color={colors.foreground} />} />
+            <Button title="Open menu" icon={(color) => <MenuIcon size={18} color={color} />} />
           </DrawerTrigger>
           <DrawerContent topInset={insets.top} bottomInset={insets.bottom}>
             <DrawerHeader title="ApexRN" subtitle="Signed in as demo" />

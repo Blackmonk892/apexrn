@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Button, CheckIcon, Text, useTheme } from '@apexrn/ui';
+import { Button, CheckIcon, Text } from '@apexrn/ui';
 import Layout from '../components/Layout';
 import Section, { Caption } from '../components/Section';
 
@@ -17,7 +17,6 @@ const LABELS = {
 const SIZES = ['sm', 'md', 'lg'] as const;
 
 export default function ButtonScreen({ onBack }: { onBack: () => void }) {
-  const { colors } = useTheme();
   const [pressed, setPressed] = useState('none');
   const [saving, setSaving] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -68,7 +67,7 @@ export default function ButtonScreen({ onBack }: { onBack: () => void }) {
         <View style={styles.row}>
           <Button variant="primary" loading={saving} onPress={save}>Save changes</Button>
           <Button variant="outline" disabled={saving}>Discard</Button>
-          <Button variant="ghost" icon={<CheckIcon size={20} color={colors.foreground} />} iconPosition="right">Review</Button>
+          <Button variant="ghost" icon={(color) => <CheckIcon size={20} color={color} />} iconPosition="right">Review</Button>
         </View>
         <Caption>Saving swaps the label for blocks without a layout jump, and Discard locks until it finishes.</Caption>
       </Section>
@@ -83,8 +82,8 @@ export default function ButtonScreen({ onBack }: { onBack: () => void }) {
         </View>
         <Caption>Full width at 320 through the style prop.</Caption>
         <View style={styles.row}>
-          <Button icon={<CheckIcon size={20} color={colors.primaryForeground} />} accessibilityLabel="Confirm" />
-          <Button variant="outline" icon={<CheckIcon size={20} color={colors.foreground} />} accessibilityLabel="Confirm" size="sm" />
+          <Button icon={(color) => <CheckIcon size={20} color={color} />} accessibilityLabel="Confirm" />
+          <Button variant="outline" icon={(color) => <CheckIcon size={20} color={color} />} accessibilityLabel="Confirm" size="sm" />
         </View>
         <Caption>Icon only, labelled for screen readers.</Caption>
       </Section>
