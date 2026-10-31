@@ -10,7 +10,8 @@ import Animated, {
   type SharedValue,
 } from 'react-native-reanimated';
 
-import { useMotion, motion } from '../lib/motion';
+import { borderWidths, spacing } from '../lib/colors';
+import { useMotion } from '../lib/motion';
 import { useTheme } from '../lib/theme';
 import BrutalSurface from './brutal-surface';
 import Text from './text';
@@ -28,14 +29,16 @@ export interface ProgressProps extends Omit<ViewProps, 'style'> {
 
 const TRACK_HEIGHT = 24;
 const BLOCKS = 3;
+// Slow enough to read as a step on a 24px track; faster looks like flicker.
+const STEP_MS = 400;
 
-function Block({ index, step, still }: { index: number; step: SharedValue<number>; still: boolean }) {
+function Block({ index, last, step, still }: { index: number; last: boolean; step: SharedValue<number>; still: boolean }) {
   const { colors } = useTheme();
   const style = useAnimatedStyle(() => ({
     opacity: still || Math.floor(step.value) === index ? 1 : 0,
   }));
   return (
-    <View style={[styles.cell, { borderColor: colors.foreground }]}>
+    <View style={[styles.cell, !last && { borderRightWidth: borderWidths.control, borderColor: colors.border }]}>
       <Animated.View testID="progress-block" style={[styles.fill, { backgroundColor: colors.foreground }, style]} />
     </View>
   );
@@ -58,7 +61,7 @@ export function Progress({ value, max = 100, label, style, ...props }: ProgressP
 
   useEffect(() => {
     if (determinate || reduceMotion) return;
-    step.value = withRepeat(withTiming(BLOCKS, { duration: motion.selection.duration * BLOCKS, easing: Easing.linear }), -1, false);
+    step.value = withRepeat(withTiming(BLOCKS, { duration: STEP_MS * BLOCKS, easing: Easing.linear }), -1, false);
     return () => cancelAnimation(step);
   }, [determinate, reduceMotion, step]);
 
@@ -72,14 +75,14 @@ export function Progress({ value, max = 100, label, style, ...props }: ProgressP
     <View
       accessible
       accessibilityRole="progressbar"
-      accessibilityLabel={label}
+      accessibilityLabel={label ?? 'Progress'}
       accessibilityValue={determinate ? { min: 0, max: safeMax, now: clamped } : undefined}
       accessibilityState={determinate ? undefined : { busy: true }}
-      style={[styles.root, style]}
+      style={[styles.root, { gap: spacing.sm }, style]}
       {...props}
     >
       {label || determinate ? (
-        <View style={styles.header} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+        <View style={[styles.header, { gap: spacing.md }]} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
           {label ? <Text variant="label">{label}</Text> : <View />}
           {determinate ? (
             <Text variant="mono" testID="progress-percent">{`${Math.round(ratio * 100)}%`}</Text>
@@ -100,7 +103,7 @@ export function Progress({ value, max = 100, label, style, ...props }: ProgressP
         ) : (
           <View style={styles.blocks}>
             {Array.from({ length: BLOCKS }, (_, i) => (
-              <Block key={i} index={i} step={step} still={reduceMotion} />
+              <Block key={i} index={i} last={i === BLOCKS - 1} step={step} still={reduceMotion} />
             ))}
           </View>
         )}
@@ -110,12 +113,12 @@ export function Progress({ value, max = 100, label, style, ...props }: ProgressP
 }
 
 const styles = StyleSheet.create({
-  root: { alignSelf: 'stretch', gap: 8 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 },
+  root: { alignSelf: 'stretch' },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
   track: { height: TRACK_HEIGHT, overflow: 'hidden' },
   fill: { width: '100%', height: '100%' },
   blocks: { flex: 1, flexDirection: 'row' },
-  cell: { flex: 1, borderRightWidth: 2 },
+  cell: { flex: 1 },
 });
 
 export default Progress;

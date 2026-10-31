@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { Button, Card, Progress, useTheme } from '@apexrn/ui';
+import { StyleSheet, View } from 'react-native';
+import { Button, Card, Progress, Text } from '@apexrn/ui';
 import Layout from '../components/Layout';
 import Section, { Caption } from '../components/Section';
 
 export default function ProgressScreen({ onBack }: { onBack: () => void }) {
-  const { colors } = useTheme();
   const [value, setValue] = useState(25);
   const [log, setLog] = useState('Value: 25');
 
@@ -55,13 +54,13 @@ export default function ProgressScreen({ onBack }: { onBack: () => void }) {
             }}
           />
         </View>
-        <Text style={{ color: colors.foreground }}>{log}</Text>
+        <Text variant="mono" testID="progress-log">{log}</Text>
       </Section>
 
       <Section title="In context">
         <Card>
           <View style={styles.card}>
-            <Text style={[styles.title, { color: colors.foreground }]}>Backup in progress</Text>
+            <Text variant="title">Backup in progress</Text>
             <Progress value={42} label="2.1 of 5.0 GB" />
           </View>
         </Card>
@@ -81,6 +80,5 @@ const styles = StyleSheet.create({
   item: { gap: 6 },
   row: { flexDirection: 'row', gap: 14, flexWrap: 'wrap' },
   card: { gap: 12 },
-  title: { fontWeight: '900', fontSize: 16 },
   narrow: { width: 280 },
 });

@@ -2,7 +2,7 @@ import { StyleSheet } from 'react-native';
 import { screen } from '@testing-library/react-native';
 import { useReducedMotion } from 'react-native-reanimated';
 import * as Reanimated from 'react-native-reanimated';
-import { Progress } from '@apexrn/ui';
+import { ApexRNProvider, Progress } from '@apexrn/ui';
 import { renderInPalettes, renderWithTheme } from './utils/render';
 
 describe('Progress', () => {
@@ -66,5 +66,28 @@ describe('Progress', () => {
     const fills = screen.getAllByTestId('progress-block').map((f) => StyleSheet.flatten(f.props.style).opacity);
     expect(fills).toEqual([1, 1, 1]);
     spy.mockRestore();
+  });
+
+  it('labels itself Progress when no label is given, and a consumer label wins', async () => {
+    await renderWithTheme(<Progress value={10} />);
+    expect(screen.getByRole('progressbar').props.accessibilityLabel).toBe('Progress');
+    const custom = await renderWithTheme(<Progress value={10} accessibilityLabel="Disk usage" />);
+    expect(custom.getByRole('progressbar', { name: 'Disk usage' })).toBeTruthy();
+  });
+
+  it('updates accessibilityValue.now when value changes', async () => {
+    const view = await renderWithTheme(<Progress value={20} />);
+    expect(view.getByRole('progressbar').props.accessibilityValue.now).toBe(20);
+    await view.rerender(
+      <ApexRNProvider defaultMode="light">
+        <Progress value={70} />
+      </ApexRNProvider>,
+    );
+    expect(view.getByRole('progressbar').props.accessibilityValue.now).toBe(70);
+  });
+
+  it('falls back to a max of 100 when max is 0', async () => {
+    await renderWithTheme(<Progress value={50} max={0} />);
+    expect(screen.getByRole('progressbar').props.accessibilityValue).toEqual({ min: 0, max: 100, now: 50 });
   });
 });
