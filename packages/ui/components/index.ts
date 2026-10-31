@@ -3,7 +3,7 @@
 export { default as BrutalSurface, type BrutalSurfaceProps } from './brutal-surface';
 export { default as Text, type TextProps } from './text';
 export { default as Button, type ButtonProps } from './button';
-export { default as Card, CardHeader, CardFooter, CardText, type CardProps, type CardHeaderProps, type CardFooterProps, type CardTextProps } from './card';
+export { default as Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, type CardProps, type CardHeaderProps, type CardTitleProps, type CardDescriptionProps, type CardContentProps, type CardFooterProps } from './card';
 export { default as Input, type InputProps } from './input';
 export { default as Checkbox, type CheckboxProps } from './checkbox';
 export { default as Badge, type BadgeProps } from './badge';
