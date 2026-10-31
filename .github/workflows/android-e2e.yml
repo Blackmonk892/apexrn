@@ -33,7 +33,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       # Release, not debug: a debug APK loads its JS from Metro, which doesn't exist here.
       # The Expo template signs release builds with the debug keystore, so no secrets are needed.
-      - run: ./gradlew assembleRelease
+      - run: ./gradlew assembleRelease -PreactNativeArchitectures=x86_64
         working-directory: demo/android
       - name: Install Maestro
         run: |
@@ -48,12 +48,14 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
           script: |
             adb install demo/android/app/build/outputs/apk/release/app-release.apk
-            maestro test demo/e2e/ --format junit --output maestro-report.xml
+            maestro test demo/e2e/ --format junit --output maestro-report.xml --test-output-dir maestro-out
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: maestro
           path: |
             maestro-report.xml
+            maestro-out/**
             ~/.maestro/tests/**
+            *.png
           if-no-files-found: warn
