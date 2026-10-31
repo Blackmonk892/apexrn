@@ -25,7 +25,7 @@ Branches: `ship/v0.1` (integration) ← `ship/phase-<x>` (one per phase), each m
 - Ruling: A6 skips the local `expo prebuild` check (no SDK here); the CI run is the verification — cost if wrong: a prebuild config error surfaces one CI run later.
 - Ruling: fix diffs of ≤ 10 lines get their scoped re-review from the Opus controller instead of a new subagent — speed — cost if wrong: one less independent read of a trivial diff.
 
-## Phase A — make it run (PR: pending)
+## Phase A — make it run (PR: see below)
 
 Parallel tasks and their files (recorded retroactively for A5/A6, which were dispatched before owner rule 3):
 - A5: `website/scripts/check-no-rn.mjs`, `website/scripts/check-no-rn.test.mjs`, `website/scripts/__fixtures__/check-no-rn/**`, `website/package.json` (scripts), `.github/workflows/ci.yml`.
@@ -39,8 +39,9 @@ Parallel tasks and their files (recorded retroactively for A5/A6, which were dis
 | A3 | Native-safe window access (demo + preview) | DONE | 98d634a, edce8bc | 2 native jest tests RED without their guards; 1 web embed-mode regression test; demo + preview typecheck; web export; Opus review | Expo Go on a real phone (owner); preview guards have no test (ruling); emulator: see CI below |
 | A4 | `useTheme()` dev warning outside provider | DONE | 3255865 | 4 jest tests (warn once, none inside provider, none when `__DEV__` false, light fallback); typecheck; registry build; Opus review | Not exercised on device or emulator |
 | A5 | CI: tests, preview, website, check-no-rn | DONE | 660edde | 4 node tests; website lint + tsc + check-no-rn local; CI run 41202443138 green on Linux incl. `next build` + Pagefind; Sonnet review | No macOS CI yet (Phase E); check-no-rn CLI exit path untested; CRLF one-liner in generate-docs.mjs has no test (Linux build covers it) |
-| A6 | CI: Android emulator + Maestro launch flow | DONE | 56cf4e5, 10c46bf | CI run 41200542233: prebuild, release APK, API 34 emulator, install, Maestro all ran; flow reproduced the launch crash (pre-A3) | Green launch pending A3 |
+| A6 | CI: Android emulator + Maestro launch flow | DONE | 56cf4e5, 10c46bf | Run 41200542233 reproduced the crash (pre-A3); run 41202918081 at edce8bc: launch flow PASSED on API 34 emulator, home screen screenshot in `evidence/phase-a-launch-home-api34.png` | iOS; physical Android; Maestro pinned version (deferred) |
 - Parallel (2026-10-31): A2 review (read-only; any fix touches `demo/jest.config.js`, `demo/jest.setup.ts`, `demo/__tests__/harness.test.tsx`, `demo/__tests__/utils/render.tsx`) ∥ A3 (`demo/src/components/Layout.tsx`, `demo/src/screens/PlaygroundScreen.tsx`, `preview/App.tsx`, `preview/src/protocol.ts`, `demo/__tests__/native-globals.test.tsx`).
 - Ruling: `renderWithTheme` is async (RNTL 14 `render` returns a promise); every test awaits it — library API — cost if wrong: none.
 - Parallel (2026-10-31): A4 (`packages/ui/lib/theme.tsx`, `demo/jest.setup.ts`, `demo/__tests__/theme-provider-warning.test.tsx`) ∥ A3 (files above). No overlap.
 - Parallel: none during the final-review fix wave (one agent: CLAUDE.md, both workflows, `demo/__tests__/{harness,theme-provider-warning,native-globals}.test.tsx`, `demo/jest.config.js`); the controller edits only this ledger.
+- CI flake (run 41203078985): website `next build` failed resolving `next/font/google` (Google Fonts fetch at build time); rerun of the failed job green, no code change. Ruling: the Phase D site uses system fonts only (matches ORCHESTRATOR §1.4), which removes the build's network dependency — cost if wrong: site loses Space Grotesk/Inter/JetBrains Mono (being rebuilt anyway).
