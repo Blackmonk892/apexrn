@@ -23,6 +23,7 @@ function Icon({ size = 24, color, strokeWidth = 2, children }: IconProps & { chi
       strokeLinecap="square"
       strokeLinejoin="miter"
       accessible={false}
+      accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
     >
       {children}
@@ -63,7 +64,7 @@ export const CheckIcon = (p: IconProps) => (
 
 export const HomeIcon = (p: IconProps) => (
   <Icon {...p}>
-    <Path d="M3 11L12 3L21 11M5 9.5V21H19V9.5" />
+    <Path d="M3 11L12 3L21 11M5 10V21H19V10" />
   </Icon>
 );
 
@@ -88,6 +89,6 @@ export const WarningIcon = (p: IconProps) => (
 
 export const InfoIcon = (p: IconProps) => (
   <Icon {...p}>
-    <Path d="M12 4V5M12 10V20" />
+    <Path d="M12 4V5M10 10H12V20M9 20H15" />
   </Icon>
 );
