@@ -1,5 +1,6 @@
 import { Text } from 'react-native';
 import { ApexRNProvider, presets, useTheme } from '@apexrn/ui';
+import { render } from '@testing-library/react-native';
 import { renderWithTheme } from './utils/render';
 
 function Probe({ id }: { id: string }) {
@@ -11,6 +12,21 @@ describe('presets', () => {
   it('defaults to neo', async () => {
     const screen = await renderWithTheme(<Probe id="p" />);
     expect(screen.getByTestId('p').props.children).toBe(`neo:4:${presets.neo.light.background}`);
+  });
+
+  it('falls back to neo light outside any provider', async () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const screen = await render(<Probe id="p" />);
+      expect(screen.getByTestId('p').props.children).toBe(`neo:4:${presets.neo.light.background}`);
+      function Scheme() {
+        return <Text testID="c">{useTheme().colorScheme}</Text>;
+      }
+      const scheme = await render(<Scheme />);
+      expect(scheme.getByTestId('c').props.children).toBe('light');
+    } finally {
+      warn.mockRestore();
+    }
   });
 
   it('resolves preset="raw"', async () => {

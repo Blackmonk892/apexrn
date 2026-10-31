@@ -71,7 +71,7 @@ const neoLight: ColorScheme = {
 };
 
 const neoDark: ColorScheme = {
-  background: '#222222',
+  background: '#1A1A1A',
   foreground: '#FFFFFF',
   surface: '#222222',
   surfaceForeground: '#FFFFFF',
@@ -97,7 +97,8 @@ const neoDark: ColorScheme = {
 };
 
 // Raw has one signal colour (red). Success and warning stay ink on paper so
-// status is carried by the glyph and label, never by hue alone.
+// status is carried by the glyph and label, never by hue alone. The focus ring
+// is ink too: red already means error, so a red ring would read as one.
 const rawLight: ColorScheme = {
   background: '#F2F0EB',
   foreground: '#111111',
@@ -119,7 +120,7 @@ const rawLight: ColorScheme = {
   warningForeground: '#111111',
   border: '#111111',
   input: '#111111',
-  ring: '#C8102E',
+  ring: '#111111',
   shadow: '#111111',
   scrim: '#111111',
 };
@@ -145,7 +146,7 @@ const rawDark: ColorScheme = {
   warningForeground: '#F2F0EB',
   border: '#F2F0EB',
   input: '#F2F0EB',
-  ring: '#FF5A5F',
+  ring: '#F2F0EB',
   shadow: '#5A5750',
   scrim: '#000000',
 };
