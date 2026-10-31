@@ -46,7 +46,7 @@ Parallel tasks and their files (recorded retroactively for A5/A6, which were dis
 - Parallel: none during the final-review fix wave (one agent: CLAUDE.md, both workflows, `demo/__tests__/{harness,theme-provider-warning,native-globals}.test.tsx`, `demo/jest.config.js`); the controller edits only this ledger.
 - CI flake (run 41203078985): website `next build` failed resolving `next/font/google` (Google Fonts fetch at build time); rerun of the failed job green, no code change. Ruling: the Phase D site uses system fonts only (matches ORCHESTRATOR §1.4), which removes the build's network dependency — cost if wrong: site loses Space Grotesk/Inter/JetBrains Mono (being rebuilt anyway).
 
-## Phase B0 — design system first (PR: https://github.com/Blackmonk892/apexrn/pull/2, awaiting owner sign-off) — serial, owner sign-off at end
+## Phase B0 — design system first (PR: https://github.com/Blackmonk892/apexrn/pull/2, owner go 2026-11-01, merged 46eaf4d) — serial, owner sign-off at end
 
 | # | Task | Status | Commit | Verified | Not verified |
 |---|---|---|---|---|---|
@@ -85,3 +85,13 @@ Parallel tasks and their files (recorded retroactively for A5/A6, which were dis
 - Carried to Phase B (owner, 2026-11-01): Button gets sentence-case text and `LoadingBlocks` instead of the spinner; Input's disabled state uses the dashed-border rule (BrutalSurface `disabled`), not a grey fill; all 10 "not wired" cells on the specimen board get wired; Chip's status variants join the status-signal test.
 - B0-11 review (Sonnet, icons 49c2428 + B0-8): approve-with-fixes. Fix round: HomeIcon wall top on grid (`V10`); InfoIcon gets serifs (`M12 4V5M10 10H12V20M9 20H15`) so it can't read as a flipped "!"; icons test gains a real geometry check (path/circle extents inside the 24 box, no fill) instead of only wrapper props; `accessibilityElementsHidden` for iOS. Kept: WarningIcon dot as a 2×3 block (zero-length subpaths render unreliably on iOS).
 - Carried to Phase B (B0-11 review): accordion, checkbox and select hand-roll their own `Svg` at stroke 3–4 and chip passes `strokeWidth={4}` — all move to `lib/icons` at the default 2px in their loops; status icons render at ≥ 20 inside Toast/Alert badges (check on device).
+
+## Phase B — components (plan: `docs/ship-plan/phase-b.md`)
+
+- Ruling: each `<Name>Screen.tsx` is that component's specimen; the 12-section Lab of `apexrn-modify.md` §4 is not built — ORCHESTRATOR §3 (final) asks for smoke tests, an emulator flow and the specimen, not the Lab — cost if wrong: Lab chrome added later, specimens move into it.
+- Ruling: tasks inside a wave run in parallel in the main checkout (not worktrees: harness worktrees branch from `main`, which lacks B0). Each task owns four paths and commits with `git commit -- <paths>`; shared files are controller-owned — cost if wrong: an index.lock retry or a typecheck error from a neighbour's in-flight file.
+- Ruling: one android-e2e run per wave push covers that wave's flows (~20 min per run) — cost if wrong: a flow failure is found per wave, not per component.
+
+| # | Task | Status | Commit | Verified | Not verified |
+|---|---|---|---|---|---|
+| B-1 | Harness: palette render helper, deep links, flow template, peers, tracker | in progress | | | |
