@@ -316,10 +316,10 @@ export function AccordionContent({ children, style, ...props }: ViewProps) {
 const styles = StyleSheet.create({
   root: {
     alignSelf: 'stretch',
-    borderTopWidth: borderWidths.heavy,
+    borderTopWidth: borderWidths.container,
   },
   item: {
-    borderBottomWidth: borderWidths.heavy,
+    borderBottomWidth: borderWidths.container,
   },
   trigger: {
     flexDirection: 'row',
@@ -343,6 +343,6 @@ const styles = StyleSheet.create({
   contentInner: {
     position: 'absolute',
     width: '100%',
-    borderTopWidth: borderWidths.standard,
+    borderTopWidth: borderWidths.control,
   },
 });

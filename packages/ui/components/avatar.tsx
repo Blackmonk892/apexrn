@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Image, StyleSheet, Text, View, ViewProps } from 'react-native';
 
-import { shadowOffset, typography } from '../lib/colors';
+import { typography } from '../lib/colors';
 import { useTheme } from '../lib/theme';
 import BrutalSurface from './brutal-surface';
 
@@ -39,12 +39,8 @@ const SIZES = {
   lg: 80,
 };
 
-// Small avatars get the subtle offset so the shadow doesn't dominate the block.
-const SHADOW_OFFSETS = {
-  sm: shadowOffset.subtle.width,
-  md: shadowOffset.standard.width,
-  lg: shadowOffset.standard.width,
-};
+// Small avatars get the control depth so the shadow doesn't dominate the block.
+const SHADOW_DEPTHS = { sm: 'control', md: 'card', lg: 'card' } as const;
 
 // ---------------------------------------------------------------------------
 // Component
@@ -75,10 +71,9 @@ export function Avatar({
     <BrutalSurface
       style={[styles.container, style]}
       surfaceStyle={{ width: dimension, height: dimension, backgroundColor: colors.background, overflow: 'hidden' }}
-      offset={SHADOW_OFFSETS[size]}
-      borderWidth="standard"
+      elevation={withShadow ? SHADOW_DEPTHS[size] : 'flat'}
+      borderWidth="control"
       pressable={false}
-      hasShadow={withShadow}
       accessibilityRole="image"
       accessibilityLabel={showFallback ? `Avatar for ${displayInitials}` : 'Avatar image'}
       {...props}

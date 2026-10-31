@@ -1,0 +1,58 @@
+appId: dev.apexrn.demo
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 60000
+# The Home row renders its name uppercased, so the row is matched by id rather than by text.
+- tapOn:
+    id: "home-specimen"
+- extendedWaitUntil:
+    visible:
+      id: "quadrant-title-neo-light"
+    timeout: 20000
+- assertNotVisible: "Render Error"
+- takeScreenshot: specimen-1
+# Each quadrant is several screens tall, so it can never be 100% visible. Fixed swipes are
+# deterministic on slow software-GL emulators; the title coming into view is the stop condition.
+- repeat:
+    while:
+      notVisible:
+        id: "quadrant-title-neo-dark"
+    times: 40
+    commands:
+      - swipe:
+          start: "50%, 80%"
+          end: "50%, 20%"
+          duration: 600
+- assertVisible:
+    id: "quadrant-title-neo-dark"
+- takeScreenshot: specimen-2
+- repeat:
+    while:
+      notVisible:
+        id: "quadrant-title-raw-light"
+    times: 40
+    commands:
+      - swipe:
+          start: "50%, 80%"
+          end: "50%, 20%"
+          duration: 600
+- assertVisible:
+    id: "quadrant-title-raw-light"
+- takeScreenshot: specimen-3
+- repeat:
+    while:
+      notVisible:
+        id: "quadrant-title-raw-dark"
+    times: 40
+    commands:
+      - swipe:
+          start: "50%, 80%"
+          end: "50%, 20%"
+          duration: 600
+- assertVisible:
+    id: "quadrant-title-raw-dark"
+- takeScreenshot: specimen-4

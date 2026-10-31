@@ -61,7 +61,7 @@ export interface TokenData {
   spacing: TokenScaleEntry[];
   typography: TokenScaleEntry[];
   borderWidths: TokenSimpleEntry[];
-  shadowOffset: TokenSimpleEntry[];
+  elevation: TokenSimpleEntry[];
   controlHeight: TokenSimpleEntry[];
   opacity: TokenSimpleEntry[];
   touchTarget: string | null;

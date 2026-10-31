@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
   dot: {
     width: 12,
     height: 12,
-    borderWidth: borderWidths.standard,
+    borderWidth: borderWidths.control,
     borderRadius: 0,
   },
 });

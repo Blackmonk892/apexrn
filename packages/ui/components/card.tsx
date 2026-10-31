@@ -70,12 +70,6 @@ export function CardText({ tone = 'body', style, ...rest }: CardTextProps) {
 }
 
 // ---------------------------------------------------------------------------
-// Design tokens
-// ---------------------------------------------------------------------------
-
-const SHADOW_OFFSET = 4;
-
-// ---------------------------------------------------------------------------
 // Sub-components
 // ---------------------------------------------------------------------------
 
@@ -163,7 +157,7 @@ export function Card({
     <BrutalSurface
       style={style}
       surfaceStyle={{ backgroundColor: v.bg }}
-      offset={SHADOW_OFFSET}
+      elevation="card"
       pressable={isPressable}
       onPress={onPress}
       accessibilityRole={isPressable ? 'button' : undefined}
@@ -183,10 +177,10 @@ export function Card({
 
 const styles = StyleSheet.create({
   header: {
-    borderBottomWidth: borderWidths.standard,
+    borderBottomWidth: borderWidths.control,
   },
   footer: {
-    borderTopWidth: borderWidths.standard,
+    borderTopWidth: borderWidths.control,
   },
 });
 

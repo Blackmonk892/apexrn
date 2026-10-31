@@ -75,6 +75,7 @@ const LAB_SCREEN = {
   slider: "slider",
   switch: "switch",
   tabs: "tabs",
+  text: { screen: "label", fallback: true },
   textarea: "textarea",
   toast: "toast",
   toaster: { screen: "toast", fallback: true },
@@ -286,8 +287,8 @@ function extractVariants(props, aliases) {
 function extractTokens() {
   const text = readFileSync(COLORS_FILE, "utf8");
 
-  function colorBlock(scheme) {
-    const blockRe = new RegExp(`${scheme}:\\s*\\{([\\s\\S]*?)\\n\\s*\\},`, "m");
+  function colorBlock(constName) {
+    const blockRe = new RegExp(`const ${constName}: ColorScheme = \\{([\\s\\S]*?)\\n\\};`, "m");
     const block = blockRe.exec(text)?.[1] ?? "";
     const entries = [];
     const lineRe = /^\s*(\w+):\s*'(#[0-9A-Fa-f]+)',?\s*$/gm;
@@ -321,15 +322,21 @@ function extractTokens() {
     return entries;
   }
 
+  // Elevation ladder of the neo preset, shown on the theming page.
+  function neoElevation() {
+    const block = /neo: \{[\s\S]*?elevation: \{([^}]*)\}/.exec(text)?.[1] ?? "";
+    return [...block.matchAll(/(\w+):\s*(\d+)/g)].map((m) => ({ name: m[1], value: m[2] }));
+  }
+
   const touchTargetMatch = text.match(/export const touchTarget = (.+);/);
 
   return {
-    light: colorBlock("light"),
-    dark: colorBlock("dark"),
+    light: colorBlock("neoLight"),
+    dark: colorBlock("neoDark"),
     spacing: scaleBlock("spacing"),
     typography: scaleBlock("typography"),
     borderWidths: simpleObject("borderWidths"),
-    shadowOffset: simpleObject("shadowOffset"),
+    elevation: neoElevation(),
     controlHeight: simpleObject("controlHeight"),
     opacity: simpleObject("opacity"),
     touchTarget: touchTargetMatch ? touchTargetMatch[1].trim() : null,

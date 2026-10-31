@@ -67,11 +67,6 @@ export interface InputProps extends TextInputProps {
 }
 
 // ---------------------------------------------------------------------------
-// Design tokens
-// ---------------------------------------------------------------------------
-const SHADOW_OFFSET = 4;
-
-// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 const Input = forwardRef<TextInput, InputProps>(({
@@ -127,10 +122,9 @@ const Input = forwardRef<TextInput, InputProps>(({
     <View style={cn(styles.container, style)}>
       <BrutalSurface
         pressable={false}
-        hasShadow
         shadowStyle={animatedShadowStyle}
-        offset={SHADOW_OFFSET}
-        borderWidth="heavy"
+        elevation="card"
+        borderWidth="container"
         backgroundColor={disabled ? colors.muted : colors.background}
         borderColor={disabled ? colors.mutedForeground : accent}
         shadowColor={error && !disabled ? colors.destructive : undefined}

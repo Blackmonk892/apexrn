@@ -86,6 +86,7 @@ jobs:
         with:
           node-version: 22
       - run: node registry/check-contrast.mjs
+      - run: npm run tokens:test
       - run: node registry/build.mjs
       - run: npm test
         working-directory: packages/cli

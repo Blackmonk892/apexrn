@@ -3,7 +3,7 @@ const path = require('path');
 module.exports = {
   preset: 'jest-expo',
   roots: ['<rootDir>/__tests__'],
-  testMatch: ['**/*.test.tsx'],
+  testMatch: ['**/*.test.{ts,tsx}'],
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   moduleNameMapper: {
     '^@apexrn/ui$': '<rootDir>/../packages/ui/index.ts',

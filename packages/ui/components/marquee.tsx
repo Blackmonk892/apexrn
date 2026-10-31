@@ -168,8 +168,8 @@ const styles = StyleSheet.create({
   container: {
     alignSelf: 'stretch',
     overflow: 'hidden',
-    borderTopWidth: borderWidths.heavy,
-    borderBottomWidth: borderWidths.heavy,
+    borderTopWidth: borderWidths.container,
+    borderBottomWidth: borderWidths.container,
   },
   track: {
     flexDirection: 'row',

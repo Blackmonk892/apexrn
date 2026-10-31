@@ -1,6 +1,6 @@
 import { PressableProps, StyleProp, StyleSheet, Text, ViewStyle } from 'react-native';
 
-import { shadowOffset, spacing, typography } from '../lib/colors';
+import { spacing, typography } from '../lib/colors';
 import { useTheme } from '../lib/theme';
 import BrutalSurface from './brutal-surface';
 
@@ -32,7 +32,6 @@ export interface FABProps extends Omit<PressableProps, 'style' | 'disabled'> {
 // ---------------------------------------------------------------------------
 // Design tokens
 // ---------------------------------------------------------------------------
-const SHADOW_OFFSET_ELEVATED = shadowOffset.elevated.width;
 const FAB_SIZE = 56;
 
 // ---------------------------------------------------------------------------
@@ -64,9 +63,8 @@ export function FAB({
           borderColor: disabled ? colors.mutedForeground : colors.border,
         },
       ]}
-      offset={SHADOW_OFFSET_ELEVATED}
+      elevation="overlay"
       disabled={disabled}
-      hasShadow={!disabled}
       accessibilityRole="button"
       accessibilityLabel={label || 'Floating Action Button'}
       accessibilityHint="Activates the primary action"
@@ -99,7 +97,6 @@ const styles = StyleSheet.create({
   portalAnchor: {
     position: 'absolute',
     zIndex: 999,
-    elevation: 6,
   },
   surface: {
     alignItems: 'center',

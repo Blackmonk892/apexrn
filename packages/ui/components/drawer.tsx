@@ -281,8 +281,8 @@ export function DrawerContent({
                     paddingBottom: bottomInset,
                   },
                   side === 'left'
-                    ? { borderRightWidth: borderWidths.extraHeavy }
-                    : { borderLeftWidth: borderWidths.extraHeavy },
+                    ? { borderRightWidth: borderWidths.container }
+                    : { borderLeftWidth: borderWidths.container },
                   style,
                 )}
                 {...props}
@@ -447,7 +447,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   header: {
-    borderBottomWidth: borderWidths.extraHeavy,
+    borderBottomWidth: borderWidths.container,
   },
   headerTitle: {
     fontWeight: '900',
@@ -463,7 +463,7 @@ const styles = StyleSheet.create({
   item: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderBottomWidth: borderWidths.standard,
+    borderBottomWidth: borderWidths.control,
   },
   itemLabel: {
     flex: 1,

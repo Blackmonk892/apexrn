@@ -567,3 +567,20 @@ export function Tile() {
   );
 }
 ```
+
+### Text
+
+The type scale: `display`, `title`, `body`, `label` and `mono`. Colour comes from the theme; `tone="inherit"` leaves it to the parent, for text on a filled control.
+
+```tsx
+import { Text } from '@/components/apexrn';
+
+export function Heading() {
+  return (
+    <>
+      <Text variant="title">Orders</Text>
+      <Text tone="muted">Shipped this week</Text>
+    </>
+  );
+}
+```

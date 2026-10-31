@@ -170,7 +170,7 @@ export function TabsList({ children, style, ...props }: ViewProps) {
     // A trigger's layout.x is measured from the list's border box, but the
     // absolutely positioned indicator starts inside the border, so the
     // border width comes off or the indicator sits that far to the right.
-    const x = activeLayout.x - borderWidths.heavy;
+    const x = activeLayout.x - borderWidths.container;
     if (isFirstRender.current || reduceMotion) {
       translateX.value = x;
       isFirstRender.current = false;
@@ -190,8 +190,8 @@ export function TabsList({ children, style, ...props }: ViewProps) {
       <BrutalSurface
         style={[styles.listWrapper, { marginBottom: SHADOW_OFFSET + spacing.md }, style]}
         surfaceStyle={[styles.listSurface, { backgroundColor: colors.background }]}
-        offset={SHADOW_OFFSET}
-        borderWidth="heavy"
+        elevation="card"
+        borderWidth="container"
         pressable={false}
         accessibilityRole="tablist"
         {...props}
@@ -296,8 +296,8 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     zIndex: 1,
-    borderRightWidth: borderWidths.standard,
-    borderLeftWidth: borderWidths.standard,
+    borderRightWidth: borderWidths.control,
+    borderLeftWidth: borderWidths.control,
   },
   trigger: {
     flex: 1,

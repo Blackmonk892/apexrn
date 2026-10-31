@@ -58,7 +58,6 @@ export interface CheckboxProps extends Omit<PressableProps, 'onPress' | 'onPress
 // ---------------------------------------------------------------------------
 // Design tokens
 // ---------------------------------------------------------------------------
-const SHADOW_OFFSET = 2;
 const CHECKBOX_SIZE = 24;
 
 // ---------------------------------------------------------------------------
@@ -117,9 +116,8 @@ export function Checkbox({
         disabled && { backgroundColor: colors.muted, borderColor: colors.mutedForeground }, 
         !disabled && animatedFillStyle
       ]}
-      offset={SHADOW_OFFSET}
-      borderWidth="heavy"
-      hasShadow={!disabled}
+      elevation="control"
+      borderWidth="container"
       disabled={disabled}
       hitSlop={hitSlop}
       onPress={handlePress}

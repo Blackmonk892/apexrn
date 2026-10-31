@@ -64,9 +64,10 @@ Add these to `ColorScheme` in both presets and both schemes. Components may only
 | `scrim` | Overlay backdrop (opacity 0.5 in light, 0.7 in dark) |
 
 **Dark-mode correction (do this first):** the dark `shadow` must stop being `#FFFFFF`. A white slab behind every surface glows on OLED screens and looks cheap.
-- Start the dark shadow at a mid-grey (around `#4A4A4A` on `#1A1A1A`).
+- **Locked (B0, 2026-10-31):** neo dark `shadow` = `#5A5A5A` on `#1A1A1A` (2.5:1). `#4A4A4A` disappeared once the shadow became a solid slab.
+- **Locked (B0 sign-off):** raw dark `shadow` = `#6E6A62` on `#111111` (3.5:1). Lightened at owner sign-off because `#5A5750` was too faint at 2px; still dimmer than the border.
 - Keep the borders bright.
-- Decide the final value on the specimen board, side by side.
+- The shadow is one solid slab: its border takes the shadow colour, never the surface border colour (an outlined slab is the glow this rule removes).
 
 ### 1.2 Presets
 - **`neo` (default):** the current palette, kept with the dark shadow fix.
@@ -74,7 +75,29 @@ Add these to `ColorScheme` in both presets and both schemes. Components may only
   - Light theme: paper background (around `#F2F0EB`), ink foreground (around `#111111`), `primary` = ink with paper text, `accent` = a paper-dark grey, `destructive` is the only colour.
   - Dark theme: the inverse.
   - The shadow is 2px and reads as misregistered print.
-- Both presets must pass `tokens:check` (≥ 4.5:1 for every pair, in both schemes).
+- Both presets must pass `tokens:check`: ≥ 4.5:1 for every text pair; `border` and `ring` ≥ 3:1 on `background` (WCAG 1.4.11); `shadow` ≥ 1.5:1 (decorative, the border carries the edge).
+- `raw` has one colour, so `success` and `warning` are ink on paper-dark; status reads through the glyph and label, never hue. Its focus `ring` is ink too (red already means error), which draws as a double rule.
+
+#### Locked values (B0, 2026-10-31; source of truth is `packages/ui/lib/colors.ts`)
+
+| Role | neo light | neo dark | raw light | raw dark |
+|---|---|---|---|---|
+| background / foreground | `#FFFFFF` / `#000000` | `#1A1A1A` / `#FFFFFF` | `#F2F0EB` / `#111111` | `#111111` / `#F2F0EB` |
+| surface / surfaceForeground | `#FFFFFF` / `#000000` | `#222222` / `#FFFFFF` | `#F2F0EB` / `#111111` | `#111111` / `#F2F0EB` |
+| muted / mutedForeground | `#F5F5F5` / `#6B6B6B` | `#2A2A2A` / `#9E9E9E` | `#DEDAD2` / `#5A5750` | `#2B2925` / `#A8A399` |
+| primary / fg | `#FF5252` / `#000000` | `#FF6B6B` / `#000000` | `#111111` / `#F2F0EB` | `#F2F0EB` / `#111111` |
+| secondary / fg | `#3D5AFE` / `#FFFFFF` | `#4D5FF5` / `#FFFFFF` | `#DEDAD2` / `#111111` | `#2B2925` / `#F2F0EB` |
+| accent / fg | `#FFD600` / `#000000` | `#FFEA00` / `#000000` | `#DEDAD2` / `#111111` | `#2B2925` / `#F2F0EB` |
+| destructive / fg | `#D32F2F` / `#FFFFFF` | `#EF5350` / `#000000` | `#C8102E` / `#FFFFFF` | `#FF5A5F` / `#111111` |
+| success / fg | `#2E7D32` / `#FFFFFF` | `#66BB6A` / `#000000` | `#DEDAD2` / `#111111` | `#2B2925` / `#F2F0EB` |
+| warning / fg | `#F59E0B` / `#000000` | `#FFB300` / `#000000` | `#DEDAD2` / `#111111` | `#2B2925` / `#F2F0EB` |
+| border = input | `#000000` | `#FFFFFF` | `#111111` | `#F2F0EB` |
+| ring | `#3D5AFE` | `#8C9EFF` | `#111111` | `#F2F0EB` |
+| shadow | `#000000` | `#5A5A5A` | `#111111` | `#6E6A62` |
+| scrim | `#000000` | `#000000` | `#111111` | `#111111` |
+| elevation flat / control / card / overlay | 0 / 2 / 4 / 6 | 0 / 2 / 4 / 6 | 0 / 2 / 2 / 2 | 0 / 2 / 2 / 2 |
+
+Scrim opacity 0.5 light, 0.7 dark. Specimen: `docs/ship-plan/specimen/`.
 
 ### 1.3 Space, size, border, shadow
 
@@ -112,6 +135,7 @@ Add a `Text` primitive whose `variant` is one of the roles below. Components nev
 | Selected / active | Inverted block: `foreground` fill with `background` text. Or the `accent` block for navigation. Not a tint. |
 | Disabled | `opacity.disabled`, dashed border, no shadow, no haptic. Still readable. |
 | Error | Border becomes `destructive`. A message appears below in `label` style with a ✕ glyph drawn as an icon. Colour is never the only signal. |
+| Status | Every `destructive`, `success` and `warning` variant (and `info`, once one exists) renders its icon from `lib/icons` (check for success, warning mark, close for destructive, info) and a visible text label. Colour is never the only signal. In `raw`, success and warning share one neutral fill, so the icon is what tells them apart. |
 | Loading | Width is kept. The label is replaced by a 3-block stepping indicator. The control does not change size. |
 | Empty / long content | Every list or text slot defines both cases (empty state, two-line truncation rule). |
 

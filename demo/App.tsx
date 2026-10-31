@@ -49,6 +49,7 @@ import ChipScreen from './src/screens/ChipScreen';
 
 import ShowcaseScreen from './src/screens/ShowcaseScreen';
 import PlaygroundScreen from './src/screens/PlaygroundScreen';
+import SpecimenScreen from './src/screens/specimen/SpecimenScreen';
 
 // Web only: `#button` opens the Button screen directly, `#button:light` also forces the theme
 // (used for headless checks). `#playground:<component>:<theme?>` opens a single controllable
@@ -137,6 +138,7 @@ function AppShell() {
         return (
           <PlaygroundScreen componentId={playgroundComponent} onBack={() => setCurrentScreen('home')} />
         );
+      case 'specimen': return <SpecimenScreen onBack={() => setCurrentScreen('home')} />;
       case 'showcase': return <ShowcaseScreen onBack={() => setCurrentScreen('home')} />;
       case 'hero': return <ShowcaseScreen onBack={() => setCurrentScreen('home')} />;
       case 'button': return <ButtonScreen onBack={() => setCurrentScreen('home')} />;

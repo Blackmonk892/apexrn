@@ -10,6 +10,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { spacing, typography } from '../lib/colors';
+import { CheckIcon, CloseIcon, WarningIcon } from '../lib/icons';
 import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
 import BrutalSurface from './brutal-surface';
@@ -31,7 +32,7 @@ export interface ToastProps extends ViewProps {
    */
   description?: string;
   /**
-   * The visual style of the toast. Status variants add a glyph and a spoken
+   * The visual style of the toast. Status variants add an icon and a spoken
    * prefix ("Error.", "Success.", "Warning."), so they are never colour-only.
    * @default 'default'
    */
@@ -51,14 +52,14 @@ export interface ToastProps extends ViewProps {
 // ---------------------------------------------------------------------------
 // Design tokens
 // ---------------------------------------------------------------------------
-const SHADOW_OFFSET = 4;
 const HIDDEN_Y = -150;
 const GLYPH_SIZE = 22;
+const ICON_SIZE = 16;
 
 const STATUS = {
-  destructive: { glyph: '✕', spoken: 'Error. ' },
-  success: { glyph: '✓', spoken: 'Success. ' },
-  warning: { glyph: '!', spoken: 'Warning. ' },
+  destructive: { Icon: CloseIcon, spoken: 'Error. ' },
+  success: { Icon: CheckIcon, spoken: 'Success. ' },
+  warning: { Icon: WarningIcon, spoken: 'Warning. ' },
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -168,8 +169,8 @@ export function Toast({
       {...props}
     >
       <BrutalSurface
-        offset={SHADOW_OFFSET}
-        borderWidth="heavy"
+        elevation="card"
+        borderWidth="container"
         onPress={hideToast}
         accessibilityRole="button"
         accessibilityLabel={label}
@@ -178,11 +179,12 @@ export function Toast({
       >
         {status ? (
           <View
+            testID={`status-icon-${variant}`}
             style={[styles.glyph, { backgroundColor: activeVariant.text.color, marginRight: spacing.sm }]}
             importantForAccessibility="no-hide-descendants"
             accessibilityElementsHidden
           >
-            <Text style={[styles.glyphText, { color: activeVariant.surface.backgroundColor }]}>{status.glyph}</Text>
+            <status.Icon size={ICON_SIZE} color={activeVariant.surface.backgroundColor} />
           </View>
         ) : null}
         <View style={[styles.contentContainer, { gap: spacing.xs }]}>
@@ -228,11 +230,6 @@ const styles = StyleSheet.create({
     height: GLYPH_SIZE,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  glyphText: {
-    fontSize: 14,
-    fontWeight: '900',
-    lineHeight: 16,
   },
   contentContainer: {
     flex: 1,

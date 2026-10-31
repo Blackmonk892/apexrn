@@ -94,7 +94,7 @@ export function Skeleton({
 // ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
   base: {
-    borderWidth: borderWidths.standard,
+    borderWidth: borderWidths.control,
     borderRadius: 0,
     overflow: 'hidden',
     position: 'relative',

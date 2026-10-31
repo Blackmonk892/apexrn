@@ -78,9 +78,7 @@ const RadioContext = createContext<RadioContextValue | null>(null);
 // ---------------------------------------------------------------------------
 const RADIO_SIZE = 24;
 const DOT_SIZE = 12;
-const SHADOW_OFFSET = 2;
-// Radios stay round on purpose: circle vs. square is how people tell a
-// single-choice control from a checkbox, so this is a functional radius.
+// Only the inner dot is round; the surface follows the zero-radius rule.
 const RADIO_RADIUS = 999;
 
 // ---------------------------------------------------------------------------
@@ -158,12 +156,10 @@ export function RadioGroupItem({
     <BrutalSurface
       style={style}
       surfaceStyle={styles.surface}
-      offset={SHADOW_OFFSET}
-      borderWidth="heavy"
-      borderRadius={RADIO_RADIUS}
+      elevation="control"
+      borderWidth="container"
       backgroundColor={isDisabled ? colors.muted : colors.background}
       borderColor={isDisabled ? colors.mutedForeground : colors.border}
-      hasShadow={!isDisabled}
       disabled={isDisabled}
       hitSlop={hitSlop}
       onPress={() => context.onValueChange(value)}

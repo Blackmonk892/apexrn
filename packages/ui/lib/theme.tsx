@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import { useColorScheme as useRNColorScheme } from 'react-native';
-import { colors, ColorScheme } from './colors';
+import { presets, type ColorScheme, type Elevation, type PresetName } from './colors';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
 
@@ -8,6 +8,9 @@ export interface ThemeContextType {
   mode: ThemeMode;
   colorScheme: 'light' | 'dark';
   colors: ColorScheme;
+  preset: PresetName;
+  elevation: Elevation;
+  scrimOpacity: number;
   setMode: (mode: ThemeMode) => void;
   toggleTheme: () => void;
   isDark: boolean;
@@ -20,9 +23,11 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export function ApexRNProvider({
   children,
   defaultMode = 'system',
+  preset = 'neo',
 }: {
   children: React.ReactNode;
   defaultMode?: ThemeMode;
+  preset?: PresetName;
 }) {
   const systemColorScheme = useRNColorScheme();
   const [mode, setMode] = useState<ThemeMode>(defaultMode);
@@ -34,7 +39,8 @@ export function ApexRNProvider({
         : 'light'
       : mode;
 
-  const activeColors = colors[resolvedScheme];
+  const active = presets[preset];
+  const activeColors = active[resolvedScheme];
   const isDark = resolvedScheme === 'dark';
 
   const toggleTheme = useCallback(() => {
@@ -52,11 +58,14 @@ export function ApexRNProvider({
       mode,
       colorScheme: resolvedScheme,
       colors: activeColors,
+      preset,
+      elevation: active.elevation,
+      scrimOpacity: active.scrimOpacity[resolvedScheme],
       setMode,
       toggleTheme,
       isDark,
     }),
-    [mode, resolvedScheme, activeColors, toggleTheme, isDark],
+    [mode, resolvedScheme, activeColors, preset, active, toggleTheme, isDark],
   );
 
   return (
@@ -80,7 +89,10 @@ export function useTheme(): ThemeContextType {
     return {
       mode: 'light',
       colorScheme: 'light',
-      colors: colors.light,
+      colors: presets.neo.light,
+      preset: 'neo',
+      elevation: presets.neo.elevation,
+      scrimOpacity: presets.neo.scrimOpacity.light,
       setMode: () => {},
       toggleTheme: () => {},
       isDark: false,

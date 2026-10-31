@@ -224,8 +224,8 @@ export function DialogContent({
           <BrutalSurface
             style={styles.dialogWrapper}
             surfaceStyle={[styles.surface, { padding: spacing.xl, gap: spacing.md, backgroundColor: colors.background }]}
-            offset={DIALOG_SHADOW_OFFSET}
-            borderWidth="extraHeavy"
+            elevation="overlay"
+            borderWidth="container"
             pressable={false}
           >
             {children}
@@ -288,7 +288,6 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     alignItems: 'center',
     zIndex: 1,
-    elevation: 1,
   },
   dialogWrapper: {
     width: '100%',

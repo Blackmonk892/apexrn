@@ -64,7 +64,7 @@ export function ListItem({
   const interactive = isPressable && !disabled;
 
   const { pressed, handlePressIn, handlePressOut } = usePressPhysics({
-    offset: 0,
+    depth: 0,
     disabled: !interactive,
     haptics: false,
   });
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'stretch',
-    borderBottomWidth: borderWidths.standard,
+    borderBottomWidth: borderWidths.control,
     borderRadius: 0,
   },
   contentContainer: {

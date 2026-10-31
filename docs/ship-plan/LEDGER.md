@@ -25,7 +25,7 @@ Branches: `ship/v0.1` (integration) ← `ship/phase-<x>` (one per phase), each m
 - Ruling: A6 skips the local `expo prebuild` check (no SDK here); the CI run is the verification — cost if wrong: a prebuild config error surfaces one CI run later.
 - Ruling: fix diffs of ≤ 10 lines get their scoped re-review from the Opus controller instead of a new subagent — speed — cost if wrong: one less independent read of a trivial diff.
 
-## Phase A — make it run (PR: see below)
+## Phase A — make it run (PR: https://github.com/Blackmonk892/apexrn/pull/1, merged 59908ca)
 
 Parallel tasks and their files (recorded retroactively for A5/A6, which were dispatched before owner rule 3):
 - A5: `website/scripts/check-no-rn.mjs`, `website/scripts/check-no-rn.test.mjs`, `website/scripts/__fixtures__/check-no-rn/**`, `website/package.json` (scripts), `.github/workflows/ci.yml`.
@@ -45,3 +45,43 @@ Parallel tasks and their files (recorded retroactively for A5/A6, which were dis
 - Parallel (2026-10-31): A4 (`packages/ui/lib/theme.tsx`, `demo/jest.setup.ts`, `demo/__tests__/theme-provider-warning.test.tsx`) ∥ A3 (files above). No overlap.
 - Parallel: none during the final-review fix wave (one agent: CLAUDE.md, both workflows, `demo/__tests__/{harness,theme-provider-warning,native-globals}.test.tsx`, `demo/jest.config.js`); the controller edits only this ledger.
 - CI flake (run 41203078985): website `next build` failed resolving `next/font/google` (Google Fonts fetch at build time); rerun of the failed job green, no code change. Ruling: the Phase D site uses system fonts only (matches ORCHESTRATOR §1.4), which removes the build's network dependency — cost if wrong: site loses Space Grotesk/Inter/JetBrains Mono (being rebuilt anyway).
+
+## Phase B0 — design system first (PR: https://github.com/Blackmonk892/apexrn/pull/2, awaiting owner sign-off) — serial, owner sign-off at end
+
+| # | Task | Status | Commit | Verified | Not verified |
+|---|---|---|---|---|---|
+| B0-1 | Colour roles, neo + raw presets, provider `preset`, contrast gate | DONE | 697edca, 79eb871 | tokens:check (4 palettes, text ≥4.5, border/ring ≥3, shadow ≥1.5); tokens:test 3 (RED via stub); 11 theme/harness tests incl. nested providers + fallback; typecheck; generate-docs; website tsc | Values are start values until B0-7; no device run |
+| B0-2 | `lib/variants.ts` + `lib/motion.ts` | DONE | f462442, f9f86be | 7 variants tests (defaults, unknown/null/inherited-key fallback, no base mutation); motion values + useMotion reduced path; typecheck; registry build (44 items) | Easing curves not visually checked until B0-6 |
+| B0-3 | BrutalSurface on the depth ladder; press, ring, disabled, invalid | DONE | aed90fd, af3cbac | 15 BrutalSurface tests (depth neo 4 / raw 2, flat, disabled dashed+no press+no haptic+stable margin, invalid, ring focus/blur/gated, press sink, reduced motion, mid-press reset); 43 suite tests; typecheck; web export | Ring on web keyboard focus not checked in a browser; press translate asserted via shared value (mock limit); no device run |
+| B0-4 | `Text` primitive + loading blocks | DONE | 71e121b, 898d661 | 16 tests: each variant size/line/weight, label mono+uppercase, 1.3 cap, muted tone dark, header role; LoadingBlocks 3 blocks, progressbar role, no withRepeat under reduced motion; typecheck; registry (46 items); generate-docs | Mono font rendering per platform not seen on screen yet (B0-6); Text has no live preview on the site yet |
+| B0-5 | Icons on the §5 grid | DONE | 49c2428 | 8 icon tests (2px stroke, square caps, miter, 24 viewBox, no fill, hidden from a11y), RED on 3px first | Glyph legibility at 2px seen on screen in B0-6 |
+| B0-6 | Specimen board | DONE | 3485672 | 8 specimen tests (4 quadrants × 23 roles, 5 type specimens, depth 4/2); 75 suite tests; web screenshots desktop + phone reviewed by Opus | Device (iOS, physical Android) |
+| B0-7 | Tune and lock values | DONE | 94e1166 + DESIGN.md lock | shadow-slab test RED→GREEN; tokens:check; 76 suite tests; re-shot screenshots reviewed by Opus; DESIGN table cross-checked against colors.ts by script (0 mismatches) | raw dark shadow is subtle (owner to judge) |
+- Ruling: B0-1 keeps BrutalSurface's `offset` prop (only token reads migrate); B0-3 owns the BrutalSurface API change — keeps tasks reviewable separately — cost if wrong: none.
+- Ruling: raw `ring` = the ink foreground (light `#111111`, dark `#F2F0EB`), not the signal red — in raw, red already means error/destructive, so a red focus ring would read as an error state; the 2px offset gap distinguishes the ring from the border — cost if wrong: focus is less loud in raw (tunable on the specimen board).
+- Ruling: neo dark `background` stays `#1A1A1A` (current palette, DESIGN §1.1 tunes the shadow against it); only `surface` is `#222222` — cost if wrong: none.
+- Ruling: the radio is square (DESIGN §1.3: radius 0, no exceptions); Phase B's radio loop makes the indicator distinguishable from Checkbox by its inner mark — cost if wrong: radio and checkbox look alike until Phase B.
+- Ruling (B0-7 tuning): the shadow is one solid slab — the shadow layer's border takes the shadow colour, not the surface border — dark mode otherwise showed white-outlined slabs (the glow DESIGN §1.1 removes) — cost if wrong: none visible in light (both black).
+- Ruling (B0-7 tuning): neo dark `shadow` = `#5A5A5A` (~2.5:1 on `#1A1A1A`); `#4A4A4A` vanished once the slab was solid — cost if wrong: a slightly lighter shadow, tunable in one token.
+- Ruling (B0-7 tuning): raw keeps the ink focus ring; on screen it reads as a deliberate double rule (misregistered print), clearly distinct from idle — cost if wrong: owner may want louder focus in raw.
+- Ruling: values locked in rework/DESIGN.md §1 (B0-7, 2026-10-31) — owner sign-off pending — cost if wrong: one token edit per value.
+- Carried to Phase B (B0 final review): hard-coded shadow math in dialog, tabs, slider, switch, input-otp, dropdown-menu (SHADOW_OFFSET 4), drawer (SHADOW_WIDTH 6) must read `useTheme().elevation`; chip/slider/switch must pass `disabled` to BrutalSurface instead of switching elevation (layout shift); component-level disabled copies to remove; radio indicator redesign.
+- B0 emulator evidence: android-e2e run 41214777849 at 214450a — launch + specimen flows PASSED (API 34); four quadrant screenshots stitched in `docs/ship-plan/specimen/specimen-android-api34.png`. Debugging trail for the specimen flow (3 failed scroll strategies → deterministic swipes) is in the SDD progress log.
+
+### B0 sign-off changes (owner, 2026-11-01): "go" with six changes, as small commits on PR #2, merge only when every check is green
+
+| # | Change | Status | Commit | Verified | Not verified |
+|---|---|---|---|---|---|
+| B0-8 | Icons: round lens on search, round head on user; add `WarningIcon` + `InfoIcon` for status; re-shoot icon row | DONE | 46e644c, b444ba2, eccc334 | 30 icon tests incl. per-icon geometry (all coordinates inside the 24 box; bite-checked with one coordinate at 23.5) and circle counts; 126 suite tests; typecheck; doctor; registry build; `specimen/icons-row.png` reviewed by Opus in all four palettes | Glyphs at 16px on a device |
+| B0-9 | raw dark `shadow` `#5A5750` → `#6E6A62` (3.51:1 on `#111111`, border is 16.6:1) + DESIGN §1 | DONE | 45e1c7d | tokens:check, tokens:test | Seen on the emulator only after the next android-e2e run |
+| B0-10 | Status-signal rule (DESIGN §3) + test: raw status variants on Toast, Alert, Badge render an icon and a text label | DONE | af0c20a | `status-signal.test.tsx` 22 cases (raw light + dark × 3 components × 3 variants, Alert info, custom icon override, raw success = warning fill), RED 20/22 first; Opus diff review | Badge height with the icon on a device; Chip joins in Phase B |
+| B0-11 | Sonnet re-review of icons (49c2428, implemented by Haiku) together with B0-8 | DONE | eccc334 (fixes) | Sonnet review approve-with-fixes; all fixes applied | — |
+- Owner decision: raw focus ring double rule — keep.
+- Ruling: implementers are Sonnet from here on (owner, per the brief); 49c2428 (Haiku) gets a Sonnet re-review in B0-11 — cost if wrong: none.
+- Ruling: B0-8 → B0-9/B0-10 run serially (B0-10 consumes the new status icons; all touch `packages/ui`). The B0-11 reviewer is read-only and runs alongside B0-9/B0-10; its fixes, if any, land after B0-10 — cost if wrong: none, the reviewer writes no files.
+- Ruling: there is no `info` status role or variant in v0.1 (CLAUDE.md fixes status variants as `destructive | success | warning`); the DESIGN rule names `info` so it applies the day one is added, and the test enumerates each component's actual status variants. Alert's `default` variant already carries the info glyph and gets `InfoIcon` — cost if wrong: adding an `info` role later is one token row per palette plus one test row.
+- Ruling: Chip has no status variants yet (ORCHESTRATOR §2c adds them in Phase B), so the B0 test covers Toast, Alert and Badge; Chip joins the same test table in its Phase B loop (carry list) — cost if wrong: none, nothing to test today.
+- Ruling: status glyphs become `lib/icons` components (DESIGN §5: one icon family), replacing the text glyphs `✓ ! ✕ i` in Toast and Alert — the rule says "icon", and text glyphs scale with OS font size and fall back to system fonts — cost if wrong: small visual change in two components that Phase B rewrites anyway.
+- Carried to Phase B (owner, 2026-11-01): Button gets sentence-case text and `LoadingBlocks` instead of the spinner; Input's disabled state uses the dashed-border rule (BrutalSurface `disabled`), not a grey fill; all 10 "not wired" cells on the specimen board get wired; Chip's status variants join the status-signal test.
+- B0-11 review (Sonnet, icons 49c2428 + B0-8): approve-with-fixes. Fix round: HomeIcon wall top on grid (`V10`); InfoIcon gets serifs (`M12 4V5M10 10H12V20M9 20H15`) so it can't read as a flipped "!"; icons test gains a real geometry check (path/circle extents inside the 24 box, no fill) instead of only wrapper props; `accessibilityElementsHidden` for iOS. Kept: WarningIcon dot as a 2×3 block (zero-length subpaths render unreliably on iOS).
+- Carried to Phase B (B0-11 review): accordion, checkbox and select hand-roll their own `Svg` at stroke 3–4 and chip passes `strokeWidth={4}` — all move to `lib/icons` at the default 2px in their loops; status icons render at ≥ 20 inside Toast/Alert badges (check on device).

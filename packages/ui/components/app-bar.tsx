@@ -62,11 +62,6 @@ export interface AppBarActionProps {
 }
 
 // ---------------------------------------------------------------------------
-// Design tokens
-// ---------------------------------------------------------------------------
-const ACTION_SHADOW_OFFSET = 2;
-
-// ---------------------------------------------------------------------------
 // Components
 // ---------------------------------------------------------------------------
 export function AppBar({
@@ -165,9 +160,8 @@ export function AppBarAction({ icon, label, onPress, active = false, disabled = 
 
   return (
     <BrutalSurface
-      offset={ACTION_SHADOW_OFFSET}
-      borderWidth="standard"
-      hasShadow={!disabled}
+      elevation="control"
+      borderWidth="control"
       disabled={disabled}
       onPress={onPress}
       backgroundColor={disabled ? colors.muted : active ? colors.foreground : colors.background}
@@ -192,7 +186,7 @@ const styles = StyleSheet.create({
   // content without a blurred shadow.
   root: {
     alignSelf: 'stretch',
-    borderBottomWidth: borderWidths.extraHeavy,
+    borderBottomWidth: borderWidths.container,
   },
   row: {
     flexDirection: 'row',

@@ -56,7 +56,7 @@ export default function FABScreen({ onBack }: { onBack: () => void }) {
 }
 
 const styles = StyleSheet.create({
-  stage: { height: 150, borderWidth: borderWidths.standard, overflow: 'hidden' },
+  stage: { height: 150, borderWidth: borderWidths.control, overflow: 'hidden' },
   second: { right: 110 },
   plus: { fontSize: 28, fontWeight: '900', lineHeight: 32 },
 });

@@ -46,14 +46,15 @@ export default function ThemingPage() {
         <h1 className="font-display mt-3 text-3xl font-semibold sm:text-4xl">Theming</h1>
         <p className="mt-4 text-[var(--fg-muted)]">
           Every component reads colors from <code>useTheme().colors</code> — never a hex literal, never{" "}
-          <code>colors.light</code>/<code>colors.dark</code> read directly. Restyle the whole library by editing one
+          a palette constant read directly. Restyle the whole library by editing one
           file: <code>lib/apexrn/colors.ts</code> (copied into your project by <code>npx apexrn init</code>).
         </p>
 
         <h2 id="colors" className="font-display mt-10 text-xl font-semibold">Colors</h2>
         <p className="mt-3 text-[var(--fg-muted)]">
-          The current defaults, extracted directly from <code>packages/ui/lib/colors.ts</code>. Every
-          foreground/background pair must meet 4.5:1 contrast in both themes — enforced by{" "}
+          The <code>neo</code> preset, extracted directly from <code>packages/ui/lib/colors.ts</code>.
+          Select <code>raw</code> with <code>{'<ApexRNProvider preset="raw">'}</code>. Every
+          foreground/background pair must meet 4.5:1 contrast in every preset and theme — enforced by{" "}
           <code>node registry/check-contrast.mjs</code> in CI.
         </p>
         <div className="edge-block mt-4 overflow-x-auto">
@@ -110,11 +111,11 @@ export default function ThemingPage() {
             </ul>
           </div>
           <div>
-            <p className="font-mono text-xs font-semibold uppercase tracking-wide text-[var(--fg-muted)]">Shadow offset</p>
+            <p className="font-mono text-xs font-semibold uppercase tracking-wide text-[var(--fg-muted)]">Elevation</p>
             <ul className="mt-2 flex flex-col gap-1 text-sm text-[var(--fg-muted)]">
-              {tokens.shadowOffset.map((t) => (
+              {tokens.elevation.map((t) => (
                 <li key={t.name}>
-                  <code>{t.name}</code>: <code>{t.value}</code>
+                  <code>{t.name}</code>: {t.value}px
                 </li>
               ))}
             </ul>
