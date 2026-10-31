@@ -88,9 +88,12 @@ Add these to `ColorScheme` in both presets and both schemes. Components may only
 | secondary / fg | `#3D5AFE` / `#FFFFFF` | `#4D5FF5` / `#FFFFFF` | `#DEDAD2` / `#111111` | `#2B2925` / `#F2F0EB` |
 | accent / fg | `#FFD600` / `#000000` | `#FFEA00` / `#000000` | `#DEDAD2` / `#111111` | `#2B2925` / `#F2F0EB` |
 | destructive / fg | `#D32F2F` / `#FFFFFF` | `#EF5350` / `#000000` | `#C8102E` / `#FFFFFF` | `#FF5A5F` / `#111111` |
+| success / fg | `#2E7D32` / `#FFFFFF` | `#66BB6A` / `#000000` | `#DEDAD2` / `#111111` | `#2B2925` / `#F2F0EB` |
+| warning / fg | `#F59E0B` / `#000000` | `#FFB300` / `#000000` | `#DEDAD2` / `#111111` | `#2B2925` / `#F2F0EB` |
 | border = input | `#000000` | `#FFFFFF` | `#111111` | `#F2F0EB` |
 | ring | `#3D5AFE` | `#8C9EFF` | `#111111` | `#F2F0EB` |
 | shadow | `#000000` | `#5A5A5A` | `#111111` | `#5A5750` |
+| scrim | `#000000` | `#000000` | `#111111` | `#111111` |
 | elevation flat / control / card / overlay | 0 / 2 / 4 / 6 | 0 / 2 / 4 / 6 | 0 / 2 / 2 / 2 | 0 / 2 / 2 / 2 |
 
 Scrim opacity 0.5 light, 0.7 dark. Specimen: `docs/ship-plan/specimen/`.

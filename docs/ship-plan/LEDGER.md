@@ -65,3 +65,4 @@ Parallel tasks and their files (recorded retroactively for A5/A6, which were dis
 - Ruling (B0-7 tuning): neo dark `shadow` = `#5A5A5A` (~2.5:1 on `#1A1A1A`); `#4A4A4A` vanished once the slab was solid — cost if wrong: a slightly lighter shadow, tunable in one token.
 - Ruling (B0-7 tuning): raw keeps the ink focus ring; on screen it reads as a deliberate double rule (misregistered print), clearly distinct from idle — cost if wrong: owner may want louder focus in raw.
 - Ruling: values locked in rework/DESIGN.md §1 (B0-7, 2026-10-31) — owner sign-off pending — cost if wrong: one token edit per value.
+- Carried to Phase B (B0 final review): hard-coded shadow math in dialog, tabs, slider, switch, input-otp, dropdown-menu (SHADOW_OFFSET 4), drawer (SHADOW_WIDTH 6) must read `useTheme().elevation`; chip/slider/switch must pass `disabled` to BrutalSurface instead of switching elevation (layout shift); component-level disabled copies to remove; radio indicator redesign.
