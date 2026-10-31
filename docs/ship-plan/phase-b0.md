@@ -6,7 +6,7 @@
 
 **Architecture:** Each preset is four plain palette objects plus a depth ladder in `lib/colors.ts`. `ApexRNProvider` takes `preset` and exposes `colors` and `elevation` through `useTheme()`. Motion constants move to `lib/motion.ts`. `lib/variants.ts` is a typed, dependency-free cva. `BrutalSurface` takes an elevation key instead of a pixel offset and owns the focus ring, disabled and invalid treatments. `Text` is the only place font sizes live. Existing call sites are migrated mechanically so typecheck stays green; Phase B redesigns each component properly.
 
-**Tech Stack:** as Phase A, plus Jest harness from A2 (`demo/__tests__`, `renderWithTheme`).
+**Tech Stack:** as Phase A. Jest harness facts every task relies on: `npm test` in `demo/`; tests in `demo/__tests__/*.test.tsx`; `renderWithTheme(ui, opts)` from `demo/__tests__/utils/render.tsx` is **async** (RNTL 14, always `await`); `useReducedMotion` from `react-native-reanimated` is a `jest.fn` defaulting to `false`, override per test with `jest.mocked(useReducedMotion).mockReturnValue(true)`; `expo-haptics` is mocked (`Haptics.impactAsync` is a `jest.fn`). Emulator screenshots come from Maestro flows in `demo/e2e/*.yaml` run by `.github/workflows/android-e2e.yml` (artifact `maestro`, files under `maestro-out/**/takeScreenshot/`).
 
 **Spec:** `rework/DESIGN.md` (§1 tokens, §2 type, §3 states, §4 motion, §5 icons, §6 variants, §8 specimen board), `rework/ORCHESTRATOR.md` §1.3–1.5 and §2b, `CLAUDE.md`.
 

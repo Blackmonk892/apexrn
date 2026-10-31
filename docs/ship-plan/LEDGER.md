@@ -25,7 +25,7 @@ Branches: `ship/v0.1` (integration) ← `ship/phase-<x>` (one per phase), each m
 - Ruling: A6 skips the local `expo prebuild` check (no SDK here); the CI run is the verification — cost if wrong: a prebuild config error surfaces one CI run later.
 - Ruling: fix diffs of ≤ 10 lines get their scoped re-review from the Opus controller instead of a new subagent — speed — cost if wrong: one less independent read of a trivial diff.
 
-## Phase A — make it run (PR: see below)
+## Phase A — make it run (PR: https://github.com/Blackmonk892/apexrn/pull/1, merged 59908ca)
 
 Parallel tasks and their files (recorded retroactively for A5/A6, which were dispatched before owner rule 3):
 - A5: `website/scripts/check-no-rn.mjs`, `website/scripts/check-no-rn.test.mjs`, `website/scripts/__fixtures__/check-no-rn/**`, `website/package.json` (scripts), `.github/workflows/ci.yml`.
