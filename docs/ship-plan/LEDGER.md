@@ -94,4 +94,13 @@ Parallel tasks and their files (recorded retroactively for A5/A6, which were dis
 
 | # | Task | Status | Commit | Verified | Not verified |
 |---|---|---|---|---|---|
-| B-1 | Harness: palette render helper, deep links, flow template, peers, tracker | in progress | | | |
+| B-1 | Harness: palette render helper, deep links, flow template, peers, tracker | DONE | f3f49c5, 534e897, 15fc9b8, 8dffb0a, 785e2f7 | 130 tests (renderInPalettes; deep links: known id, unknown id, none); typecheck; doctor; web export; registry build; `expo config` shows the scheme; Opus diff review | Maestro `config.yaml` globs + `_open.yaml` until the next android-e2e run; renderInPalettes test was written with its code (not seen RED) |
+- Ruling: the tracker has 37 rows (34 Home components + 3 new); ORCHESTRATOR's "36" counted Text and BrutalSurface, finished in B0 — cost if wrong: none.
+- Ruling: B-1 infra diff reviewed by the Opus controller only (harness code, no component) — cost if wrong: one less independent read; the emulator run is the real check.
+- Parallel batch W2a (2026-11-01), each task owns only these paths:
+  - B-2 Button: `packages/ui/components/button.tsx`, `demo/src/screens/ButtonScreen.tsx`, `demo/__tests__/button.test.tsx` (+ removes `demo/__tests__/button-loading.test.tsx` into it), `demo/e2e/components/button.yaml`
+  - B-3 Label: `packages/ui/components/label.tsx`, `demo/src/screens/LabelScreen.tsx`, `demo/__tests__/label.test.tsx`, `demo/e2e/components/label.yaml`
+  - B-4 Separator: `packages/ui/components/separator.tsx`, `demo/src/screens/SeparatorScreen.tsx`, `demo/__tests__/separator.test.tsx`, `demo/e2e/components/separator.yaml`
+  - B-5 Badge: `packages/ui/components/badge.tsx`, `demo/src/screens/BadgeScreen.tsx`, `demo/__tests__/badge.test.tsx`, `demo/e2e/components/badge.yaml`
+  - B-6 Avatar: `packages/ui/components/avatar.tsx`, `demo/src/screens/AvatarScreen.tsx`, `demo/__tests__/avatar.test.tsx`, `demo/e2e/components/avatar.yaml`
+  - B-8 Progress: `packages/ui/components/progress.tsx`, `demo/src/screens/ProgressScreen.tsx`, `demo/__tests__/progress.test.tsx`, `demo/e2e/components/progress.yaml`
