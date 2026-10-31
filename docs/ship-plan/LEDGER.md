@@ -104,3 +104,14 @@ Parallel tasks and their files (recorded retroactively for A5/A6, which were dis
   - B-5 Badge: `packages/ui/components/badge.tsx`, `demo/src/screens/BadgeScreen.tsx`, `demo/__tests__/badge.test.tsx`, `demo/e2e/components/badge.yaml`
   - B-6 Avatar: `packages/ui/components/avatar.tsx`, `demo/src/screens/AvatarScreen.tsx`, `demo/__tests__/avatar.test.tsx`, `demo/e2e/components/avatar.yaml`
   - B-8 Progress: `packages/ui/components/progress.tsx`, `demo/src/screens/ProgressScreen.tsx`, `demo/__tests__/progress.test.tsx`, `demo/e2e/components/progress.yaml`
+- Ruling: Progress's indeterminate state loops (`withRepeat`), like `LoadingBlocks`: a loading indicator, not decoration; static under reduced motion — DESIGN §4's loop ban targets decoration — cost if wrong: one static variant.
+- Ruling: static, non-compound components (Separator, Label, Avatar, Badge) skip the controlled/uncontrolled, disabled and compound-throw smoke tests — nothing to test — cost if wrong: none.
+- Ruling: an avatar's initials are a monogram, so they stay uppercase outside the `label` variant (one commented exception) — cost if wrong: one style line.
+- Fix (controller): `_open.yaml` waits for Home before `openLink` — run 41235050444 showed the VIEW intent reach the activity ~1s before JS booted, so the Linking event was lost (6db916f). Website playground config drops the removed `withShadow` controls (8ab64ea).
+- Parallel batch W2b (2026-11-01), each task owns only these paths:
+  - B-7 Skeleton: `packages/ui/components/skeleton.tsx`, `demo/src/screens/SkeletonScreen.tsx`, `demo/__tests__/skeleton.test.tsx`, `demo/e2e/components/skeleton.yaml`
+  - B-9 Alert: `packages/ui/components/alert.tsx`, `demo/src/screens/AlertScreen.tsx`, `demo/__tests__/alert.test.tsx`, `demo/e2e/components/alert.yaml` (keeps `status-signal.test.tsx` green, does not edit it)
+  - B-10 Card: `packages/ui/components/card.tsx`, `demo/src/screens/CardScreen.tsx`, `demo/__tests__/card.test.tsx`, `demo/e2e/components/card.yaml`
+  - B-11 ListItem: `packages/ui/components/list-item.tsx`, `demo/src/screens/ListItemScreen.tsx`, `demo/__tests__/list-item.test.tsx`, `demo/e2e/components/listitem.yaml`
+  - B-12 FAB: `packages/ui/components/floating-action-button.tsx`, `demo/src/screens/FABScreen.tsx`, `demo/__tests__/fab.test.tsx`, `demo/e2e/components/fab.yaml`
+  - Barrel: Card's new parts and removed `CardText` need `packages/ui/components/index.ts` — the Card task owns that one line.
