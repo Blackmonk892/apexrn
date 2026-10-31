@@ -13,6 +13,8 @@ export interface ThemeContextType {
   isDark: boolean;
 }
 
+let warnedMissingProvider = false;
+
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ApexRNProvider({
@@ -67,7 +69,14 @@ export function ApexRNProvider({
 export function useTheme(): ThemeContextType {
   const context = useContext(ThemeContext);
   if (!context) {
-    // Safe fallback if rendered outside provider
+    // The fallback keeps components renderable in isolation; the dev warning
+    // exposes the missing provider, which otherwise leaves the theme silently stuck on light.
+    if (__DEV__ && !warnedMissingProvider) {
+      warnedMissingProvider = true;
+      console.warn(
+        '[apexrn] useTheme() was called outside <ApexRNProvider>. Falling back to the light theme; wrap your app root in <ApexRNProvider>.',
+      );
+    }
     return {
       mode: 'light',
       colorScheme: 'light',

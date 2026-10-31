@@ -1,0 +1,4 @@
+{
+  "name": "dep",
+  "devDependencies": { "react-native-svg": "^15.0.0" }
+}

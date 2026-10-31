@@ -91,3 +91,6 @@ registry/public/
 # ==========================
 .next/
 out/
+
+# Subagent-driven-development scratch (briefs, reports, review packages)
+.superpowers/

@@ -27,7 +27,10 @@ apexrn/
 ├── packages/ui/            # @apexrn/ui — SOURCE ONLY (components/, lib/, index.ts)
 ├── packages/cli/           # `apexrn` CLI (init/add/diff/list), zero deps, node --test
 ├── registry/               # build.mjs + meta.json -> registry/public (generated, gitignored)
-├── demo/                   # Expo app: ALL dependencies live here; hosts the Component Lab
+├── demo/                   # Expo app: ALL dependencies live here; currently a screen router (Component Lab not built yet)
+├── preview/                # Expo web runtime embedded as an iframe by the website
+├── website/                # Next.js site
+├── docs/ship-plan/         # ship ledger
 └── .claude/skills/         # vendored design skills (offline): frontend-design, ui-ux-pro-max
 ```
 
@@ -38,11 +41,11 @@ Read `apexrn-modify.md` before doing library work. It is the source of truth for
 1. **`packages/ui` is source code only.** No `node_modules`, no lockfile, never run `npm install` there. All dependencies are installed in `demo/`. A second install creates duplicate copies of react/reanimated/svg → "Invalid hook call", duplicate native view registration, dead themes. `cd demo && npm run doctor` must stay green.
 2. **Do not add `"@apexrn/ui": "file:../packages/ui"` to any package.json.** That link is what made npm install peer deps inside `packages/ui`.
 3. **Metro/TS/Babel wiring is deliberate — don't "clean it up":**
-   - Aliases (`@apexrn/ui`, transitional `@ui/*`) are in `demo/metro.config.js` via `resolveRequest` (`extraNodeModules` can't map scoped subpaths).
+   - The `@apexrn/ui` alias is in `demo/metro.config.js` via `resolveRequest` (`extraNodeModules` can't map scoped subpaths).
    - `demo/tsconfig.json` has a `"*"` path mapping so TS can resolve deps for files in `packages/ui`; `@types/*` must come **first**.
    - `demo/app.json` has `experiments.tsconfigPaths: false`, otherwise Expo feeds that `"*"` mapping to Metro and `react` resolves to `@types/react`.
    - `babel.config.js` is preset-only; `babel-preset-expo` already adds the worklets plugin (don't list it again).
-4. **Import the library only through `@apexrn/ui`** in new demo code. `@ui/*` deep imports exist only for old screens and disappear as they are rebuilt.
+4. **Import the library only through `@apexrn/ui`** in demo code.
 5. **One component per loop.** Never start the next component until the current one is VERIFIED (plan §5). If a primitive is wrong, reopen it and re-verify its dependents.
 6. **Web passing ≠ device passing.** Reanimated 4 + New Architecture errors often appear only on Android/iOS. Test gestures, overlays, keyboard and back-button on device.
 7. Do not change `package.json` dependency versions casually; use `npx expo install <pkg>` to stay aligned with the Expo SDK (currently 57).
@@ -100,7 +103,7 @@ For each component, in dependency order (primitives → atoms → inputs → mot
 1. **Spec** — props, states, a11y contract.
 2. **Design pass** — the two skills (above).
 3. **Rewrite** the component (old version is reference only).
-4. **Specimen** — a Component Lab page in `demo/` importing from `@apexrn/ui`: variants, sizes, states matrix, light/dark split, playground, stress cases, event log; wrapped in an ErrorBoundary and lazy-loaded.
+4. **Specimen** — a Component Lab page in `demo/` (the Lab is not built yet; the demo is currently a screen router) importing from `@apexrn/ui`: variants, sizes, states matrix, light/dark split, playground, stress cases, event log; wrapped in an ErrorBoundary and lazy-loaded.
 5. **Run** on web, then on device. Fix.
 6. **Lock** — Definition of Done checklist, smoke test, one commit `feat(ui): <component> — rewrite + lab specimen`, update the tracker.
 
@@ -109,13 +112,14 @@ For each component, in dependency order (primitives → atoms → inputs → mot
 ```bash
 npm run doctor                     # env sanity: no duplicate dependency trees
 npm run typecheck                  # tsc — covers packages/ui AND the demo
+npm test                           # jest-expo + RNTL smoke tests (demo/__tests__)
 npx expo export --platform web     # bundle check
 npx expo start --web               # fast iteration
 npx expo start                     # device (Expo Go / dev build)
 npx expo install --check           # SDK version alignment
 ```
 
-Before declaring a component done: `doctor` + `typecheck` + `expo export` green **and** it has been exercised in the Lab on a device. Say plainly what was and wasn't verified; don't claim device behavior from a web run.
+Before declaring a component done: `doctor` + `typecheck` + `test` + `expo export` green **and** it has been exercised in the Lab on a device. Say plainly what was and wasn't verified; don't claim device behavior from a web run.
 
 ## When something renders wrong
 

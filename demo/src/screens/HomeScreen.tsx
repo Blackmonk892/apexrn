@@ -81,29 +81,31 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
 
   return (
     <Layout title="APEXRN">
-      <Text style={[styles.lede, { color: colors.foreground }]}>
-        Every screen renders the real component from the library barrel, with its variants and states.
-      </Text>
+      <View testID="home-screen">
+        <Text style={[styles.lede, { color: colors.foreground }]}>
+          Every screen renders the real component from the library barrel, with its variants and states.
+        </Text>
 
-      {GROUPS.map((group) => (
-        <Section key={group.title} title={group.title}>
-          <View style={styles.list}>
-            {group.items.map((item) => (
-              <BrutalSurface
-                key={item.id}
-                offset={4}
-                onPress={() => onNavigate(item.id)}
-                accessibilityRole="button"
-                accessibilityLabel={`${item.name} demo`}
-                surfaceStyle={styles.row}
-              >
-                <Text style={[styles.name, { color: colors.foreground }]}>{item.name}</Text>
-                <Text style={[styles.arrow, { color: colors.foreground }]}>→</Text>
-              </BrutalSurface>
-            ))}
-          </View>
-        </Section>
-      ))}
+        {GROUPS.map((group) => (
+          <Section key={group.title} title={group.title}>
+            <View style={styles.list}>
+              {group.items.map((item) => (
+                <BrutalSurface
+                  key={item.id}
+                  offset={4}
+                  onPress={() => onNavigate(item.id)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${item.name} demo`}
+                  surfaceStyle={styles.row}
+                >
+                  <Text style={[styles.name, { color: colors.foreground }]}>{item.name}</Text>
+                  <Text style={[styles.arrow, { color: colors.foreground }]}>→</Text>
+                </BrutalSurface>
+              ))}
+            </View>
+          </Section>
+        ))}
+      </View>
     </Layout>
   );
 }

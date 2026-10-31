@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { borderWidths, touchTarget, useTheme } from '@apexrn/ui';
 
@@ -14,7 +14,9 @@ interface LayoutProps {
 /** Demo chrome. Every colour comes from the library theme, so a broken theme looks broken here. */
 export default function Layout({ title, children, onBack, overlay }: LayoutProps) {
   const { colors, isDark, toggleTheme } = useTheme();
-  const isEmbed = typeof window !== 'undefined' && (window.location.search.includes('embed=1') || window.location.search.includes('frame=0'));
+  // Native aliases window to global but defines no location, so a typeof window check is not enough.
+  const search = Platform.OS === 'web' ? window.location?.search ?? '' : '';
+  const isEmbed = search.includes('embed=1') || search.includes('frame=0');
 
   if (isEmbed) {
     return (

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '@apexrn/ui';
 import Layout from '../components/Layout';
 import { PLAYGROUND_RENDERERS, type PlaygroundProps } from '../playground/registry';
@@ -18,6 +18,7 @@ export default function PlaygroundScreen({ componentId, onBack }: { componentId:
   }, [componentId]);
 
   useEffect(() => {
+    if (Platform.OS !== 'web') return;
     const handleMessage = (e: MessageEvent) => {
       if (!e.data || typeof e.data !== 'object') return;
       if (e.data.type === 'apexrn:playgroundProps' && e.data.component === componentId && e.data.props) {

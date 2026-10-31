@@ -34,6 +34,7 @@ export default function App() {
   const [message, setMessage] = useState<RenderMessage | null>(initialRenderMessage);
 
   useEffect(() => {
+    if (Platform.OS !== 'web') return;
     function onMessage(event: MessageEvent) {
       if (isRenderMessage(event.data)) {
         setMessage(event.data);

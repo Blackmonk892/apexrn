@@ -9,7 +9,11 @@
     "build": "next build",
     "postbuild": "node scripts/build-search-index.mjs",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "pretypecheck": "node scripts/generate-docs.mjs",
+    "typecheck": "tsc --noEmit",
+    "check:no-rn": "node scripts/check-no-rn.mjs",
+    "test:scripts": "node --test \"scripts/*.test.mjs\""
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.3.3",

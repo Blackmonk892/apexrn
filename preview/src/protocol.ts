@@ -2,6 +2,8 @@
 // preview runtime (iframe). Keep this the single source of truth for the
 // message shapes both sides use.
 
+import { Platform } from 'react-native';
+
 export type PreviewTheme = 'light' | 'dark' | 'system';
 
 /** parent -> preview: render (or re-render) a named @apexrn/ui export with props. */
@@ -41,7 +43,7 @@ export type PreviewToParentMessage = ReadyMessage | ResizeMessage | ErrorMessage
 const PARENT_ORIGIN = process.env.EXPO_PUBLIC_PARENT_ORIGIN || '*';
 
 export function postToParent(message: PreviewToParentMessage): void {
-  if (typeof window === 'undefined' || window.parent === window) return;
+  if (Platform.OS !== 'web' || typeof window === 'undefined' || !window.parent || window.parent === window) return;
   window.parent.postMessage(message, PARENT_ORIGIN);
 }
 
