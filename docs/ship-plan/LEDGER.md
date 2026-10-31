@@ -67,3 +67,19 @@ Parallel tasks and their files (recorded retroactively for A5/A6, which were dis
 - Ruling: values locked in rework/DESIGN.md §1 (B0-7, 2026-10-31) — owner sign-off pending — cost if wrong: one token edit per value.
 - Carried to Phase B (B0 final review): hard-coded shadow math in dialog, tabs, slider, switch, input-otp, dropdown-menu (SHADOW_OFFSET 4), drawer (SHADOW_WIDTH 6) must read `useTheme().elevation`; chip/slider/switch must pass `disabled` to BrutalSurface instead of switching elevation (layout shift); component-level disabled copies to remove; radio indicator redesign.
 - B0 emulator evidence: android-e2e run 41214777849 at 214450a — launch + specimen flows PASSED (API 34); four quadrant screenshots stitched in `docs/ship-plan/specimen/specimen-android-api34.png`. Debugging trail for the specimen flow (3 failed scroll strategies → deterministic swipes) is in the SDD progress log.
+
+### B0 sign-off changes (owner, 2026-11-01): "go" with six changes, as small commits on PR #2, merge only when every check is green
+
+| # | Change | Status | Commit | Verified | Not verified |
+|---|---|---|---|---|---|
+| B0-8 | Icons: round lens on search, round head on user; add `WarningIcon` + `InfoIcon` for status; re-shoot icon row | pending | | | |
+| B0-9 | raw dark `shadow` `#5A5750` → `#6E6A62` (3.51:1 on `#111111`, border is 16.6:1) + DESIGN §1 | pending | | | |
+| B0-10 | Status-signal rule (DESIGN §3) + test: raw status variants on Toast, Alert, Badge render an icon and a text label | pending | | | |
+| B0-11 | Sonnet re-review of icons (49c2428, implemented by Haiku) together with B0-8 | pending | | | |
+- Owner decision: raw focus ring double rule — keep.
+- Ruling: implementers are Sonnet from here on (owner, per the brief); 49c2428 (Haiku) gets a Sonnet re-review in B0-11 — cost if wrong: none.
+- Ruling: B0-8 → B0-9/B0-10 run serially (B0-10 consumes the new status icons; all touch `packages/ui`). The B0-11 reviewer is read-only and runs alongside B0-9/B0-10; its fixes, if any, land after B0-10 — cost if wrong: none, the reviewer writes no files.
+- Ruling: there is no `info` status role or variant in v0.1 (CLAUDE.md fixes status variants as `destructive | success | warning`); the DESIGN rule names `info` so it applies the day one is added, and the test enumerates each component's actual status variants. Alert's `default` variant already carries the info glyph and gets `InfoIcon` — cost if wrong: adding an `info` role later is one token row per palette plus one test row.
+- Ruling: Chip has no status variants yet (ORCHESTRATOR §2c adds them in Phase B), so the B0 test covers Toast, Alert and Badge; Chip joins the same test table in its Phase B loop (carry list) — cost if wrong: none, nothing to test today.
+- Ruling: status glyphs become `lib/icons` components (DESIGN §5: one icon family), replacing the text glyphs `✓ ! ✕ i` in Toast and Alert — the rule says "icon", and text glyphs scale with OS font size and fall back to system fonts — cost if wrong: small visual change in two components that Phase B rewrites anyway.
+- Carried to Phase B (owner, 2026-11-01): Button gets sentence-case text and `LoadingBlocks` instead of the spinner; Input's disabled state uses the dashed-border rule (BrutalSurface `disabled`), not a grey fill; all 10 "not wired" cells on the specimen board get wired; Chip's status variants join the status-signal test.
