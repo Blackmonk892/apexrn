@@ -166,7 +166,7 @@ function extractProps(slug, typeName) {
 // ---------------------------------------------------------------------------
 function parseComponentsMd() {
   const text = readFileSync(COMPONENTS_MD, "utf8");
-  const lines = text.split("\n");
+  const lines = text.split(/\r?\n/); // Windows checkouts convert to CRLF
   const sections = []; // { group, heading, code, note }
   let currentGroup = null;
   let currentHeading = null;
