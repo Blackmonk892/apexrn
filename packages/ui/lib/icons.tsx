@@ -1,16 +1,17 @@
 import type { ReactNode } from 'react';
 import Svg, { Path, Rect } from 'react-native-svg';
 
-// Square-capped, heavy-stroked glyphs so icons match the border weight of the
-// blocks that hold them. Decorative: the pressable that wraps an icon owns the
-// accessibility label, so these are hidden from assistive tech.
+// 24x24 glyphs with a 2px stroke, the same weight as the control border, so
+// icons and the blocks around them read as one line weight. Decorative: the
+// pressable that wraps an icon owns the accessibility label, so these are
+// hidden from assistive tech.
 export interface IconProps {
   size?: number;
   color: string;
   strokeWidth?: number;
 }
 
-function Icon({ size = 24, color, strokeWidth = 3, children }: IconProps & { children: ReactNode }) {
+function Icon({ size = 24, color, strokeWidth = 2, children }: IconProps & { children: ReactNode }) {
   return (
     <Svg
       width={size}
