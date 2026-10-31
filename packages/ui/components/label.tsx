@@ -1,60 +1,28 @@
-import React from 'react';
-import { StyleSheet, Text, TextProps } from 'react-native';
+import { spacing } from '../lib/colors';
+import { Text, type TextProps } from './text';
 
-import { spacing, typography } from '../lib/colors';
-import { useTheme } from '../lib/theme';
-import { cn } from '../lib/utils';
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-export interface LabelProps extends TextProps {
-  /**
-   * Visually mutes the label to indicate an inactive associated form control.
-   * @default false
-   */
+export interface LabelProps extends Omit<TextProps, 'variant' | 'tone'> {
+  /** Mutes the label while the control it names is unavailable. */
   disabled?: boolean;
-  children?: React.ReactNode;
+  /** Shows a `*` and announces "required" to screen readers. */
+  required?: boolean;
 }
 
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
-export function Label({
-  disabled = false,
-  style,
-  children,
-  ...props
-}: LabelProps) {
-  const { colors } = useTheme();
-
+export function Label({ disabled = false, required = false, accessibilityLabel, style, children, ...props }: LabelProps) {
+  // The visible `*` reads as "star" aloud, so the spoken label is built from the text instead.
+  const spoken = accessibilityLabel ?? (typeof children === 'string' ? children : undefined);
   return (
     <Text
-      style={cn(
-        styles.label,
-        // Size-dependent tokens are read at render time, not frozen at import.
-        { marginBottom: spacing.xs, fontSize: typography.sm },
-        { color: disabled ? colors.mutedForeground : colors.foreground },
-        style
-      )}
-      accessibilityRole="text"
-      maxFontSizeMultiplier={1.3}
+      variant="label"
+      tone={disabled ? 'muted' : 'default'}
+      accessibilityLabel={required && spoken ? `${spoken}, required` : accessibilityLabel}
+      style={[{ marginBottom: spacing.xs }, style]}
       {...props}
     >
       {children}
+      {required ? ' *' : null}
     </Text>
   );
 }
-
-// ---------------------------------------------------------------------------
-// Styles
-// ---------------------------------------------------------------------------
-const styles = StyleSheet.create({
-  label: {
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
-  },
-});
 
 export default Label;

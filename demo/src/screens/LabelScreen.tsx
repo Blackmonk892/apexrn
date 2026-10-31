@@ -9,19 +9,27 @@ export default function LabelScreen({ onBack }: { onBack: () => void }) {
 
   return (
     <Layout id="label" title="LABEL" onBack={onBack}>
-      <Section title="Default">
+      <Section title="Variants" note="A required label shows a * and is announced as required.">
         <Label>Email address</Label>
-        <Caption>Names a form control.</Caption>
+        <View testID="label-required">
+          <Label required>Email address</Label>
+        </View>
       </Section>
 
-      <Section title="Disabled" note="Mutes the label when the control it names is unavailable.">
+      <Section title="States" note="Disabled mutes the label while its control is unavailable.">
         <Label disabled>Username</Label>
+        <Label disabled required>Billing postcode</Label>
       </Section>
 
-      <Section title="With a control">
+      <Section title="In context">
         <View style={styles.field}>
-          <Label>Email address</Label>
-          <Input value={email} onChangeText={setEmail} placeholder="you@example.com" />
+          <Label required nativeID="label-email">Email address</Label>
+          <Input
+            value={email}
+            onChangeText={setEmail}
+            placeholder="you@example.com"
+            accessibilityLabelledBy="label-email"
+          />
         </View>
         <View style={styles.field}>
           <Label disabled>Username</Label>
@@ -31,7 +39,7 @@ export default function LabelScreen({ onBack }: { onBack: () => void }) {
 
       <Section title="Edge cases">
         <View style={styles.narrow}>
-          <Label>A long label that wraps onto a second line when space runs out</Label>
+          <Label required>Preferred contact method for delivery updates</Label>
         </View>
         <Caption>Wraps inside a 180pt container; text scales up to 1.3x.</Caption>
       </Section>

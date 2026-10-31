@@ -1,0 +1,12 @@
+appId: dev.apexrn.demo
+---
+- runFlow:
+    file: ../_open.yaml
+    env:
+      ID: label
+- assertVisible:
+    id: "label-required"
+- assertVisible: "(?i)email address [*].*"
+- assertNotVisible: "Render Error"
+- assertNotVisible: ".*TypeError.*"
+- takeScreenshot: label
