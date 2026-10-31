@@ -11,6 +11,10 @@ interface HomeScreenProps {
 // One entry per component demo, in dependency order (plan §5.3).
 const GROUPS: { title: string; items: { id: string; name: string }[] }[] = [
   {
+    title: 'Design system',
+    items: [{ id: 'specimen', name: 'Specimen' }],
+  },
+  {
     title: 'Atoms',
     items: [
       { id: 'button', name: 'Button' },
@@ -92,6 +96,7 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
               {group.items.map((item) => (
                 <BrutalSurface
                   key={item.id}
+                  testID={`home-${item.id}`}
                   elevation="card"
                   onPress={() => onNavigate(item.id)}
                   accessibilityRole="button"

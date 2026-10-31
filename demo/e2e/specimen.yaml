@@ -1,0 +1,35 @@
+appId: dev.apexrn.demo
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 60000
+# The Home row renders its name uppercased, so the row is matched by id rather than by text.
+- tapOn:
+    id: "home-specimen"
+- extendedWaitUntil:
+    visible:
+      id: "quadrant-neo-light"
+    timeout: 20000
+- assertNotVisible: "Render Error"
+- takeScreenshot: specimen-1
+- scrollUntilVisible:
+    element:
+      id: "quadrant-neo-dark"
+    direction: DOWN
+    timeout: 30000
+- takeScreenshot: specimen-2
+- scrollUntilVisible:
+    element:
+      id: "quadrant-raw-light"
+    direction: DOWN
+    timeout: 30000
+- takeScreenshot: specimen-3
+- scrollUntilVisible:
+    element:
+      id: "quadrant-raw-dark"
+    direction: DOWN
+    timeout: 30000
+- takeScreenshot: specimen-4
