@@ -46,7 +46,7 @@ Parallel tasks and their files (recorded retroactively for A5/A6, which were dis
 - Parallel: none during the final-review fix wave (one agent: CLAUDE.md, both workflows, `demo/__tests__/{harness,theme-provider-warning,native-globals}.test.tsx`, `demo/jest.config.js`); the controller edits only this ledger.
 - CI flake (run 41203078985): website `next build` failed resolving `next/font/google` (Google Fonts fetch at build time); rerun of the failed job green, no code change. Ruling: the Phase D site uses system fonts only (matches ORCHESTRATOR §1.4), which removes the build's network dependency — cost if wrong: site loses Space Grotesk/Inter/JetBrains Mono (being rebuilt anyway).
 
-## Phase B0 — design system first (PR: pending) — serial, owner sign-off at end
+## Phase B0 — design system first (PR: https://github.com/Blackmonk892/apexrn/pull/2, awaiting owner sign-off) — serial, owner sign-off at end
 
 | # | Task | Status | Commit | Verified | Not verified |
 |---|---|---|---|---|---|
