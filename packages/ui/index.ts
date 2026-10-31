@@ -1,6 +1,6 @@
 // Theme & Provider
 export { ApexRNProvider, useTheme, type ThemeMode, type ThemeContextType } from './lib/theme';
-export { colors, spacing, typography, borderWidths, shadowOffset, touchTarget, controlHeight, opacity, motion, type ColorScheme } from './lib/colors';
+export { presets, spacing, typography, borderWidths, focusRing, touchTarget, controlHeight, opacity, motion, type ColorScheme, type PresetName, type Preset, type Elevation } from './lib/colors';
 export { scale, verticalScale, moderateScale, normalize, screenWidth, screenHeight } from './lib/metrics';
 export { usePressPhysics, type UsePressPhysicsOptions, type PressPhysicsConfig } from './lib/use-press-physics';
 export { cn } from './lib/utils';

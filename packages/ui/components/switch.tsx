@@ -49,7 +49,7 @@ const THUMB_SIZE = 24;
 // sits inside its width, so both come off the travel distance:
 // 56 - 2*2 (border) - 2*2 (padding) - (24 + 2) = 22.
 const THUMB_TRAVEL_DISTANCE =
-  TRACK_WIDTH - borderWidths.standard * 2 - TRACK_PADDING * 2 - (THUMB_SIZE + SHADOW_OFFSET);
+  TRACK_WIDTH - borderWidths.control * 2 - TRACK_PADDING * 2 - (THUMB_SIZE + SHADOW_OFFSET);
 
 // ---------------------------------------------------------------------------
 // Component
@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
   track: {
     width: TRACK_WIDTH,
     height: TRACK_HEIGHT,
-    borderWidth: borderWidths.standard,
+    borderWidth: borderWidths.control,
     borderRadius: 0,
     justifyContent: 'center',
     paddingHorizontal: TRACK_PADDING,

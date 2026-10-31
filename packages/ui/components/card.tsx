@@ -183,10 +183,10 @@ export function Card({
 
 const styles = StyleSheet.create({
   header: {
-    borderBottomWidth: borderWidths.standard,
+    borderBottomWidth: borderWidths.control,
   },
   footer: {
-    borderTopWidth: borderWidths.standard,
+    borderTopWidth: borderWidths.control,
   },
 });
 

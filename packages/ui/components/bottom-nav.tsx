@@ -231,7 +231,7 @@ export function BottomNavItem({
 const styles = StyleSheet.create({
   root: {
     alignSelf: 'stretch',
-    borderTopWidth: borderWidths.extraHeavy,
+    borderTopWidth: borderWidths.container,
   },
   block: {
     position: 'absolute',
@@ -266,7 +266,7 @@ const styles = StyleSheet.create({
     height: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: borderWidths.standard,
+    borderWidth: borderWidths.control,
   },
   badgeText: {
     fontWeight: '900',

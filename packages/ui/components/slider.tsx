@@ -74,7 +74,7 @@ const SHADOW_OFFSET = 2;
 const THUMB_WIDTH = 16;
 const THUMB_HEIGHT = 32;
 const ROW_HEIGHT = Math.max(touchTarget, THUMB_HEIGHT + SHADOW_OFFSET);
-const TRACK_HEIGHT = borderWidths.heavy;
+const TRACK_HEIGHT = borderWidths.container;
 
 // ---------------------------------------------------------------------------
 // Component
@@ -268,7 +268,7 @@ export function Slider({
             pressable={false}
             hasShadow={!disabled}
             offset={SHADOW_OFFSET}
-            borderWidth="standard"
+            borderWidth="control"
             backgroundColor={disabled ? colors.muted : colors.background}
             borderColor={disabled ? colors.mutedForeground : colors.border}
             surfaceStyle={styles.thumbSurface}

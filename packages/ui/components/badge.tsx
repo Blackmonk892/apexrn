@@ -95,7 +95,7 @@ export function Badge({
         activeVariant.surface,
       )}
       offset={SHADOW_OFFSET_SUBTLE}
-      borderWidth="standard"
+      borderWidth="control"
       pressable={false}
       hasShadow={withShadow}
       accessible={typeof content === 'string'}

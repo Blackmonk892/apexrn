@@ -130,7 +130,7 @@ const Input = forwardRef<TextInput, InputProps>(({
         hasShadow
         shadowStyle={animatedShadowStyle}
         offset={SHADOW_OFFSET}
-        borderWidth="heavy"
+        borderWidth="container"
         backgroundColor={disabled ? colors.muted : colors.background}
         borderColor={disabled ? colors.mutedForeground : accent}
         shadowColor={error && !disabled ? colors.destructive : undefined}

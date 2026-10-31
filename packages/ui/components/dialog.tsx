@@ -225,7 +225,7 @@ export function DialogContent({
             style={styles.dialogWrapper}
             surfaceStyle={[styles.surface, { padding: spacing.xl, gap: spacing.md, backgroundColor: colors.background }]}
             offset={DIALOG_SHADOW_OFFSET}
-            borderWidth="extraHeavy"
+            borderWidth="container"
             pressable={false}
           >
             {children}

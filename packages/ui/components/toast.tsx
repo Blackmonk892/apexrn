@@ -169,7 +169,7 @@ export function Toast({
     >
       <BrutalSurface
         offset={SHADOW_OFFSET}
-        borderWidth="heavy"
+        borderWidth="container"
         onPress={hideToast}
         accessibilityRole="button"
         accessibilityLabel={label}

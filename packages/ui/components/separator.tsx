@@ -45,11 +45,11 @@ export function Separator({
 const styles = StyleSheet.create({
   horizontal: {
     alignSelf: 'stretch',
-    height: borderWidths.standard,
+    height: borderWidths.control,
   },
   vertical: {
     alignSelf: 'stretch',
-    width: borderWidths.standard,
+    width: borderWidths.control,
   },
 });
 

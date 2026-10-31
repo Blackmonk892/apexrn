@@ -78,7 +78,7 @@ export function Alert({
         { padding: spacing.md, backgroundColor: bg, borderColor: colors.border },
       ]}
       offset={SHADOW_OFFSET}
-      borderWidth="heavy"
+      borderWidth="container"
       pressable={false}
       accessibilityRole="alert"
       accessibilityLabel={announcement}

@@ -1,6 +1,6 @@
 import { PressableProps, StyleProp, StyleSheet, Text, ViewStyle } from 'react-native';
 
-import { shadowOffset, spacing, typography } from '../lib/colors';
+import { spacing, typography } from '../lib/colors';
 import { useTheme } from '../lib/theme';
 import BrutalSurface from './brutal-surface';
 
@@ -32,7 +32,6 @@ export interface FABProps extends Omit<PressableProps, 'style' | 'disabled'> {
 // ---------------------------------------------------------------------------
 // Design tokens
 // ---------------------------------------------------------------------------
-const SHADOW_OFFSET_ELEVATED = shadowOffset.elevated.width;
 const FAB_SIZE = 56;
 
 // ---------------------------------------------------------------------------
@@ -46,7 +45,7 @@ export function FAB({
   style,
   ...props
 }: FABProps) {
-  const { colors } = useTheme();
+  const { colors, elevation } = useTheme();
   const isExtended = label !== undefined && label.length > 0;
 
   return (
@@ -64,7 +63,7 @@ export function FAB({
           borderColor: disabled ? colors.mutedForeground : colors.border,
         },
       ]}
-      offset={SHADOW_OFFSET_ELEVATED}
+      offset={elevation.overlay}
       disabled={disabled}
       hasShadow={!disabled}
       accessibilityRole="button"

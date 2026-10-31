@@ -159,7 +159,7 @@ export function RadioGroupItem({
       style={style}
       surfaceStyle={styles.surface}
       offset={SHADOW_OFFSET}
-      borderWidth="heavy"
+      borderWidth="container"
       borderRadius={RADIO_RADIUS}
       backgroundColor={isDisabled ? colors.muted : colors.background}
       borderColor={isDisabled ? colors.mutedForeground : colors.border}

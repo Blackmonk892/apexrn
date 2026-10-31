@@ -123,7 +123,7 @@ export function Chip({
         style={[styles.root, style]}
         pressable={false}
         offset={SHADOW_OFFSET}
-        borderWidth="standard"
+        borderWidth="control"
         hasShadow={!disabled}
         backgroundColor={bg}
         borderColor={border}
@@ -161,7 +161,7 @@ export function Chip({
       style={[styles.root, style]}
       surfaceStyle={surfaceStyle}
       offset={SHADOW_OFFSET}
-      borderWidth="standard"
+      borderWidth="control"
       hasShadow={!disabled}
       disabled={disabled}
       onPress={handlePress}
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     alignItems: 'center',
     justifyContent: 'center',
-    borderLeftWidth: borderWidths.standard,
+    borderLeftWidth: borderWidths.control,
   },
   label: {
     flexShrink: 1,

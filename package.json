@@ -6,6 +6,7 @@
   "scripts": {
     "registry:build": "node registry/build.mjs",
     "cli:test": "node registry/build.mjs && npm test --prefix packages/cli",
-    "tokens:check": "node registry/check-contrast.mjs"
+    "tokens:check": "node registry/check-contrast.mjs",
+    "tokens:test": "node --test registry/*.test.mjs"
   }
 }

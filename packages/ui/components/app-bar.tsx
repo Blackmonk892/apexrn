@@ -166,7 +166,7 @@ export function AppBarAction({ icon, label, onPress, active = false, disabled = 
   return (
     <BrutalSurface
       offset={ACTION_SHADOW_OFFSET}
-      borderWidth="standard"
+      borderWidth="control"
       hasShadow={!disabled}
       disabled={disabled}
       onPress={onPress}
@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
   // content without a blurred shadow.
   root: {
     alignSelf: 'stretch',
-    borderBottomWidth: borderWidths.extraHeavy,
+    borderBottomWidth: borderWidths.container,
   },
   row: {
     flexDirection: 'row',

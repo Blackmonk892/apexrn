@@ -34,7 +34,7 @@ export function Caption({ children }: { children: string }) {
 
 const styles = StyleSheet.create({
   section: { marginTop: 28, gap: 12 },
-  head: { borderBottomWidth: borderWidths.standard, paddingBottom: 6 },
+  head: { borderBottomWidth: borderWidths.control, paddingBottom: 6 },
   title: { fontSize: 14, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase' },
   note: { fontSize: 13, lineHeight: 18 },
   caption: { fontSize: 12, fontWeight: '700' },

@@ -231,7 +231,7 @@ export function DatePickerContent({ style, ...props }: ViewProps) {
             styles.cellSurface,
             { height: touchTarget },
             pressed && { backgroundColor: colors.accent, borderColor: colors.border },
-            isSelected && { backgroundColor: colors.primary, borderColor: colors.border, borderWidth: borderWidths.standard },
+            isSelected && { backgroundColor: colors.primary, borderColor: colors.border, borderWidth: borderWidths.control },
           ]}
           accessibilityRole="button"
           accessibilityLabel={date.toLocaleDateString(undefined, {
@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
   weekRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    borderBottomWidth: borderWidths.standard,
+    borderBottomWidth: borderWidths.control,
   },
   weekText: {
     fontWeight: '800',

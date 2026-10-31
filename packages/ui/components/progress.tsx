@@ -75,7 +75,7 @@ export function Progress({
       style={[styles.container, style]}
       surfaceStyle={[styles.track, { backgroundColor: colors.background }]}
       offset={SHADOW_OFFSET}
-      borderWidth="heavy"
+      borderWidth="container"
       pressable={false}
       hasShadow={withShadow}
       accessibilityRole="progressbar"

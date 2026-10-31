@@ -259,7 +259,7 @@ export function DropdownMenuContent({ children, style, ...props }: ViewProps) {
           <BrutalSurface
             pressable={false}
             offset={SHADOW_OFFSET}
-            borderWidth="heavy"
+            borderWidth="container"
             backgroundColor={colors.background}
             surfaceStyle={[styles.surface, { maxHeight }]}
           >
@@ -267,7 +267,7 @@ export function DropdownMenuContent({ children, style, ...props }: ViewProps) {
               {/* Every item draws a bottom divider; the negative margin lets
                   the last one slide under the surface border instead of
                   doubling it. */}
-              <View style={{ marginBottom: -borderWidths.standard }}>{children}</View>
+              <View style={{ marginBottom: -borderWidths.control }}>{children}</View>
             </ScrollView>
           </BrutalSurface>
         </Animated.View>

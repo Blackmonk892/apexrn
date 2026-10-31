@@ -22,7 +22,7 @@ export interface BrutalSurfaceProps
   children?: ReactNode;
   /** Shadow offset in px, e.g. 2/4/6/8. @default 4 */
   offset?: number;
-  /** Border thickness preset. @default 'heavy' */
+  /** Border thickness preset. @default 'container' */
   borderWidth?: BorderWidthKey;
   /** Wires up press physics + haptics. Set false for non-interactive surfaces. @default true */
   pressable?: boolean;
@@ -52,7 +52,7 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 export function BrutalSurface({
   children,
   offset = 4,
-  borderWidth = 'heavy',
+  borderWidth = 'container',
   pressable = true,
   hasShadow = true,
   disabled = false,

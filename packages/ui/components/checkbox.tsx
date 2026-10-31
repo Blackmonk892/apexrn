@@ -118,7 +118,7 @@ export function Checkbox({
         !disabled && animatedFillStyle
       ]}
       offset={SHADOW_OFFSET}
-      borderWidth="heavy"
+      borderWidth="container"
       hasShadow={!disabled}
       disabled={disabled}
       hitSlop={hitSlop}

@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'stretch',
-    borderBottomWidth: borderWidths.standard,
+    borderBottomWidth: borderWidths.control,
     borderRadius: 0,
   },
   contentContainer: {
