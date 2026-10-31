@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Pressable, type PressableProps, StyleSheet, View, type ViewStyle } from 'react-native';
+import { Pressable, type PressableProps, type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native';
 
 import { opacity, spacing } from '../lib/colors';
 import { useTheme } from '../lib/theme';
@@ -18,7 +18,7 @@ export interface ListItemProps extends Omit<PressableProps, 'style' | 'children'
   trailing?: ReactNode;
   /** Without `onPress` the row is plain content: no role, no press feedback. */
   onPress?: PressableProps['onPress'];
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
 }
 
 // ---------------------------------------------------------------------------
