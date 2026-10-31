@@ -22,14 +22,20 @@ export interface AlertProps extends ViewProps {
   children?: ReactNode;
 }
 
+const hiddenFromA11y = {
+  accessible: false,
+  importantForAccessibility: 'no-hide-descendants',
+  accessibilityElementsHidden: true,
+} as const;
+
 const GLYPH_SIZE = 22;
 const ICON_SIZE = 16;
 
 const STATUS = {
-  default: { Icon: InfoIcon, name: 'info', spoken: '' },
-  destructive: { Icon: CloseIcon, name: 'destructive', spoken: 'Error. ' },
-  warning: { Icon: WarningIcon, name: 'warning', spoken: 'Warning. ' },
-  success: { Icon: CheckIcon, name: 'success', spoken: 'Success. ' },
+  default: { Icon: InfoIcon, name: 'info', spoken: null },
+  destructive: { Icon: CloseIcon, name: 'destructive', spoken: 'Error' },
+  warning: { Icon: WarningIcon, name: 'warning', spoken: 'Warning' },
+  success: { Icon: CheckIcon, name: 'success', spoken: 'Success' },
 } as const;
 
 type Tone = { fill: keyof ColorScheme; ink: keyof ColorScheme };
@@ -50,7 +56,6 @@ const look = variants({
 
 interface AlertContextValue {
   ink: string;
-  spoken: string;
 }
 
 const AlertContext = createContext<AlertContextValue | null>(null);
@@ -79,7 +84,7 @@ export function Alert({
   const announces = variant === 'destructive' || variant === 'warning';
 
   return (
-    <AlertContext.Provider value={{ ink, spoken: status.spoken }}>
+    <AlertContext.Provider value={{ ink }}>
       <BrutalSurface
         style={[styles.container, style]}
         surfaceStyle={[styles.surface, { padding: spacing.md }]}
@@ -87,19 +92,23 @@ export function Alert({
         elevation="flat"
         borderWidth="container"
         pressable={false}
-        // Only urgent variants interrupt; info and success are read in focus order.
+        // Only urgent variants interrupt. Assertive announcements are Android-only; iOS reads the alert in focus order.
         accessibilityRole={announces ? 'alert' : undefined}
         accessibilityLiveRegion={announces ? 'assertive' : undefined}
         {...props}
       >
         <View
           style={{ marginRight: spacing.sm }}
-          accessible={false}
-          importantForAccessibility="no-hide-descendants"
-          accessibilityElementsHidden
+          // A custom icon is decorative; the built-in one is the severity node and must stay reachable.
+          {...(icon ? hiddenFromA11y : null)}
         >
           {icon ?? (
-            <View testID={`status-icon-${status.name}`} style={[styles.glyph, { backgroundColor: ink }]}>
+            <View
+              testID={`status-icon-${status.name}`}
+              style={[styles.glyph, { backgroundColor: ink }]}
+              accessible={status.spoken != null}
+              accessibilityLabel={status.spoken ?? undefined}
+            >
               <status.Icon size={ICON_SIZE} color={fill} />
             </View>
           )}
@@ -116,19 +125,16 @@ export function Alert({
   );
 }
 
-export function AlertTitle({ children, style, accessibilityLabel, ...props }: TextProps) {
-  const { ink, spoken } = useAlert('AlertTitle');
+export function AlertTitle({ style, ...props }: TextProps) {
+  const { ink } = useAlert('AlertTitle');
   return (
     <Text
       variant="label"
       tone="inherit"
       numberOfLines={2}
-      accessibilityLabel={accessibilityLabel ?? (typeof children === 'string' ? `${spoken}${children}` : undefined)}
       style={[{ color: ink }, style]}
       {...props}
-    >
-      {children}
-    </Text>
+    />
   );
 }
 

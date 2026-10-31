@@ -40,27 +40,39 @@ describe('Alert', () => {
     }
   });
 
-  it('keeps the spoken severity prefix on the title', async () => {
-    await renderWithTheme(<Alert variant="destructive" title="Payment failed" description="Card declined." />);
-    expect(screen.getByLabelText('Error. Payment failed', hidden)).toBeTruthy();
+  it('exposes the severity word on the status icon', async () => {
+    const words = { destructive: 'Error', warning: 'Warning', success: 'Success' } as const;
+    for (const variant of Object.keys(words) as (keyof typeof words)[]) {
+      await renderWithTheme(
+        <Alert variant={variant}>
+          <AlertTitle>Payment failed</AlertTitle>
+        </Alert>,
+      );
+      const icon = screen.getByLabelText(words[variant]);
+      expect(icon.props.accessible).toBe(true);
+      expect(icon.props.testID).toBe(`status-icon-${variant}`);
+    }
   });
 
-  it('adds no prefix for the default variant', async () => {
-    await renderWithTheme(
-      <Alert>
-        <AlertTitle>Heads up</AlertTitle>
-      </Alert>,
-    );
-    expect(screen.getByText('Heads up', hidden).props.accessibilityLabel).toBe('Heads up');
+  it('reads a string title as written', async () => {
+    await renderWithTheme(<Alert variant="destructive" title="Payment failed" />);
+    expect(screen.getByText('Payment failed').props.accessibilityLabel).toBeUndefined();
   });
 
-  it('prefixes a compound title with its severity', async () => {
+  it('keeps a consumer title label', async () => {
     await renderWithTheme(
-      <Alert variant="success">
-        <AlertTitle>Profile updated</AlertTitle>
+      <Alert variant="destructive">
+        <AlertTitle accessibilityLabel="Card declined">Payment failed</AlertTitle>
       </Alert>,
     );
-    expect(screen.getByLabelText('Success. Profile updated', hidden)).toBeTruthy();
+    expect(screen.getByLabelText('Card declined')).toBeTruthy();
+  });
+
+  it('has no severity node for the default variant or a custom icon', async () => {
+    await renderWithTheme(<Alert title="Heads up" />);
+    expect(screen.queryByLabelText(/^(Error|Warning|Success)$/, hidden)).toBeNull();
+    await renderWithTheme(<Alert variant="destructive" title="Heads up" icon={<></>} />);
+    expect(screen.queryByLabelText(/^(Error|Warning|Success)$/, hidden)).toBeNull();
   });
 
   it('renders the action slot and keeps it pressable', async () => {
