@@ -1,99 +1,101 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { Button, useTheme } from '@apexrn/ui';
+import React, { useEffect, useRef, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { Button, CheckIcon, Text, useTheme } from '@apexrn/ui';
 import Layout from '../components/Layout';
 import Section, { Caption } from '../components/Section';
 
-const VARIANTS = ['default', 'primary', 'outline', 'destructive'] as const;
+const VARIANTS = ['primary', 'secondary', 'outline', 'ghost', 'destructive', 'success', 'warning'] as const;
+const LABELS = {
+  primary: 'Save changes',
+  secondary: 'Add to cart',
+  outline: 'Cancel',
+  ghost: 'Skip for now',
+  destructive: 'Delete account',
+  success: 'Mark as paid',
+  warning: 'Replace file',
+} as const;
 const SIZES = ['sm', 'md', 'lg'] as const;
-
-const Dot = () => {
-  const { colors } = useTheme();
-  return <View style={[styles.dot, { backgroundColor: colors.accent, borderColor: colors.border }]} />;
-};
 
 export default function ButtonScreen({ onBack }: { onBack: () => void }) {
   const { colors } = useTheme();
   const [pressed, setPressed] = useState('none');
   const [saving, setSaving] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  useEffect(() => () => clearTimeout(timer.current), []);
 
   const save = () => {
     setSaving(true);
-    setTimeout(() => setSaving(false), 1500);
+    timer.current = setTimeout(() => setSaving(false), 1500);
   };
 
   return (
     <Layout id="button" title="BUTTON" onBack={onBack}>
-      <Text style={[styles.lede, { color: colors.foreground }]}>
-        Press to see the block sink into its shadow. Every cell below is the real component.
-      </Text>
+      <Text>Press a button to feel it sink into its shadow. Every cell below is the real component.</Text>
 
-      <Section title="Variants">
+      <Section title="Variants" note="Destructive, success and warning carry an icon as well as colour.">
         <View style={styles.row}>
           {VARIANTS.map((v) => (
-            <View key={v} testID={`button-${v}`}>
-              <Button variant={v} onPress={() => setPressed(v)}>{v}</Button>
-            </View>
+            <Button key={v} testID={`button-${v}`} variant={v} onPress={() => setPressed(v)}>
+              {LABELS[v]}
+            </Button>
           ))}
         </View>
         <Caption>{`Pressed: ${pressed}`}</Caption>
       </Section>
 
-      <Section title="Sizes" note="Heights 40 / 48 / 56. Small buttons extend their hit area to the platform touch target.">
+      <Section title="Sizes" note="Heights 40, 48 and 56. Small buttons extend their hit area to the platform touch target.">
         <View style={[styles.row, styles.rowCenter]}>
-          {SIZES.map((sz) => (
-            <Button key={sz} title={sz} size={sz} variant="primary" />
+          {SIZES.map((size) => (
+            <Button key={size} size={size}>
+              {`Size ${size}`}
+            </Button>
           ))}
         </View>
       </Section>
 
-      <Section title="States" note="Each row is a variant: default, disabled, loading.">
+      <Section title="States" note="Idle, disabled and loading for every variant. Loading keeps the width and the live look.">
         {VARIANTS.map((v) => (
           <View key={v} style={styles.row}>
-            <Button title={v} variant={v} />
-            <Button title="Disabled" variant={v} disabled />
-            <Button title="Loading" variant={v} loading />
+            <Button variant={v}>{LABELS[v]}</Button>
+            <Button variant={v} disabled>{LABELS[v]}</Button>
+            <Button variant={v} loading>{LABELS[v]}</Button>
           </View>
         ))}
-        <Caption>Disabled: muted fill, dashed border, no shadow. Loading: keeps colour, drops the shadow, keeps its width.</Caption>
       </Section>
 
-      <Section title="Icons">
+      <Section title="In context">
         <View style={styles.row}>
-          <Button title="Left" variant="primary" icon={<Dot />} />
-          <Button title="Right" icon={<Dot />} iconPosition="right" />
-          <Button title="Disabled" icon={<Dot />} disabled />
+          <Button variant="primary" loading={saving} onPress={save}>Save changes</Button>
+          <Button variant="outline" disabled={saving}>Discard</Button>
+          <Button variant="ghost" icon={<CheckIcon size={20} color={colors.foreground} />} iconPosition="right">Review</Button>
         </View>
-      </Section>
-
-      <Section title="Interactive">
-        <View style={styles.row}>
-          <Button title="Save changes" variant="primary" loading={saving} onPress={save} />
-        </View>
-        <Caption>Loading blocks further presses without a layout jump.</Caption>
+        <Caption>Saving swaps the label for blocks without a layout jump, and Discard locks until it finishes.</Caption>
       </Section>
 
       <Section title="Edge cases">
         <View style={styles.narrow}>
-          <Button
-            title="A very long label that must not overflow its container"
-            variant="primary"
-            style={styles.stretch}
-          />
+          <Button style={styles.stretch}>Export every invoice from the last fiscal year</Button>
         </View>
-        <Caption>Long label in a 200pt container: truncates to one line.</Caption>
-        <Button title="Stretch" variant="destructive" style={styles.stretch} />
-        <Caption>Full width via the style prop (alignSelf: stretch).</Caption>
+        <Caption>A long label in a 200 wide container truncates to one line.</Caption>
+        <View style={styles.narrow320}>
+          <Button variant="destructive" style={styles.stretch}>Delete all 1,204 files</Button>
+        </View>
+        <Caption>Full width at 320 through the style prop.</Caption>
+        <View style={styles.row}>
+          <Button icon={<CheckIcon size={20} color={colors.primaryForeground} />} accessibilityLabel="Confirm" />
+          <Button variant="outline" icon={<CheckIcon size={20} color={colors.foreground} />} accessibilityLabel="Confirm" size="sm" />
+        </View>
+        <Caption>Icon only, labelled for screen readers.</Caption>
       </Section>
     </Layout>
   );
 }
 
 const styles = StyleSheet.create({
-  lede: { fontSize: 15, lineHeight: 21, fontWeight: '600' },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 14, paddingBottom: 4 },
   rowCenter: { alignItems: 'center' },
   narrow: { width: 200 },
+  narrow320: { width: 320, maxWidth: '100%' },
   stretch: { alignSelf: 'stretch' },
-  dot: { width: 12, height: 12, borderWidth: 2 },
 });
