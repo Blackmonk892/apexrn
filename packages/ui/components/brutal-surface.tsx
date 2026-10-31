@@ -79,6 +79,7 @@ export function BrutalSurface({
   const bw = borderWidths[borderWidth];
   const ringInset = focusRing.offset + focusRing.width;
   const edge = borderColor ?? theme.colors.border;
+  const slab = shadowColor ?? theme.colors.shadow;
 
   // Focus can't survive the surface going disabled, and onBlur won't fire for it.
   useEffect(() => {
@@ -122,8 +123,9 @@ export function BrutalSurface({
               left: depth,
               right: -depth,
               bottom: -depth,
-              backgroundColor: shadowColor ?? theme.colors.shadow,
-              borderColor: edge,
+              backgroundColor: slab,
+              // Same colour as the fill: a border-coloured outline here reads as a second, glowing edge in dark mode.
+              borderColor: slab,
               borderWidth: bw,
             },
             shadowStyle,

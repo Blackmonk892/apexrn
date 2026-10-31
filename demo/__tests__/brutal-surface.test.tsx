@@ -25,6 +25,13 @@ describe('BrutalSurface', () => {
     expect(screen.getByTestId('brutal-surface-shadow')).toHaveStyle({ top: 2, left: 2 });
   });
 
+  it('draws the shadow as one solid slab, its border the shadow colour', async () => {
+    await renderWithTheme(<BrutalSurface><Text>x</Text></BrutalSurface>, { mode: 'dark' });
+    const style = StyleSheet.flatten(screen.getByTestId('brutal-surface-shadow').props.style);
+    expect(style.borderColor).toBe(presets.neo.dark.shadow);
+    expect(style.backgroundColor).toBe(presets.neo.dark.shadow);
+  });
+
   it('renders no shadow node when flat', async () => {
     await renderWithTheme(<BrutalSurface elevation="flat"><Text>x</Text></BrutalSurface>);
     expect(screen.queryByTestId('brutal-surface-shadow')).toBeNull();

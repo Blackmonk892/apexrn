@@ -92,7 +92,7 @@ const neoDark: ColorScheme = {
   border: '#FFFFFF',
   input: '#FFFFFF',
   ring: '#8C9EFF',
-  shadow: '#4A4A4A',
+  shadow: '#5A5A5A',
   scrim: '#000000',
 };
 
