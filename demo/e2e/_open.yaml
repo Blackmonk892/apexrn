@@ -3,6 +3,12 @@ appId: dev.apexrn.demo
 # Included by component flows with `env: { ID: <screen id> }`. The leading underscore keeps it
 # out of config.yaml's flow globs: it is a helper, not a test.
 - launchApp
+# A link sent while JS is still booting is delivered to the activity before the Linking
+# listener exists and is lost, so wait for Home first.
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 60000
 - openLink: apexrn-demo://c/${ID}
 - extendedWaitUntil:
     visible:
