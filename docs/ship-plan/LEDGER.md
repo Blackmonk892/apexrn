@@ -115,3 +115,9 @@ Parallel tasks and their files (recorded retroactively for A5/A6, which were dis
   - B-11 ListItem: `packages/ui/components/list-item.tsx`, `demo/src/screens/ListItemScreen.tsx`, `demo/__tests__/list-item.test.tsx`, `demo/e2e/components/listitem.yaml`
   - B-12 FAB: `packages/ui/components/floating-action-button.tsx`, `demo/src/screens/FABScreen.tsx`, `demo/__tests__/fab.test.tsx`, `demo/e2e/components/fab.yaml`
   - Barrel: Card's new parts and removed `CardText` need `packages/ui/components/index.ts` — the Card task owns that one line.
+- Slowness fix (2026-11-01): parallel agents each ran the full Jest suite (one worker per core), so one test file took ~200s. Leftover full runs were killed; agents now run only their own file with `--maxWorkers=1`, and the controller runs the full suite once per batch.
+- Parallel batch W3a (2026-11-01), each task owns only these paths:
+  - B-13 Input: `packages/ui/components/input.tsx`, `demo/src/screens/InputScreen.tsx`, `demo/__tests__/input.test.tsx`, `demo/e2e/components/input.yaml`
+  - B-15 Checkbox: `packages/ui/components/checkbox.tsx`, `demo/src/screens/CheckboxScreen.tsx`, `demo/__tests__/checkbox.test.tsx`, `demo/e2e/components/checkbox.yaml`
+  - B-16 Switch: `packages/ui/components/switch.tsx`, `demo/src/screens/SwitchScreen.tsx`, `demo/__tests__/switch.test.tsx`, `demo/e2e/components/switch.yaml`
+  - B-17 RadioGroup: `packages/ui/components/radio-group.tsx`, `demo/src/screens/RadioGroupScreen.tsx`, `demo/__tests__/radio-group.test.tsx`, `demo/e2e/components/radiogroup.yaml`
