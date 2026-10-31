@@ -1,38 +1,48 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { Separator, useTheme } from '@apexrn/ui';
+import { StyleSheet, View } from 'react-native';
+import { Separator, Text } from '@apexrn/ui';
 import Layout from '../components/Layout';
 import Section from '../components/Section';
 
-export default function SeparatorScreen({ onBack }: { onBack: () => void }) {
-  const { colors } = useTheme();
-  const text = { color: colors.foreground, fontWeight: '700' as const };
+const SETTINGS = ['Profile', 'Notifications', 'Privacy and security'];
 
+export default function SeparatorScreen({ onBack }: { onBack: () => void }) {
   return (
     <Layout id="separator" title="SEPARATOR" onBack={onBack}>
-      <Section title="Horizontal">
-        <Text style={text}>Above the line</Text>
+      <Section title="Variants" note="Two pixels of border colour. Nothing else.">
+        <Text>Order summary</Text>
         <Separator />
-        <Text style={text}>Below the line</Text>
-      </Section>
-
-      <Section title="Vertical" note="Stretches to the height of its row.">
+        <Text>Delivery details</Text>
         <View style={styles.row}>
-          <Text style={text}>Left</Text>
+          <Text>Draft</Text>
           <Separator orientation="vertical" />
-          <Text style={text}>Middle</Text>
+          <Text>Review</Text>
           <Separator orientation="vertical" />
-          <Text style={text}>Right</Text>
+          <Text>Published</Text>
         </View>
       </Section>
 
-      <Section title="In a list" note="Horizontal separators between rows.">
-        {['Profile', 'Notifications', 'Privacy and security'].map((item, i) => (
+      <Section title="Labelled" note="The label is plain text; the rules are hidden from screen readers.">
+        <Separator label="Account" testID="separator-labelled" />
+      </Section>
+
+      <Section title="In context">
+        <Text variant="title">Settings</Text>
+        {SETTINGS.map((item, i) => (
           <View key={item}>
             {i > 0 ? <Separator /> : null}
-            <Text style={[text, styles.item]}>{item}</Text>
+            <Text style={styles.item}>{item}</Text>
           </View>
         ))}
+        <Separator label="Danger zone" />
+        <Text style={styles.item}>Delete workspace</Text>
+      </Section>
+
+      <Section title="Edge cases" note="A long label wraps between its rules rather than pushing them off screen.">
+        <View style={styles.narrow}>
+          <Separator label="Billing address and payment method for the annual plan" />
+        </View>
+        <Separator orientation="vertical" style={styles.short} />
       </Section>
     </Layout>
   );
@@ -41,4 +51,6 @@ export default function SeparatorScreen({ onBack }: { onBack: () => void }) {
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 16, height: 40 },
   item: { paddingVertical: 12 },
+  narrow: { width: 320, maxWidth: '100%' },
+  short: { height: 24 },
 });
