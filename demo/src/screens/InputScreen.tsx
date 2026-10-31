@@ -1,73 +1,127 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { Input, Label, useTheme } from '@apexrn/ui';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { CloseIcon, Input, SearchIcon, Text, spacing, useTheme } from '@apexrn/ui';
 import Layout from '../components/Layout';
 import Section, { Caption } from '../components/Section';
 
+const SIZES = ['sm', 'md', 'lg'] as const;
+
 export default function InputScreen({ onBack }: { onBack: () => void }) {
   const { colors } = useTheme();
-  const [email, setEmail] = useState('');
+  const [value, setValue] = useState('');
+  const [email, setEmail] = useState('ada@');
+  const [query, setQuery] = useState('');
   const [secret, setSecret] = useState('hunter2');
   const [revealed, setRevealed] = useState(false);
-  const [log, setLog] = useState('none');
-  const glyph = (c: string) => <Text style={[styles.glyph, { color: colors.mutedForeground }]}>{c}</Text>;
-  const invalid = email.length > 0 && !email.includes('@');
+
+  const emailInvalid = !email.includes('@') || email.endsWith('@');
 
   return (
     <Layout id="input" title="INPUT" onBack={onBack}>
-      <Section title="Default" note="Focus the field: the hard shadow fades in and the size never changes.">
-        <Input placeholder="Enter your text" onFocus={() => setLog('focus')} onBlur={() => setLog('blur')} />
-        <Caption>{`Last event: ${log}`}</Caption>
-      </Section>
+      <Text>Tap a field to raise its focus ring. The size never changes between states.</Text>
 
-      <Section title="Icons" note="Leading icons are decorative. A trailing icon with onTrailingIconPress becomes a button.">
-        <Input placeholder="Username" leadingIcon={glyph('@')} />
+      <Section title="Variants" note="Label, description, slots and an error row are all optional parts of one field.">
         <Input
-          placeholder="Password"
-          secureTextEntry={!revealed}
-          value={secret}
-          onChangeText={setSecret}
-          trailingIcon={glyph(revealed ? 'HIDE' : 'SHOW')}
-          onTrailingIconPress={() => setRevealed((r) => !r)}
-          trailingIconLabel={revealed ? 'Hide password' : 'Show password'}
+          testID="input-email"
+          label="Email address"
+          placeholder="you@example.com"
+          autoCapitalize="none"
+          keyboardType="email-address"
+          onValueChange={setValue}
+        />
+        <Caption>{`Value: ${value}`}</Caption>
+        <Input
+          label="Display name"
+          required
+          description="Shown on invoices and receipts."
+          placeholder="Ada Lovelace"
+        />
+        <Input
+          label="Search orders"
+          placeholder="Order number"
+          value={query}
+          onValueChange={setQuery}
+          leading={<SearchIcon size={20} color={colors.foreground} />}
+          trailing={
+            query ? (
+              <Pressable
+                onPress={() => setQuery('')}
+                hitSlop={12}
+                accessibilityRole="button"
+                accessibilityLabel="Clear search"
+              >
+                <CloseIcon size={18} color={colors.foreground} />
+              </Pressable>
+            ) : undefined
+          }
         />
       </Section>
 
-      <Section title="Error" note="Destructive border and a permanent shadow, plus aria-invalid. Not colour alone.">
-        <View>
-          <Label>Email address</Label>
-          <Input
-            placeholder="you@example.com"
-            value={email}
-            onChangeText={setEmail}
-            error={invalid}
-            autoCapitalize="none"
-            keyboardType="email-address"
-          />
-          {invalid ? (
-            <Text style={[styles.errorText, { color: colors.destructive }]}>Enter an email address that includes @.</Text>
-          ) : (
-            <Caption>Type text without an @ to see the error.</Caption>
-          )}
-        </View>
-        <Input placeholder="Always invalid" error />
+      <Section title="Sizes" note="Heights 40, 48 and 56. Small fields extend their hit area to the platform touch target.">
+        {SIZES.map((size) => (
+          <Input key={size} size={size} placeholder={`Size ${size}`} />
+        ))}
       </Section>
 
-      <Section title="Disabled">
-        <Input placeholder="Cannot edit this" disabled />
-        <Input value="Locked value" disabled />
-        <Caption>Muted fill and muted border; same size as an enabled input.</Caption>
+      <Section title="States" note="Focus is real: tap the first field. Invalid and disabled are forced.">
+        <Input label="Default" placeholder="Waiting for input" />
+        <Input
+          label="Invalid"
+          invalid
+          defaultValue="12 Rue de la Paix"
+          errorMessage="Postcode is missing from this address."
+        />
+        <Input label="Disabled" disabled defaultValue="Locked by your administrator" />
+        <Caption>Disabled keeps the field fill, dashes the border and drops focus.</Caption>
+      </Section>
+
+      <Section title="In context">
+        <Input
+          label="Work email"
+          required
+          value={email}
+          onValueChange={setEmail}
+          invalid={emailInvalid}
+          errorMessage="Enter a full address, such as ada@example.com."
+          autoCapitalize="none"
+          keyboardType="email-address"
+        />
+        <Input
+          label="Password"
+          value={secret}
+          onValueChange={setSecret}
+          secureTextEntry={!revealed}
+          trailing={
+            <Pressable
+              onPress={() => setRevealed((r) => !r)}
+              hitSlop={12}
+              accessibilityRole="button"
+              accessibilityLabel={revealed ? 'Hide password' : 'Show password'}
+            >
+              <Text variant="label">{revealed ? 'Hide' : 'Show'}</Text>
+            </Pressable>
+          }
+        />
+        <Caption>The email error clears as soon as the address is complete.</Caption>
       </Section>
 
       <Section title="Edge cases">
-        <Input value="A very long value that keeps going well past the end of the visible field" />
-        <Input placeholder="Placeholder that is also quite long and will be clipped by the field width" />
+        <Input defaultValue="A very long value that keeps going well past the end of the visible field" />
+        <Input
+          label="Shipping instructions for the courier on arrival"
+          invalid
+          errorMessage="Instructions are limited to 120 characters, shorten them to continue."
+          defaultValue="Leave at the side gate"
+        />
+        <View style={styles.narrow}>
+          <Input label="Promo code" placeholder="SPRING-24" />
+        </View>
+        <Caption>A 200 wide container; the field and its label keep inside the border.</Caption>
       </Section>
     </Layout>
   );
 }
 
 const styles = StyleSheet.create({
-  glyph: { fontSize: 13, fontWeight: '900' },
-  errorText: { fontSize: 13, fontWeight: '700', marginTop: 8 },
+  narrow: { width: 200, marginTop: spacing.sm },
 });
