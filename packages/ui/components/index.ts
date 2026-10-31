@@ -1,6 +1,7 @@
 // Single entry point for every ApexRN component. Add new components here.
 
 export { default as BrutalSurface, type BrutalSurfaceProps } from './brutal-surface';
+export { default as Text, type TextProps } from './text';
 export { default as Button, type ButtonProps } from './button';
 export { default as Card, CardHeader, CardFooter, CardText, type CardProps, type CardHeaderProps, type CardFooterProps, type CardTextProps } from './card';
 export { default as Input, type InputProps } from './input';

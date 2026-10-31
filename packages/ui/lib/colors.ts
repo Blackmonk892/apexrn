@@ -1,4 +1,4 @@
-import { Platform } from 'react-native';
+import { Platform, type TextStyle } from 'react-native';
 import { moderateScale, normalize } from './metrics';
 
 export type PresetName = 'neo' | 'raw';
@@ -195,6 +195,21 @@ export const typography: Record<'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl'
   get '2xl'() { return normalize(24); },
   get '3xl'() { return normalize(32); },
   get '4xl'() { return normalize(40); },
+};
+
+export type TextVariant = 'display' | 'title' | 'body' | 'label' | 'mono';
+
+export const fontFamilies = {
+  mono: Platform.select({ ios: 'Menlo', android: 'monospace', default: 'ui-monospace' }),
+};
+
+// Sizes are fixed numbers: OS font scaling is applied by Text, capped by maxFontSizeMultiplier.
+export const textStyles: Record<TextVariant, TextStyle> = {
+  display: { fontSize: 32, lineHeight: 36, fontWeight: '900', letterSpacing: -0.5 },
+  title: { fontSize: 20, lineHeight: 24, fontWeight: '800' },
+  body: { fontSize: 16, lineHeight: 22, fontWeight: '400' },
+  label: { fontSize: 12, lineHeight: 16, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', fontFamily: fontFamilies.mono },
+  mono: { fontSize: 14, lineHeight: 20, fontWeight: '500', fontVariant: ['tabular-nums'], fontFamily: fontFamilies.mono },
 };
 
 export const borderWidths = {

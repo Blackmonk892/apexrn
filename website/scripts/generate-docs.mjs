@@ -75,6 +75,7 @@ const LAB_SCREEN = {
   slider: "slider",
   switch: "switch",
   tabs: "tabs",
+  text: { screen: "label", fallback: true },
   textarea: "textarea",
   toast: "toast",
   toaster: { screen: "toast", fallback: true },

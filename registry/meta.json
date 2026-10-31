@@ -7,6 +7,7 @@
     "avatar": "Image or initials avatar in a hard-shadowed frame.",
     "badge": "Small count/status label.",
     "bottom-nav": "Bottom tab bar with a sliding block, badges and a safe-area bottomInset.",
+    "text": "The type scale: display, title, body, label and mono roles with theme colours and capped font scaling.",
     "brutal-surface": "The surface primitive: border, hard offset shadow and press physics. Everything blocky is built on it.",
     "button": "Pressable button with variants, sizes, loading state and press physics.",
     "card": "Bordered container with header/footer slots and CardText, which takes the variant's foreground colour; pressable when given onPress.",
@@ -43,6 +44,7 @@
     "icons": "Small SVG icon set used by AppBar, Chip and SearchBar.",
     "variants": "Typed cva-style helper that resolves per-slot style objects from variant and size maps.",
     "motion": "Motion constants (press spring, enter/exit/selection timings) and the useMotion() reduced-motion hook.",
+    "loading-blocks": "Three-block stepping loading indicator that holds still under reduced motion.",
     "use-press-physics": "Spring + haptic press animation hook used by pressable surfaces."
   },
   "impliedDependencies": { "react-native-reanimated": ["react-native-worklets"] },
