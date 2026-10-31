@@ -288,7 +288,6 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     alignItems: 'center',
     zIndex: 1,
-    elevation: 1,
   },
   dialogWrapper: {
     width: '100%',

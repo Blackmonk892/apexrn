@@ -18,6 +18,11 @@ describe('SpecimenScreen', () => {
     for (const id of QUADRANTS) expect(screen.getByTestId(`quadrant-${id}`)).toBeTruthy();
   });
 
+  it('gives each quadrant a title testID for the e2e scroll targets', async () => {
+    await renderWithTheme(<SpecimenScreen onBack={() => {}} />);
+    for (const id of QUADRANTS) expect(screen.getByTestId(`quadrant-title-${id}`)).toBeTruthy();
+  });
+
   it.each(QUADRANTS)('%s lists all 23 colour roles and the 5 type roles', async (id) => {
     await renderWithTheme(<SpecimenScreen onBack={() => {}} />);
     const quadrant = within(screen.getByTestId(`quadrant-${id}`));

@@ -97,7 +97,6 @@ const styles = StyleSheet.create({
   portalAnchor: {
     position: 'absolute',
     zIndex: 999,
-    elevation: 6,
   },
   surface: {
     alignItems: 'center',

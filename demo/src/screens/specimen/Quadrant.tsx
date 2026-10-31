@@ -89,7 +89,7 @@ function Sheet({ preset, mode, style }: { preset: PresetName; mode: 'light' | 'd
       style={[styles.sheet, { backgroundColor: colors.background }, style]}
     >
       <View style={styles.head}>
-        <Text variant="label">{`${preset}  ${mode}`}</Text>
+        <Text variant="label" testID={`quadrant-title-${preset}-${mode}`}>{`${preset}  ${mode}`}</Text>
         <Separator style={styles.headRule} />
       </View>
       <Section title="Colour roles"><ColourRoles /></Section>

@@ -11,25 +11,30 @@ appId: dev.apexrn.demo
     id: "home-specimen"
 - extendedWaitUntil:
     visible:
-      id: "quadrant-neo-light"
+      id: "quadrant-title-neo-light"
     timeout: 20000
 - assertNotVisible: "Render Error"
 - takeScreenshot: specimen-1
+# Each quadrant is several screens tall, so it can never be 100% visible; the short title is
+# the scroll target and centering it leaves the quadrant's top region in the screenshot.
 - scrollUntilVisible:
     element:
-      id: "quadrant-neo-dark"
+      id: "quadrant-title-neo-dark"
     direction: DOWN
-    timeout: 30000
+    timeout: 60000
+    centerElement: true
 - takeScreenshot: specimen-2
 - scrollUntilVisible:
     element:
-      id: "quadrant-raw-light"
+      id: "quadrant-title-raw-light"
     direction: DOWN
-    timeout: 30000
+    timeout: 60000
+    centerElement: true
 - takeScreenshot: specimen-3
 - scrollUntilVisible:
     element:
-      id: "quadrant-raw-dark"
+      id: "quadrant-title-raw-dark"
     direction: DOWN
-    timeout: 30000
+    timeout: 60000
+    centerElement: true
 - takeScreenshot: specimen-4
