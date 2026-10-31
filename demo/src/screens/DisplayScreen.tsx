@@ -17,9 +17,9 @@ export default function DisplayScreen({ onBack }: { onBack: () => void }) {
     <Layout id="display" title="DATA DISPLAY" onBack={onBack}>
       <Text style={[styles.label, { color: textColor }]}>AVATAR</Text>
       <View style={styles.row}>
-        <Avatar initials="JD" withShadow />
+        <Avatar initials="JD" />
         <Avatar size="sm" initials="AB" />
-        <Avatar size="lg" initials="XY" withShadow />
+        <Avatar size="lg" initials="XY" />
       </View>
 
       <Text style={[styles.label, { color: textColor }]}>ACCORDION</Text>

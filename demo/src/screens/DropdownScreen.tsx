@@ -39,7 +39,7 @@ export default function DropdownScreen({ onBack }: { onBack: () => void }) {
           <DropdownMenu open={open} onOpenChange={setOpen}>
             <DropdownMenuTrigger asChild>
               <Pressable accessibilityRole="button" accessibilityLabel="Open profile menu">
-                <Avatar initials="JD" size="lg" withShadow />
+                <Avatar initials="JD" size="lg" />
               </Pressable>
             </DropdownMenuTrigger>
             <DropdownMenuContent>

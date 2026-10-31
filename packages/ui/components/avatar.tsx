@@ -1,63 +1,56 @@
 import { useEffect, useState } from 'react';
-import { Image, StyleSheet, Text, View, ViewProps } from 'react-native';
+import { Image, StyleSheet, View, ViewProps, type ViewStyle } from 'react-native';
 
-import { typography } from '../lib/colors';
 import { useTheme } from '../lib/theme';
+import { variants } from '../lib/variants';
 import BrutalSurface from './brutal-surface';
+import { Text } from './text';
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 export interface AvatarProps extends ViewProps {
-  /**
-   * The source URL for the avatar image.
-   */
+  /** Image URL. A failed load falls back to initials. */
   src?: string;
-  /**
-   * Initials to display if the image fails to load or is not provided.
-   */
+  /** Who or what this is. Names the avatar for screen readers and supplies initials when `initials` is not set. */
+  name?: string;
+  /** Overrides the initials derived from `name`. Only the first two letters are shown. */
   initials?: string;
-  /**
-   * The size of the avatar.
-   * @default 'md'
-   */
+  /** @default 'md' */
   size?: 'sm' | 'md' | 'lg';
-  /**
-   * Toggles the Brutalist hard shadow.
-   * @default false
-   */
-  withShadow?: boolean;
 }
 
 // ---------------------------------------------------------------------------
-// Design tokens
+// Look
 // ---------------------------------------------------------------------------
-// Square block, not a circle: zero radius is part of the system geometry.
-const SIZES = {
-  sm: 40,
-  md: 56,
-  lg: 80,
-};
+// Square, not round: zero radius is the system geometry (DESIGN 1.3).
+const look = variants({
+  base: { surface: { overflow: 'hidden' } as ViewStyle },
+  variants: {
+    size: {
+      sm: { surface: { width: 32, height: 32 } },
+      md: { surface: { width: 40, height: 40 } },
+      lg: { surface: { width: 56, height: 56 } },
+    },
+  },
+  defaultVariants: { size: 'md' },
+});
 
-// Small avatars get the control depth so the shadow doesn't dominate the block.
-const SHADOW_DEPTHS = { sm: 'control', md: 'card', lg: 'card' } as const;
+// Counted by code point so a surrogate pair is not cut in half.
+function deriveInitials(name: string) {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return '';
+  const first = Array.from(words[0])[0];
+  const last = words.length > 1 ? Array.from(words[words.length - 1])[0] : '';
+  return first + last;
+}
 
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-export function Avatar({
-  src,
-  initials,
-  size = 'md',
-  withShadow = false,
-  style,
-  ...props
-}: AvatarProps) {
+export function Avatar({ src, name, initials, size = 'md', style, testID, ...props }: AvatarProps) {
   const { colors } = useTheme();
   const [imageFailed, setImageFailed] = useState(false);
-  const dimension = SIZES[size];
-  // Size-dependent tokens are read at render time.
-  const fontSize = { sm: typography.sm, md: typography.md, lg: typography.lg }[size];
 
   // A new src gets a fresh load attempt instead of sticking on the fallback.
   useEffect(() => {
@@ -65,33 +58,33 @@ export function Avatar({
   }, [src]);
 
   const showFallback = !src || imageFailed;
-  const displayInitials = (initials || '?').substring(0, 2).toUpperCase();
+  const letters = Array.from(initials || deriveInitials(name ?? '') || '?').slice(0, 2).join('').toUpperCase();
+  const { surface } = look({ size });
 
   return (
     <BrutalSurface
-      style={[styles.container, style]}
-      surfaceStyle={{ width: dimension, height: dimension, backgroundColor: colors.background, overflow: 'hidden' }}
-      elevation={withShadow ? SHADOW_DEPTHS[size] : 'flat'}
+      testID={testID}
+      style={[styles.outer, style]}
+      surfaceStyle={surface}
+      elevation="flat"
       borderWidth="control"
       pressable={false}
+      accessible
       accessibilityRole="image"
-      accessibilityLabel={showFallback ? `Avatar for ${displayInitials}` : 'Avatar image'}
+      accessibilityLabel={name}
       {...props}
     >
       {showFallback ? (
-        <View style={[styles.fallbackContainer, { backgroundColor: colors.muted }]}>
-          <Text
-            style={[styles.initialsText, { fontSize, color: colors.foreground }]}
-            numberOfLines={1}
-            maxFontSizeMultiplier={1.3}
-          >
-            {displayInitials}
+        <View style={[styles.fill, styles.center, { backgroundColor: colors.muted }]}>
+          <Text variant={size === 'lg' ? 'title' : 'label'} numberOfLines={1}>
+            {letters}
           </Text>
         </View>
       ) : (
         <Image
+          testID={testID ? `${testID}-image` : undefined}
           source={{ uri: src }}
-          style={styles.image}
+          style={styles.fill}
           resizeMode="cover"
           accessible={false}
           onError={() => setImageFailed(true)}
@@ -101,28 +94,10 @@ export function Avatar({
   );
 }
 
-// ---------------------------------------------------------------------------
-// Styles
-// ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
-  container: {
-    alignSelf: 'flex-start',
-  },
-  image: {
-    width: '100%',
-    height: '100%',
-  },
-  fallbackContainer: {
-    width: '100%',
-    height: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  initialsText: {
-    fontWeight: '800',
-    letterSpacing: 0.4,
-    textTransform: 'uppercase',
-  },
+  outer: { alignSelf: 'flex-start' },
+  fill: { width: '100%', height: '100%' },
+  center: { alignItems: 'center', justifyContent: 'center' },
 });
 
 export default Avatar;
