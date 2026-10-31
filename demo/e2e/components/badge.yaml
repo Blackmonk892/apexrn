@@ -1,0 +1,16 @@
+appId: dev.apexrn.demo
+---
+- runFlow:
+    file: ../_open.yaml
+    env:
+      ID: badge
+- assertVisible:
+    id: "badge-success"
+- scrollUntilVisible:
+    element:
+      id: "badge-count-120"
+    direction: DOWN
+- assertVisible: "99+"
+- assertNotVisible: "Render Error"
+- assertNotVisible: ".*TypeError.*"
+- takeScreenshot: badge
