@@ -40,8 +40,7 @@ describe('Separator', () => {
       expect(row.children).toHaveLength(3);
       expect(StyleSheet.flatten(row.props.style).flexDirection).toBe('row');
 
-      const rules = view.getAllByTestId('divider-rule', hidden);
-      expect(rules).toHaveLength(2);
+      const rules = [view.getByTestId('divider-rule-start', hidden), view.getByTestId('divider-rule-end', hidden)];
       for (const rule of rules) {
         const style = StyleSheet.flatten(rule.props.style);
         expect(style.height).toBe(borderWidths.control);

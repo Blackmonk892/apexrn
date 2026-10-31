@@ -1,6 +1,6 @@
 import { StyleSheet, View, type ViewProps } from 'react-native';
 
-import { borderWidths } from '../lib/colors';
+import { borderWidths, spacing } from '../lib/colors';
 import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
 import { Text } from './text';
@@ -18,9 +18,9 @@ export function Separator({ orientation = 'horizontal', label, style, testID, ..
 
   // React Native has no separator role, so the rule is simply removed from the
   // accessibility tree; a label stays readable as plain text.
-  const rule = (ruleStyle?: ViewProps['style'], ruleTestID?: string) => (
+  const rule = (ruleStyle?: ViewProps['style'], rest?: ViewProps) => (
     <View
-      testID={ruleTestID}
+      {...rest}
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
       style={cn(
@@ -33,29 +33,21 @@ export function Separator({ orientation = 'horizontal', label, style, testID, ..
 
   if (label && !vertical) {
     return (
-      <View testID={testID} style={cn(styles.labelled, style)} {...props}>
-        {rule(styles.fill, testID && `${testID}-rule`)}
+      <View testID={testID} style={cn(styles.labelled, { gap: spacing.md }, style)} {...props}>
+        {rule(styles.fill, { testID: testID && `${testID}-rule-start` })}
         <Text variant="label" style={styles.caption}>{label}</Text>
-        {rule(styles.fill, testID && `${testID}-rule`)}
+        {rule(styles.fill, { testID: testID && `${testID}-rule-end` })}
       </View>
     );
   }
 
-  return (
-    <View
-      testID={testID}
-      accessibilityElementsHidden
-      importantForAccessibility="no-hide-descendants"
-      style={cn({ backgroundColor: colors.border }, vertical ? styles.vertical : styles.horizontal, style)}
-      {...props}
-    />
-  );
+  return rule(style, { testID, ...props });
 }
 
 const styles = StyleSheet.create({
   horizontal: { alignSelf: 'stretch', height: borderWidths.control },
   vertical: { alignSelf: 'stretch', width: borderWidths.control },
-  labelled: { alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', gap: 12 },
+  labelled: { alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center' },
   fill: { flex: 1 },
   caption: { flexShrink: 1 },
 });
