@@ -14,7 +14,6 @@ appId: dev.apexrn.demo
     direction: DOWN
 - assertVisible:
     id: "avatar-broken"
-- assertVisible: "KJ"
 - assertNotVisible: "Render Error"
 - assertNotVisible: ".*TypeError.*"
 - takeScreenshot: avatar

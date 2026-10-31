@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Image, StyleSheet, View, ViewProps, type ViewStyle } from 'react-native';
 
 import { useTheme } from '../lib/theme';
@@ -48,17 +48,15 @@ function deriveInitials(name: string) {
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-export function Avatar({ src, name, initials, size = 'md', style, testID, ...props }: AvatarProps) {
+export function Avatar({ src, name, initials, size = 'md', style, testID, accessibilityLabel, ...props }: AvatarProps) {
   const { colors } = useTheme();
-  const [imageFailed, setImageFailed] = useState(false);
+  // Remembering which src failed (rather than a boolean) means a new src gets a fresh
+  // load attempt with no stale fallback render in between.
+  const [failedSrc, setFailedSrc] = useState<string>();
 
-  // A new src gets a fresh load attempt instead of sticking on the fallback.
-  useEffect(() => {
-    setImageFailed(false);
-  }, [src]);
-
-  const showFallback = !src || imageFailed;
+  const showFallback = !src || failedSrc === src;
   const letters = Array.from(initials || deriveInitials(name ?? '') || '?').slice(0, 2).join('').toUpperCase();
+  const label = accessibilityLabel ?? name;
   const { surface } = look({ size });
 
   return (
@@ -69,14 +67,23 @@ export function Avatar({ src, name, initials, size = 'md', style, testID, ...pro
       elevation="flat"
       borderWidth="control"
       pressable={false}
-      accessible
-      accessibilityRole="image"
-      accessibilityLabel={name}
+      accessible={!!label}
+      accessibilityRole={label ? 'image' : undefined}
+      accessibilityLabel={label}
+      // The label is the whole announcement; the initials inside must not be read a second time.
+      // With no label the avatar is decorative and hidden entirely.
+      importantForAccessibility={label ? 'yes' : 'no-hide-descendants'}
       {...props}
     >
       {showFallback ? (
-        <View style={[styles.fill, styles.center, { backgroundColor: colors.muted }]}>
-          <Text variant={size === 'lg' ? 'title' : 'label'} numberOfLines={1}>
+        <View
+          importantForAccessibility="no-hide-descendants"
+          accessibilityElementsHidden
+          style={[styles.fill, styles.center, { backgroundColor: colors.muted }]}
+        >
+          {/* Initials are a monogram, not running text, so they stay uppercase at every size.
+              The explicit role stops `title` from announcing them as a heading. */}
+          <Text variant={size === 'lg' ? 'title' : 'label'} accessibilityRole="text" numberOfLines={1}>
             {letters}
           </Text>
         </View>
@@ -87,7 +94,7 @@ export function Avatar({ src, name, initials, size = 'md', style, testID, ...pro
           style={styles.fill}
           resizeMode="cover"
           accessible={false}
-          onError={() => setImageFailed(true)}
+          onError={() => setFailedSrc(src)}
         />
       )}
     </BrutalSurface>
