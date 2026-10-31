@@ -105,13 +105,12 @@ function OTPBlock({ char, isActive, error, disabled, size }: OTPBlockProps) {
     <BrutalSurface
       surfaceStyle={[styles.surface, { width: size, height: size }]}
       shadowStyle={animatedShadowStyle}
-      offset={SHADOW_OFFSET}
+      elevation="card"
       borderWidth="container"
       backgroundColor={disabled ? colors.muted : colors.background}
       borderColor={disabled ? colors.mutedForeground : showError ? colors.destructive : colors.border}
       shadowColor={showError ? colors.destructive : undefined}
       pressable={false}
-      hasShadow
     >
       <Text
         style={cn(

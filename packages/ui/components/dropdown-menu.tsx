@@ -258,7 +258,7 @@ export function DropdownMenuContent({ children, style, ...props }: ViewProps) {
         >
           <BrutalSurface
             pressable={false}
-            offset={SHADOW_OFFSET}
+            elevation="card"
             borderWidth="container"
             backgroundColor={colors.background}
             surfaceStyle={[styles.surface, { maxHeight }]}

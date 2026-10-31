@@ -116,8 +116,7 @@ export function Switch({
       <AnimatedView style={[styles.thumbContainer, animatedThumbStyle]}>
         <BrutalSurface
           pressable={false}
-          hasShadow={!disabled}
-          offset={SHADOW_OFFSET}
+          elevation={disabled ? 'flat' : 'control'}
           backgroundColor={disabled ? colors.muted : colors.background}
           borderColor={disabled ? colors.mutedForeground : colors.border}
           surfaceStyle={styles.thumbSurface}

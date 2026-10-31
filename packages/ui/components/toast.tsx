@@ -51,7 +51,6 @@ export interface ToastProps extends ViewProps {
 // ---------------------------------------------------------------------------
 // Design tokens
 // ---------------------------------------------------------------------------
-const SHADOW_OFFSET = 4;
 const HIDDEN_Y = -150;
 const GLYPH_SIZE = 22;
 
@@ -168,7 +167,7 @@ export function Toast({
       {...props}
     >
       <BrutalSurface
-        offset={SHADOW_OFFSET}
+        elevation="card"
         borderWidth="container"
         onPress={hideToast}
         accessibilityRole="button"

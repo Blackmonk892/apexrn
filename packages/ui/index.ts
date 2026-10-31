@@ -4,7 +4,7 @@ export { presets, spacing, typography, borderWidths, focusRing, touchTarget, con
 export { motion, useMotion } from './lib/motion';
 export { variants, type VariantProps, type VariantsConfig, type VariantSelection } from './lib/variants';
 export { scale, verticalScale, moderateScale, normalize, screenWidth, screenHeight } from './lib/metrics';
-export { usePressPhysics, type UsePressPhysicsOptions, type PressPhysicsConfig } from './lib/use-press-physics';
+export { usePressPhysics, type UsePressPhysicsOptions } from './lib/use-press-physics';
 export { cn } from './lib/utils';
 export { MenuIcon, BackIcon, CloseIcon, SearchIcon, CheckIcon, HomeIcon, BellIcon, UserIcon, type IconProps } from './lib/icons';
 

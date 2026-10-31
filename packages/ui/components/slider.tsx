@@ -266,8 +266,7 @@ export function Slider({
         <Animated.View style={[styles.thumbWrapper, animatedThumbStyle]}>
           <BrutalSurface
             pressable={false}
-            hasShadow={!disabled}
-            offset={SHADOW_OFFSET}
+            elevation={disabled ? 'flat' : 'control'}
             borderWidth="control"
             backgroundColor={disabled ? colors.muted : colors.background}
             borderColor={disabled ? colors.mutedForeground : colors.border}

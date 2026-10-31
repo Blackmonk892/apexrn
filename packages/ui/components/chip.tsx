@@ -47,7 +47,6 @@ export interface ChipProps {
 // ---------------------------------------------------------------------------
 // Design tokens
 // ---------------------------------------------------------------------------
-const SHADOW_OFFSET = 2;
 const CHIP_HEIGHT = 36;
 
 // ---------------------------------------------------------------------------
@@ -122,9 +121,8 @@ export function Chip({
       <BrutalSurface
         style={[styles.root, style]}
         pressable={false}
-        offset={SHADOW_OFFSET}
+        elevation={disabled ? 'flat' : 'control'}
         borderWidth="control"
-        hasShadow={!disabled}
         backgroundColor={bg}
         borderColor={border}
         surfaceStyle={[styles.surface, { minHeight: CHIP_HEIGHT, borderStyle: disabled ? 'dashed' : 'solid' }]}
@@ -160,9 +158,8 @@ export function Chip({
     <BrutalSurface
       style={[styles.root, style]}
       surfaceStyle={surfaceStyle}
-      offset={SHADOW_OFFSET}
+      elevation="control"
       borderWidth="control"
-      hasShadow={!disabled}
       disabled={disabled}
       onPress={handlePress}
       backgroundColor={bg}

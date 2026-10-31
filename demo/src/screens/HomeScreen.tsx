@@ -92,7 +92,7 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
               {group.items.map((item) => (
                 <BrutalSurface
                   key={item.id}
-                  offset={4}
+                  elevation="card"
                   onPress={() => onNavigate(item.id)}
                   accessibilityRole="button"
                   accessibilityLabel={`${item.name} demo`}

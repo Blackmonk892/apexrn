@@ -64,7 +64,7 @@ export function ListItem({
   const interactive = isPressable && !disabled;
 
   const { pressed, handlePressIn, handlePressOut } = usePressPhysics({
-    offset: 0,
+    depth: 0,
     disabled: !interactive,
     haptics: false,
   });

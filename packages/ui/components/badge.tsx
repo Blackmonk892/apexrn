@@ -34,7 +34,6 @@ export interface BadgeProps extends ViewProps {
 // ---------------------------------------------------------------------------
 // Design tokens
 // ---------------------------------------------------------------------------
-const SHADOW_OFFSET_SUBTLE = 2;
 
 // ---------------------------------------------------------------------------
 // Component
@@ -94,10 +93,9 @@ export function Badge({
         { paddingHorizontal: spacing.sm, paddingVertical: spacing.xs },
         activeVariant.surface,
       )}
-      offset={SHADOW_OFFSET_SUBTLE}
+      elevation={withShadow ? 'control' : 'flat'}
       borderWidth="control"
       pressable={false}
-      hasShadow={withShadow}
       accessible={typeof content === 'string'}
       accessibilityRole="text"
       {...props}

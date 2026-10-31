@@ -64,7 +64,6 @@ export interface AppBarActionProps {
 // ---------------------------------------------------------------------------
 // Design tokens
 // ---------------------------------------------------------------------------
-const ACTION_SHADOW_OFFSET = 2;
 
 // ---------------------------------------------------------------------------
 // Components
@@ -165,9 +164,8 @@ export function AppBarAction({ icon, label, onPress, active = false, disabled = 
 
   return (
     <BrutalSurface
-      offset={ACTION_SHADOW_OFFSET}
+      elevation="control"
       borderWidth="control"
-      hasShadow={!disabled}
       disabled={disabled}
       onPress={onPress}
       backgroundColor={disabled ? colors.muted : active ? colors.foreground : colors.background}

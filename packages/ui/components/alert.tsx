@@ -33,7 +33,6 @@ export interface AlertProps extends ViewProps {
 // ---------------------------------------------------------------------------
 // Design tokens
 // ---------------------------------------------------------------------------
-const SHADOW_OFFSET = 4;
 const GLYPH_SIZE = 22;
 
 // Severity is never colour-only: each variant has its own glyph and spoken prefix.
@@ -77,7 +76,7 @@ export function Alert({
         styles.surface,
         { padding: spacing.md, backgroundColor: bg, borderColor: colors.border },
       ]}
-      offset={SHADOW_OFFSET}
+      elevation="card"
       borderWidth="container"
       pressable={false}
       accessibilityRole="alert"

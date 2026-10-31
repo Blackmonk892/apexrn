@@ -190,7 +190,7 @@ export function TabsList({ children, style, ...props }: ViewProps) {
       <BrutalSurface
         style={[styles.listWrapper, { marginBottom: SHADOW_OFFSET + spacing.md }, style]}
         surfaceStyle={[styles.listSurface, { backgroundColor: colors.background }]}
-        offset={SHADOW_OFFSET}
+        elevation="card"
         borderWidth="container"
         pressable={false}
         accessibilityRole="tablist"

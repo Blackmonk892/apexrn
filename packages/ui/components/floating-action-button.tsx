@@ -45,7 +45,7 @@ export function FAB({
   style,
   ...props
 }: FABProps) {
-  const { colors, elevation } = useTheme();
+  const { colors } = useTheme();
   const isExtended = label !== undefined && label.length > 0;
 
   return (
@@ -63,9 +63,8 @@ export function FAB({
           borderColor: disabled ? colors.mutedForeground : colors.border,
         },
       ]}
-      offset={elevation.overlay}
+      elevation="overlay"
       disabled={disabled}
-      hasShadow={!disabled}
       accessibilityRole="button"
       accessibilityLabel={label || 'Floating Action Button'}
       accessibilityHint="Activates the primary action"

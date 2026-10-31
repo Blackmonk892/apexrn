@@ -48,7 +48,6 @@ export interface ButtonProps {
   accessibilityHint?: string;
 }
 
-const SHADOW_OFFSET = 4;
 
 // ---------------------------------------------------------------------------
 // Component
@@ -90,7 +89,6 @@ export function Button({
   const height = controlHeight[size];
   // Loading keeps the variant's colours (it is in flight, not unavailable) but
   // sinks into its shadow. Disabled goes muted + dashed so it is not colour-only.
-  const showShadow = v.hasShadow && !disabled && !loading;
   const fg = disabled ? colors.mutedForeground : v.fg;
 
   return (
@@ -106,8 +104,7 @@ export function Button({
         alignItems: 'center',
         justifyContent: 'center',
       }}
-      offset={SHADOW_OFFSET}
-      hasShadow={showShadow}
+      elevation={v.hasShadow ? 'card' : 'flat'}
       disabled={disabled || loading}
       onPress={onPress}
       hitSlop={Math.max(0, Math.ceil((touchTarget - height) / 2))}

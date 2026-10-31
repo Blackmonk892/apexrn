@@ -53,7 +53,7 @@ export function Avatar({
   style,
   ...props
 }: AvatarProps) {
-  const { colors, elevation } = useTheme();
+  const { colors } = useTheme();
   const [imageFailed, setImageFailed] = useState(false);
   const dimension = SIZES[size];
   // Size-dependent tokens are read at render time.
@@ -71,10 +71,9 @@ export function Avatar({
     <BrutalSurface
       style={[styles.container, style]}
       surfaceStyle={{ width: dimension, height: dimension, backgroundColor: colors.background, overflow: 'hidden' }}
-      offset={elevation[SHADOW_DEPTHS[size]]}
+      elevation={withShadow ? SHADOW_DEPTHS[size] : 'flat'}
       borderWidth="control"
       pressable={false}
-      hasShadow={withShadow}
       accessibilityRole="image"
       accessibilityLabel={showFallback ? `Avatar for ${displayInitials}` : 'Avatar image'}
       {...props}

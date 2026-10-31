@@ -73,7 +73,6 @@ export function CardText({ tone = 'body', style, ...rest }: CardTextProps) {
 // Design tokens
 // ---------------------------------------------------------------------------
 
-const SHADOW_OFFSET = 4;
 
 // ---------------------------------------------------------------------------
 // Sub-components
@@ -163,7 +162,7 @@ export function Card({
     <BrutalSurface
       style={style}
       surfaceStyle={{ backgroundColor: v.bg }}
-      offset={SHADOW_OFFSET}
+      elevation="card"
       pressable={isPressable}
       onPress={onPress}
       accessibilityRole={isPressable ? 'button' : undefined}

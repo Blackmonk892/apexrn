@@ -35,7 +35,6 @@ export interface ProgressProps extends ViewProps {
 // ---------------------------------------------------------------------------
 // Design tokens
 // ---------------------------------------------------------------------------
-const SHADOW_OFFSET = 4;
 const PROGRESS_HEIGHT = 24;
 
 // ---------------------------------------------------------------------------
@@ -74,10 +73,9 @@ export function Progress({
     <BrutalSurface
       style={[styles.container, style]}
       surfaceStyle={[styles.track, { backgroundColor: colors.background }]}
-      offset={SHADOW_OFFSET}
+      elevation={withShadow ? 'card' : 'flat'}
       borderWidth="container"
       pressable={false}
-      hasShadow={withShadow}
       accessibilityRole="progressbar"
       accessibilityValue={{ min: 0, max: clampedMax, now: clampedValue }}
       accessible
