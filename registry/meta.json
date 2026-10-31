@@ -36,7 +36,7 @@
     "textarea": "Multiline input built on Input.",
     "toast": "Transient notification (controlled). Use Toaster/useToast for the one-line toast() API.",
     "toaster": "Toaster provider and useToast(): toast('Saved'), toast.success(), toast.error(); queues one at a time.",
-    "colors": "Design tokens: colors (light/dark), spacing, typography, border widths, shadow offsets. Edit this file to restyle every component.",
+    "colors": "Design tokens: neo and raw presets (light/dark colour roles, elevation ladder), spacing, typography, border widths. Edit this file to restyle every component.",
     "theme": "ApexRNProvider and useTheme (light/dark/system). Installs the tokens too.",
     "metrics": "Screen-size scaling helpers used by the tokens.",
     "utils": "cn() style-merge helper.",

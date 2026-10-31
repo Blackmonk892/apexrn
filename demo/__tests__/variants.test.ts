@@ -42,6 +42,10 @@ describe('variants', () => {
     expect(button({ variant: 'nope' as never })).toEqual(primaryMd);
   });
 
+  it('ignores inherited keys such as toString', () => {
+    expect(button({ variant: 'toString' as never })).toEqual(primaryMd);
+  });
+
   it('falls back to the default for null', () => {
     expect(button({ variant: null })).toEqual(primaryMd);
   });

@@ -1,6 +1,6 @@
-type DeepPartialSlots<Slots> = { [S in keyof Slots]?: Partial<Slots[S]> };
+type SlotOverrides<Slots> = { [S in keyof Slots]?: Partial<Slots[S]> };
 
-type VariantMap<Slots> = Record<string, Record<string, DeepPartialSlots<Slots>>>;
+type VariantMap<Slots> = Record<string, Record<string, SlotOverrides<Slots>>>;
 
 export interface VariantsConfig<Slots, V extends VariantMap<Slots>> {
   base: Slots;
@@ -24,7 +24,7 @@ export function variants<Slots extends Record<string, object>, V extends Variant
     for (const group of Object.keys(config.variants)) {
       const options = config.variants[group];
       const picked = selection[group] as string | null | undefined;
-      const key = picked != null && picked in options ? picked : String(config.defaultVariants[group]);
+      const key = picked != null && Object.prototype.hasOwnProperty.call(options, picked) ? picked : String(config.defaultVariants[group]);
       const overrides = options[key] as Record<string, object | undefined>;
       for (const slot of Object.keys(overrides)) {
         result[slot] = { ...result[slot], ...overrides[slot] };
