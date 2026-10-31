@@ -26,7 +26,7 @@ function Block({ index, step, color, size, still }: { index: number; step: Share
   );
 }
 
-export function LoadingBlocks({ color, size = 6 }: { color: string; size?: number }) {
+export function LoadingBlocks({ color, size = 8 }: { color: string; size?: number }) {
   const { reduceMotion } = useMotion();
   const step = useSharedValue(0);
 

@@ -23,7 +23,7 @@ test('the shipped palettes pass', () => {
 });
 
 test('a palette missing a role fails and names the palette and role', () => {
-  const failures = checkSource(editPalette('rawDark', (b) => b.replace(/ {2}ring: '#[0-9A-Fa-f]{6}',\n/, '')));
+  const failures = checkSource(editPalette('rawDark', (b) => b.replace(/ {2}ring: '#[0-9A-Fa-f]{6}',\r?\n/, '')));
   assert.equal(failures.length, 1);
   assert.match(failures[0], /rawDark/);
   assert.match(failures[0], /ring/);

@@ -568,7 +568,6 @@ export function Tile() {
 }
 ```
 
-
 ### Text
 
 The type scale: `display`, `title`, `body`, `label` and `mono`. Colour comes from the theme; `tone="inherit"` leaves it to the parent, for text on a filled control.

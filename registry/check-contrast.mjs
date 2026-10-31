@@ -2,7 +2,7 @@
 // Fails if any palette in lib/colors.ts breaks the contrast gate, or is missing
 // a role. Run after editing tokens, and in CI.
 
-import { readFileSync } from 'node:fs';
+import { readFileSync, realpathSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -64,7 +64,12 @@ export function checkSource(source) {
   return failures;
 }
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+// Real paths, case-folded on Windows: a drive-letter case or symlink difference must not skip the check silently.
+const canonical = (p) => {
+  const real = realpathSync(p);
+  return process.platform === 'win32' ? real.toLowerCase() : real;
+};
+if (process.argv[1] && canonical(fileURLToPath(import.meta.url)) === canonical(process.argv[1])) {
   const file = join(dirname(fileURLToPath(import.meta.url)), '..', 'packages', 'ui', 'lib', 'colors.ts');
   const failures = checkSource(readFileSync(file, 'utf8'));
   for (const line of failures) console.error(line);

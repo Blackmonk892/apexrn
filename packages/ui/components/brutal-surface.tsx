@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import {
+  Platform,
   Pressable,
   type GestureResponderEvent,
   type PressableProps,
@@ -138,7 +139,9 @@ export function BrutalSurface({
           onPressIn={handleInnerPressIn}
           onPressOut={handleInnerPressOut}
           onFocus={(e) => {
-            setHasFocus(true);
+            // react-native-web focuses a Pressable on mouse click; the ring is for keyboard focus only.
+            const target = e?.target as unknown as { matches?: (s: string) => boolean } | undefined;
+            if (Platform.OS !== 'web' || target?.matches?.(':focus-visible') !== false) setHasFocus(true);
             onFocus?.(e);
           }}
           onBlur={(e) => {
@@ -207,9 +210,9 @@ function NonInteractiveSurface({
 
 const styles = StyleSheet.create({
   root: { position: 'relative' },
-  shadow: { position: 'absolute', zIndex: 1, elevation: 0 },
-  surface: { position: 'relative', zIndex: 2, elevation: 2, borderRadius: 0 },
-  ring: { position: 'absolute', zIndex: 3, elevation: 3 },
+  shadow: { position: 'absolute', zIndex: 1 },
+  surface: { position: 'relative', zIndex: 2, borderRadius: 0 },
+  ring: { position: 'absolute', zIndex: 3 },
 });
 
 export default BrutalSurface;

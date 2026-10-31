@@ -39,7 +39,7 @@ function RoleRow({ role, on }: { role: Role; on?: Role }) {
       <View style={styles.sampleSlot}>
         {isText && on ? (
           <View style={[styles.sample, { backgroundColor: colors[on], borderColor: colors.border }]}>
-            <Text variant="body" tone="inherit" style={[styles.sampleText, { color: value }]}>Aa</Text>
+            <Text variant="title" tone="inherit" style={{ color: value }}>Aa</Text>
           </View>
         ) : null}
       </View>
@@ -70,6 +70,5 @@ const styles = StyleSheet.create({
   name: { flex: 1, minWidth: 0 },
   sampleSlot: { width: 44 },
   sample: { height: 28, borderWidth: borderWidths.control, alignItems: 'center', justifyContent: 'center' },
-  sampleText: { fontWeight: '800' },
   reading: { width: 72, textAlign: 'right' },
 });

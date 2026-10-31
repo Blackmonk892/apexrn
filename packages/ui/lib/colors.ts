@@ -148,7 +148,7 @@ const rawDark: ColorScheme = {
   input: '#F2F0EB',
   ring: '#F2F0EB',
   shadow: '#5A5750',
-  scrim: '#000000',
+  scrim: '#111111',
 };
 
 export const presets: Record<PresetName, Preset> = {

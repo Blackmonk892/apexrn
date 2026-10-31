@@ -104,7 +104,7 @@ export function StateMatrix() {
         <Fragment key={row.name}>
           {i > 0 ? <Separator /> : null}
           <View style={styles.row}>
-            <Text variant="body" style={styles.name}>{row.name}</Text>
+            <Text variant="label">{row.name}</Text>
             <View style={styles.grid}>
               {STATES.map((state) => (
                 <View key={state} style={styles.cell}>
@@ -124,7 +124,6 @@ export function StateMatrix() {
 
 const styles = StyleSheet.create({
   row: { paddingVertical: 16, gap: 12 },
-  name: { fontWeight: '700' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', rowGap: 16 },
   // space-between pins each state name to the cell bottom, so names line up across a row of mixed heights.
   cell: { width: '33.333%', paddingRight: 12, gap: 8, justifyContent: 'space-between' },

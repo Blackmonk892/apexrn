@@ -143,3 +143,37 @@ describe('usePressPhysics', () => {
     expect(api.pressed.value).toBe(0);
   });
 });
+
+describe('BrutalSurface native shadows', () => {
+  it('sets no elevation on the shadow, surface or ring', async () => {
+    await renderWithTheme(<BrutalSurface focused testID="s"><Text>x</Text></BrutalSurface>);
+    for (const id of ['brutal-surface-shadow', 's', 'brutal-surface-ring']) {
+      const style = StyleSheet.flatten(screen.getByTestId(id, HIDDEN).props.style);
+      expect(style.elevation ?? 0).toBe(0);
+    }
+  });
+});
+
+describe('BrutalSurface web focus', () => {
+  const { Platform } = require('react-native');
+  const original = Platform.OS;
+  afterEach(() => {
+    Platform.OS = original;
+  });
+
+  const focusWith = async (matches: boolean) => {
+    Platform.OS = 'web';
+    await renderWithTheme(<BrutalSurface testID="s"><Text>x</Text></BrutalSurface>);
+    await fireEvent(screen.getByTestId('s'), 'focus', { target: { matches: () => matches } });
+  };
+
+  it('shows no ring for pointer focus', async () => {
+    await focusWith(false);
+    expect(screen.queryByTestId('brutal-surface-ring', HIDDEN)).toBeNull();
+  });
+
+  it('shows the ring for keyboard focus', async () => {
+    await focusWith(true);
+    expect(screen.getByTestId('brutal-surface-ring', HIDDEN)).toBeTruthy();
+  });
+});
