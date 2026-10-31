@@ -1,114 +1,127 @@
-import { useEffect, useState } from 'react';
-import { LayoutChangeEvent, StyleSheet, View, ViewProps } from 'react-native';
+import { useEffect } from 'react';
+import { StyleSheet, View, type DimensionValue, type LayoutChangeEvent, type StyleProp, type ViewProps, type ViewStyle } from 'react-native';
 import Animated, {
   cancelAnimation,
+  Easing,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
-  withTiming,
   withRepeat,
-  Easing
+  withTiming,
 } from 'react-native-reanimated';
 
 import { borderWidths, spacing } from '../lib/colors';
 import { useTheme } from '../lib/theme';
-import { cn } from '../lib/utils';
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-export interface SkeletonProps extends ViewProps {
-  /**
-   * Optional flag to pause the animation.
-   * @default false
-   */
+export interface SkeletonProps extends Omit<ViewProps, 'style'> {
+  /** Block width. @default '100%' */
+  width?: DimensionValue;
+  /** Block height; for `lines`, the height of each line. @default 24 for a block, 16 for lines */
+  height?: number;
+  /** Render this many text lines instead of one block; the last is 60% wide. */
+  lines?: number;
+  /** Stop the sweep. Also stopped by the OS reduce-motion setting. @default false */
   paused?: boolean;
+  /** Style for the outer node. */
+  style?: StyleProp<ViewStyle>;
 }
 
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
-export function Skeleton({
-  paused = false,
-  style,
-  ...props
-}: SkeletonProps) {
+const BAND_RATIO = 0.4;
+// The band jumps in discrete steps rather than gliding, which keeps it hard-edged in time as well as in space.
+const SWEEP_STEPS = 10;
+const SWEEP_MS = 1200;
+// Low enough that the band reads as a highlight on `muted`, not as content.
+const BAND_OPACITY = 0.25;
+const LAST_LINE_WIDTH = '60%';
+
+function Block({ style, paused, testID }: { style?: StyleProp<ViewStyle>; paused: boolean; testID?: string }) {
   const { colors } = useTheme();
   const reduceMotion = useReducedMotion();
-  const position = useSharedValue(0);
-  const [containerWidth, setContainerWidth] = useState(0);
-  // Reduced motion renders a static block instead of the sweeping highlight.
   const animated = !paused && !reduceMotion;
+  const progress = useSharedValue(0);
+  const width = useSharedValue(0);
 
   useEffect(() => {
-    if (!animated || containerWidth <= 0) {
-      cancelAnimation(position);
-      return;
-    }
+    if (!animated) return;
+    progress.value = 0;
+    progress.value = withRepeat(withTiming(1, { duration: SWEEP_MS, easing: Easing.linear }), -1, false);
+    return () => cancelAnimation(progress);
+  }, [animated, progress]);
 
-    // Sweep the 40%-wide highlight from fully off-screen-left to
-    // fully off-screen-right. `translateX` (compositor) instead of `left`
-    // (layout) so the shimmer doesn't thrash layout every frame.
-    position.value = -containerWidth;
-    position.value = withRepeat(
-      withTiming(containerWidth, {
-        duration: 900,
-        easing: Easing.linear
-      }),
-      -1,
-      false
-    );
-  }, [animated, containerWidth, position]);
-
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateX: position.value }],
-    };
+  // translateX rather than left, so the sweep never triggers layout.
+  const bandStyle = useAnimatedStyle(() => {
+    const step = Math.floor(progress.value * SWEEP_STEPS) / SWEEP_STEPS;
+    return { transform: [{ translateX: -width.value * BAND_RATIO + step * width.value * (1 + BAND_RATIO) }] };
   });
 
-  const handleLayout = (e: LayoutChangeEvent) => {
-    const w = e.nativeEvent.layout.width;
-    if (w > 0 && w !== containerWidth) {
-      setContainerWidth(w);
-    }
+  const onLayout = (e: LayoutChangeEvent) => {
+    width.value = e.nativeEvent.layout.width;
   };
 
   return (
     <View
-      style={cn(styles.base, { minHeight: spacing.xl, backgroundColor: colors.muted, borderColor: colors.border }, style)}
-      onLayout={handleLayout}
-      accessibilityRole="progressbar"
-      accessibilityLabel="Loading content"
-      accessibilityState={{ busy: !paused }}
-      {...props}
+      testID={testID}
+      onLayout={onLayout}
+      style={[styles.block, { backgroundColor: colors.muted, borderColor: colors.border }, style]}
     >
-      {animated && (
-        <Animated.View style={[styles.swipe, { backgroundColor: colors.mutedForeground }, animatedStyle]} />
-      )}
+      {animated ? (
+        <Animated.View
+          testID="skeleton-band"
+          importantForAccessibility="no"
+          accessibilityElementsHidden
+          style={[styles.band, { backgroundColor: colors.mutedForeground }, bandStyle]}
+        />
+      ) : null}
     </View>
   );
 }
 
-// ---------------------------------------------------------------------------
-// Styles
-// ---------------------------------------------------------------------------
+export function Skeleton({
+  width = '100%',
+  height,
+  lines,
+  paused = false,
+  style,
+  accessibilityLabel = 'Loading',
+  testID,
+  ...props
+}: SkeletonProps) {
+  const a11y = {
+    accessible: true,
+    accessibilityRole: 'progressbar',
+    accessibilityLabel,
+    accessibilityState: { busy: !paused },
+  } as const;
+
+  if (lines === undefined) {
+    return (
+      <View {...props} {...a11y} testID={testID} style={[{ width, height: height ?? spacing.xl }, style]}>
+        <Block paused={paused} style={styles.fill} />
+      </View>
+    );
+  }
+
+  const count = Math.max(1, Math.floor(lines));
+  return (
+    <View {...props} {...a11y} testID={testID} style={[{ width }, style]}>
+      <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden style={{ gap: spacing.sm }}>
+        {Array.from({ length: count }, (_, i) => (
+          <Block
+            key={i}
+            paused={paused}
+            testID="skeleton-line"
+            style={{ width: i === count - 1 && count > 1 ? LAST_LINE_WIDTH : '100%', height: height ?? spacing.lg }}
+          />
+        ))}
+      </View>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  base: {
-    borderWidth: borderWidths.control,
-    borderRadius: 0,
-    overflow: 'hidden',
-    position: 'relative',
-    width: '100%',
-  },
-  swipe: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    left: 0,
-    width: '40%',
-    opacity: 0.5,
-    borderRadius: 0,
-  },
+  fill: { width: '100%', height: '100%' },
+  block: { borderWidth: borderWidths.control, borderRadius: 0, overflow: 'hidden' },
+  band: { position: 'absolute', top: 0, bottom: 0, left: 0, width: `${BAND_RATIO * 100}%`, opacity: BAND_OPACITY },
 });
 
 export default Skeleton;
