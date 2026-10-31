@@ -72,10 +72,10 @@ Parallel tasks and their files (recorded retroactively for A5/A6, which were dis
 
 | # | Change | Status | Commit | Verified | Not verified |
 |---|---|---|---|---|---|
-| B0-8 | Icons: round lens on search, round head on user; add `WarningIcon` + `InfoIcon` for status; re-shoot icon row | pending | | | |
-| B0-9 | raw dark `shadow` `#5A5750` → `#6E6A62` (3.51:1 on `#111111`, border is 16.6:1) + DESIGN §1 | pending | | | |
-| B0-10 | Status-signal rule (DESIGN §3) + test: raw status variants on Toast, Alert, Badge render an icon and a text label | pending | | | |
-| B0-11 | Sonnet re-review of icons (49c2428, implemented by Haiku) together with B0-8 | pending | | | |
+| B0-8 | Icons: round lens on search, round head on user; add `WarningIcon` + `InfoIcon` for status; re-shoot icon row | DONE | 46e644c, b444ba2, eccc334 | 30 icon tests incl. per-icon geometry (all coordinates inside the 24 box; bite-checked with one coordinate at 23.5) and circle counts; 126 suite tests; typecheck; doctor; registry build; `specimen/icons-row.png` reviewed by Opus in all four palettes | Glyphs at 16px on a device |
+| B0-9 | raw dark `shadow` `#5A5750` → `#6E6A62` (3.51:1 on `#111111`, border is 16.6:1) + DESIGN §1 | DONE | 45e1c7d | tokens:check, tokens:test | Seen on the emulator only after the next android-e2e run |
+| B0-10 | Status-signal rule (DESIGN §3) + test: raw status variants on Toast, Alert, Badge render an icon and a text label | DONE | af0c20a | `status-signal.test.tsx` 22 cases (raw light + dark × 3 components × 3 variants, Alert info, custom icon override, raw success = warning fill), RED 20/22 first; Opus diff review | Badge height with the icon on a device; Chip joins in Phase B |
+| B0-11 | Sonnet re-review of icons (49c2428, implemented by Haiku) together with B0-8 | DONE | eccc334 (fixes) | Sonnet review approve-with-fixes; all fixes applied | — |
 - Owner decision: raw focus ring double rule — keep.
 - Ruling: implementers are Sonnet from here on (owner, per the brief); 49c2428 (Haiku) gets a Sonnet re-review in B0-11 — cost if wrong: none.
 - Ruling: B0-8 → B0-9/B0-10 run serially (B0-10 consumes the new status icons; all touch `packages/ui`). The B0-11 reviewer is read-only and runs alongside B0-9/B0-10; its fixes, if any, land after B0-10 — cost if wrong: none, the reviewer writes no files.
@@ -83,3 +83,5 @@ Parallel tasks and their files (recorded retroactively for A5/A6, which were dis
 - Ruling: Chip has no status variants yet (ORCHESTRATOR §2c adds them in Phase B), so the B0 test covers Toast, Alert and Badge; Chip joins the same test table in its Phase B loop (carry list) — cost if wrong: none, nothing to test today.
 - Ruling: status glyphs become `lib/icons` components (DESIGN §5: one icon family), replacing the text glyphs `✓ ! ✕ i` in Toast and Alert — the rule says "icon", and text glyphs scale with OS font size and fall back to system fonts — cost if wrong: small visual change in two components that Phase B rewrites anyway.
 - Carried to Phase B (owner, 2026-11-01): Button gets sentence-case text and `LoadingBlocks` instead of the spinner; Input's disabled state uses the dashed-border rule (BrutalSurface `disabled`), not a grey fill; all 10 "not wired" cells on the specimen board get wired; Chip's status variants join the status-signal test.
+- B0-11 review (Sonnet, icons 49c2428 + B0-8): approve-with-fixes. Fix round: HomeIcon wall top on grid (`V10`); InfoIcon gets serifs (`M12 4V5M10 10H12V20M9 20H15`) so it can't read as a flipped "!"; icons test gains a real geometry check (path/circle extents inside the 24 box, no fill) instead of only wrapper props; `accessibilityElementsHidden` for iOS. Kept: WarningIcon dot as a 2×3 block (zero-length subpaths render unreliably on iOS).
+- Carried to Phase B (B0-11 review): accordion, checkbox and select hand-roll their own `Svg` at stroke 3–4 and chip passes `strokeWidth={4}` — all move to `lib/icons` at the default 2px in their loops; status icons render at ≥ 20 inside Toast/Alert badges (check on device).
