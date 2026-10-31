@@ -7,7 +7,7 @@ import {
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 
-import { motion } from './colors';
+import { motion } from './motion';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -33,8 +33,8 @@ export type PressPhysicsConfig = UsePressPhysicsOptions;
 
 // Stiff, low-damping spring so a press reads as a snap/impact with rebound,
 // not a linear slide into the shadow.
-const SPRING_CONFIG = motion.spring;
-const SQUASH_AMOUNT = motion.squash; // scaleX 0.97 / scaleY 1.03 at full press
+const SPRING_CONFIG = motion.press;
+const SQUASH_AMOUNT = 0.03; // scaleX 0.97 / scaleY 1.03 at full press
 
 export function usePressPhysics({
   offset,

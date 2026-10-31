@@ -220,10 +220,3 @@ export const opacity = {
   /** Placeholder / secondary chrome. */
   subtle: 0.75,
 } as const;
-
-/** Press-physics timing. Springs are stiff so a tap reads as an impact. */
-export const motion = {
-  spring: { damping: 15, stiffness: 400, mass: 0.5 },
-  /** Fractional scaleX/scaleY change at full press. */
-  squash: 0.03,
-} as const;
