@@ -293,30 +293,49 @@ Rules of engagement:
 
 ### 5.4 Tracker (update as we go)
 
-`TODO` → `WIP` → `VERIFIED`
+`TODO` → `DONE`
 
-| Wave | Item | Status | Notes |
-|---|---|---|---|
-| 0 | Remove `packages/ui/node_modules` | **DONE** | Recurs on `npm install` until 0.1 lands. |
-| 0 | 0.1 Kill `file:` link, lib stubs | **DONE** | `npm install` in demo no longer recreates `packages/ui/node_modules` (tested). `@ui/*` kept as a transitional alias for old screens. |
-| 0 | 0.2 Metro: `blockList` + `nodeModulesPaths` + aliases | **DONE** | export clean, 861 modules |
-| 0 | 0.3 TS `paths`, typecheck from `demo/` | **DONE** | 0 errors; lib stub tsconfig also 0 |
-| 0 | 0.4 Babel: drop manual worklets + alias | **DONE** | |
-| 0 | 0.5 `doctor` script | **DONE** | `npm run doctor` in demo |
-| 0 | 0.6 Expo config drift (§2.6) | TODO | |
-| 0 | 0.7 Lab shell + ErrorBoundary + registry | TODO | |
-| 0 | 0.8 Jest + RNTL smoke harness | TODO | |
-| 0 | 0.9 Move unverified components to `_legacy/` | TODO | |
-| 1 | tokens + metrics | WIP | Added `touchTarget`, `controlHeight`, `opacity`, `motion`, `scrim`. Web-checked only. |
-| 1 | theme | WIP | Unchanged. |
-| 1 | cn / usePressPhysics | WIP | `usePressPhysics` now honours reduced motion. |
-| 1 | BrutalSurface | WIP | Dropped the `void _x` hack; unchanged behaviour. |
-| 2 | Button · Label · Separator · Badge · Avatar · Skeleton · Progress · Alert · Card · ListItem · FAB | WIP | Reworked + demo screens. Web-verified in headless Chrome (light + dark); not run on a device. |
-| 3 | Input · Textarea · Checkbox · Switch · RadioGroup · Slider · InputOTP | WIP | Reworked + demos. Real mouse drag/tap/typing tested on web; keyboard/IME behaviour untested on device. |
-| 4 | Marquee · Carousel · Accordion · Tabs · Toast | WIP | Reworked + demos. Carousel swipe/snap **not** exercised (web export only). |
-| 5 | Sheet · Dialog · AlertDialog · DropdownMenu · Select · DatePicker | WIP | Reworked + demos. Sheet now has its own `GestureHandlerRootView` in the Modal and a handle-only dismiss pan; **Android Modal/gesture behaviour is unverified**. |
+| Item | Status | Commit | Verified | Not verified |
+|---|---|---|---|---|
+| Button | TODO | | | |
+| Label | TODO | | | |
+| Separator | TODO | | | |
+| Badge | TODO | | | |
+| Avatar | TODO | | | |
+| Skeleton | TODO | | | |
+| Progress | TODO | | | |
+| Alert | TODO | | | |
+| Card | TODO | | | |
+| ListItem | TODO | | | |
+| FAB | TODO | | | |
+| Input | TODO | | | |
+| Textarea | TODO | | | |
+| Checkbox | TODO | | | |
+| Switch | TODO | | | |
+| RadioGroup | TODO | | | |
+| Slider | TODO | | | |
+| InputOTP | TODO | | | |
+| Marquee | TODO | | | |
+| Carousel | TODO | | | |
+| Accordion | TODO | | | |
+| Tabs | TODO | | | |
+| Toast | TODO | | | |
+| AppBar | TODO | | | |
+| Drawer | TODO | | | |
+| BottomNav | TODO | | | |
+| SearchBar | TODO | | | |
+| Chip | TODO | | | |
+| Sheet | TODO | | | |
+| Dialog | TODO | | | |
+| AlertDialog | TODO | | | |
+| DropdownMenu | TODO | | | |
+| Select | TODO | | | |
+| DatePicker | TODO | | | |
+| SegmentedControl | TODO | | | |
+| EmptyState | TODO | | | |
+| NumberInput | TODO | | | |
 
-> **Not done for any row above (so none is `VERIFIED`):** device run (Android + iOS), screen-reader pass, Jest smoke tests (Wave 0.8 not built), per-component commit. Web checks were scripted with headless Chrome over CDP (mouse events, DOM/aria assertions, console-error capture); the scripts are not in the repo.
+Status moves TODO → DONE only with smoke tests and an emulator flow green; device feel is the owner's checklist (Phase C).
 
 ---
 
