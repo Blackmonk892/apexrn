@@ -1,0 +1,59 @@
+name: android-e2e
+
+on:
+  push:
+    branches: ['ship/**']
+  workflow_dispatch:
+
+jobs:
+  launch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: demo/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      # Hosted runners expose /dev/kvm to root only; the emulator needs it without sudo.
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - run: npm ci
+        working-directory: demo
+      - run: npx expo prebuild --platform android --no-install
+        working-directory: demo
+      - uses: gradle/actions/setup-gradle@v4
+      # Release, not debug: a debug APK loads its JS from Metro, which doesn't exist here.
+      # The Expo template signs release builds with the debug keystore, so no secrets are needed.
+      - run: ./gradlew assembleRelease
+        working-directory: demo/android
+      - name: Install Maestro
+        run: |
+          curl -Ls "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> $GITHUB_PATH
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          script: |
+            adb install demo/android/app/build/outputs/apk/release/app-release.apk
+            maestro test demo/e2e/ --format junit --output maestro-report.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: maestro
+          path: |
+            maestro-report.xml
+            ~/.maestro/tests/**
+          if-no-files-found: warn
