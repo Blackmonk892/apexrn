@@ -4,13 +4,13 @@ import Animated, {
   cancelAnimation,
   Easing,
   useAnimatedStyle,
-  useReducedMotion,
   useSharedValue,
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
 
 import { borderWidths, spacing } from '../lib/colors';
+import { useMotion } from '../lib/motion';
 import { useTheme } from '../lib/theme';
 
 export interface SkeletonProps extends Omit<ViewProps, 'style'> {
@@ -36,7 +36,7 @@ const LAST_LINE_WIDTH = '60%';
 
 function Block({ style, paused, testID }: { style?: StyleProp<ViewStyle>; paused: boolean; testID?: string }) {
   const { colors } = useTheme();
-  const reduceMotion = useReducedMotion();
+  const { reduceMotion } = useMotion();
   const animated = !paused && !reduceMotion;
   const progress = useSharedValue(0);
   const width = useSharedValue(0);
