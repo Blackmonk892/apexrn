@@ -17,6 +17,7 @@ describe('native globals', () => {
   };
 
   afterEach(() => {
+    jest.restoreAllMocks();
     for (const key of ['location', 'addEventListener'] as const) {
       const descriptor = original[key];
       if (descriptor) Object.defineProperty(window, key, descriptor);
@@ -36,6 +37,7 @@ describe('native globals', () => {
   });
 
   it('PlaygroundScreen mounts on native without window.addEventListener', async () => {
+    setWindow('location', { search: '' });
     setWindow('addEventListener', undefined);
     await renderWithTheme(<PlaygroundScreen componentId="button" onBack={() => {}} />);
     expect(screen.getByText('PLAYGROUND · BUTTON')).toBeTruthy();
@@ -51,6 +53,5 @@ describe('native globals', () => {
     );
     expect(screen.getByText('child')).toBeTruthy();
     expect(screen.queryByText('APEXRN')).toBeNull();
-    jest.restoreAllMocks();
   });
 });
