@@ -7,11 +7,13 @@ import {
   CheckIcon,
   CloseIcon,
   HomeIcon,
+  InfoIcon,
   MenuIcon,
   SearchIcon,
   Separator,
   Text,
   UserIcon,
+  WarningIcon,
   borderWidths,
   textStyles,
   useTheme,
@@ -40,6 +42,8 @@ const ICONS: { name: string; Icon: (p: IconProps) => ReactNode }[] = [
   { name: 'home', Icon: HomeIcon },
   { name: 'bell', Icon: BellIcon },
   { name: 'user', Icon: UserIcon },
+  { name: 'warning', Icon: WarningIcon },
+  { name: 'info', Icon: InfoIcon },
 ];
 
 function Section({ title, children }: { title: string; children: ReactNode }) {

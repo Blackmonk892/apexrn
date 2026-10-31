@@ -79,3 +79,15 @@ export const UserIcon = (p: IconProps) => (
     <Path d="M4 21V16H20V21" />
   </Icon>
 );
+
+export const WarningIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <Path d="M12 4V13M12 19V20" />
+  </Icon>
+);
+
+export const InfoIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <Path d="M12 4V5M12 10V20" />
+  </Icon>
+);
