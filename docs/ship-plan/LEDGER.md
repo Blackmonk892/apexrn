@@ -52,11 +52,12 @@ Parallel tasks and their files (recorded retroactively for A5/A6, which were dis
 |---|---|---|---|---|---|
 | B0-1 | Colour roles, neo + raw presets, provider `preset`, contrast gate | DONE | 697edca, 79eb871 | tokens:check (4 palettes, text ≥4.5, border/ring ≥3, shadow ≥1.5); tokens:test 3 (RED via stub); 11 theme/harness tests incl. nested providers + fallback; typecheck; generate-docs; website tsc | Values are start values until B0-7; no device run |
 | B0-2 | `lib/variants.ts` + `lib/motion.ts` | DONE | f462442, f9f86be | 7 variants tests (defaults, unknown/null/inherited-key fallback, no base mutation); motion values + useMotion reduced path; typecheck; registry build (44 items) | Easing curves not visually checked until B0-6 |
-| B0-3 | BrutalSurface on the depth ladder; press, ring, disabled, invalid | WIP | | | |
-| B0-4 | `Text` primitive + loading blocks | TODO | | | |
+| B0-3 | BrutalSurface on the depth ladder; press, ring, disabled, invalid | DONE | aed90fd, af3cbac | 15 BrutalSurface tests (depth neo 4 / raw 2, flat, disabled dashed+no press+no haptic+stable margin, invalid, ring focus/blur/gated, press sink, reduced motion, mid-press reset); 43 suite tests; typecheck; web export | Ring on web keyboard focus not checked in a browser; press translate asserted via shared value (mock limit); no device run |
+| B0-4 | `Text` primitive + loading blocks | WIP | | | |
 | B0-5 | Icons on the §5 grid | TODO | | | |
 | B0-6 | Specimen board | TODO | | | |
 | B0-7 | Tune and lock values | TODO | | | |
 - Ruling: B0-1 keeps BrutalSurface's `offset` prop (only token reads migrate); B0-3 owns the BrutalSurface API change — keeps tasks reviewable separately — cost if wrong: none.
 - Ruling: raw `ring` = the ink foreground (light `#111111`, dark `#F2F0EB`), not the signal red — in raw, red already means error/destructive, so a red focus ring would read as an error state; the 2px offset gap distinguishes the ring from the border — cost if wrong: focus is less loud in raw (tunable on the specimen board).
 - Ruling: neo dark `background` stays `#1A1A1A` (current palette, DESIGN §1.1 tunes the shadow against it); only `surface` is `#222222` — cost if wrong: none.
+- Ruling: the radio is square (DESIGN §1.3: radius 0, no exceptions); Phase B's radio loop makes the indicator distinguishable from Checkbox by its inner mark — cost if wrong: radio and checkbox look alike until Phase B.
