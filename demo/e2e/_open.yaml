@@ -1,0 +1,10 @@
+appId: dev.apexrn.demo
+---
+# Included by component flows with `env: { ID: <screen id> }`. The leading underscore keeps it
+# out of config.yaml's flow globs: it is a helper, not a test.
+- launchApp
+- openLink: apexrn-demo://c/${ID}
+- extendedWaitUntil:
+    visible:
+      id: "screen-${ID}"
+    timeout: 30000
