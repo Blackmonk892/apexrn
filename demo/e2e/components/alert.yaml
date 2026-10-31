@@ -12,7 +12,10 @@ appId: dev.apexrn.demo
     direction: DOWN
 - tapOn:
     id: "alert-retry"
-- assertVisible: "Retried"
+- scrollUntilVisible:
+    element:
+      text: "Retried"
+    direction: DOWN
 - assertNotVisible: "Render Error"
 - assertNotVisible: ".*TypeError.*"
 - takeScreenshot: alert

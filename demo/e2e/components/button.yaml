@@ -8,7 +8,10 @@ appId: dev.apexrn.demo
     id: "button-primary"
 - tapOn:
     id: "button-primary"
-- assertVisible: "Pressed: primary"
+- scrollUntilVisible:
+    element:
+      text: "Pressed: primary"
+    direction: DOWN
 - assertNotVisible: "Render Error"
 - assertNotVisible: ".*TypeError.*"
 - takeScreenshot: button

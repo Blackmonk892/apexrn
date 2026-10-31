@@ -12,7 +12,10 @@ appId: dev.apexrn.demo
     id: "skeleton-placeholder"
 - tapOn:
     id: "skeleton-load"
-- assertVisible: "Event: Loaded"
+- scrollUntilVisible:
+    element:
+      text: "Event: Loaded"
+    direction: DOWN
 - assertVisible:
     id: "skeleton-content"
 - assertNotVisible:

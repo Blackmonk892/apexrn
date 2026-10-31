@@ -12,7 +12,10 @@ appId: dev.apexrn.demo
     direction: DOWN
 - tapOn:
     id: "card-press"
-- assertVisible: "Opened: Release notes"
+- scrollUntilVisible:
+    element:
+      text: "Opened: Release notes"
+    direction: DOWN
 - assertNotVisible: "Render Error"
 - assertNotVisible: ".*TypeError.*"
 - takeScreenshot: card
