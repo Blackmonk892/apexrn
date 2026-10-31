@@ -18,7 +18,7 @@ import Input, { type InputProps } from './input';
 // Types
 // ---------------------------------------------------------------------------
 export interface SearchBarProps
-  extends Omit<InputProps, 'value' | 'defaultValue' | 'onChangeText' | 'leadingIcon' | 'trailingIcon' | 'onTrailingIconPress' | 'style'> {
+  extends Omit<InputProps, 'value' | 'defaultValue' | 'onChangeText' | 'leading' | 'trailing' | 'style'> {
   /** Controlled query. Omit for an uncontrolled bar. */
   value?: string;
   /** Initial query when uncontrolled. @default '' */
@@ -108,10 +108,14 @@ export function SearchBar({
           setFocused(false);
           onBlur?.(e);
         }}
-        leadingIcon={<SearchIcon size={20} color={disabled ? colors.mutedForeground : colors.foreground} />}
-        trailingIcon={hasValue ? <CloseIcon size={18} color={colors.foreground} /> : undefined}
-        onTrailingIconPress={handleClear}
-        trailingIconLabel={clearLabel}
+        leading={<SearchIcon size={20} color={disabled ? colors.mutedForeground : colors.foreground} />}
+        trailing={
+          hasValue ? (
+            <Pressable onPress={handleClear} hitSlop={8} accessibilityRole="button" accessibilityLabel={clearLabel}>
+              <CloseIcon size={18} color={colors.foreground} />
+            </Pressable>
+          ) : undefined
+        }
         accessibilityRole="search"
         {...props}
       />

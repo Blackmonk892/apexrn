@@ -26,7 +26,7 @@ export default function SearchBarScreen({ onBack }: { onBack: () => void }) {
 
       <Section title="States">
         <SearchBar disabled defaultValue="Disabled" />
-        <SearchBar error defaultValue="No results for this" />
+        <SearchBar invalid defaultValue="No results for this" />
       </Section>
     </Layout>
   );

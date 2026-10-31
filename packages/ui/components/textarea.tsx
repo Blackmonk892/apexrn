@@ -7,7 +7,9 @@ import Input from './input';
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
-export interface TextareaProps extends TextInputProps {
+export interface TextareaProps extends Omit<TextInputProps, 'style'> {
+  /** Outer wrapper style. */
+  style?: StyleProp<ViewStyle>;
   /**
    * Disables the textarea, applying muted styles and preventing interactions.
    * @default false
@@ -33,6 +35,7 @@ export interface TextareaProps extends TextInputProps {
 // ---------------------------------------------------------------------------
 const Textarea = forwardRef<TextInput, TextareaProps>(({
   disabled = false,
+  error = false,
   style,
   inputStyle,
   surfaceStyle,
@@ -42,6 +45,7 @@ const Textarea = forwardRef<TextInput, TextareaProps>(({
     <Input
       ref={ref}
       disabled={disabled}
+      invalid={error}
       style={style}
       surfaceStyle={[styles.surface, surfaceStyle]}
       inputStyle={[styles.input, inputStyle]}

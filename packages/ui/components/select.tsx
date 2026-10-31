@@ -191,7 +191,7 @@ export function SelectTrigger({ placeholder, style, onFocus, onBlur, ...props }:
           editable={false}
           value={display}
           placeholder={placeholder}
-          trailingIcon={trailingChevron}
+          trailing={trailingChevron}
           {...props}
         />
       </View>

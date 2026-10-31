@@ -78,7 +78,7 @@ function useRows(): Row[] {
       cells: {
         idle: <Input placeholder="Email" accessibilityLabel="Email" />,
         disabled: <Input placeholder="Email" accessibilityLabel="Email" disabled />,
-        error: <Input defaultValue="ana@" accessibilityLabel="Email" error />,
+        error: <Input defaultValue="ana@" accessibilityLabel="Email" invalid />,
       },
     },
     {
