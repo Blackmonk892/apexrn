@@ -65,6 +65,7 @@ Add these to `ColorScheme` in both presets and both schemes. Components may only
 
 **Dark-mode correction (do this first):** the dark `shadow` must stop being `#FFFFFF`. A white slab behind every surface glows on OLED screens and looks cheap.
 - **Locked (B0, 2026-10-31):** neo dark `shadow` = `#5A5A5A` on `#1A1A1A` (2.5:1). `#4A4A4A` disappeared once the shadow became a solid slab.
+- **Locked (B0 sign-off):** raw dark `shadow` = `#6E6A62` on `#111111` (3.5:1). Lightened at owner sign-off because `#5A5750` was too faint at 2px; still dimmer than the border.
 - Keep the borders bright.
 - The shadow is one solid slab: its border takes the shadow colour, never the surface border colour (an outlined slab is the glow this rule removes).
 
@@ -92,7 +93,7 @@ Add these to `ColorScheme` in both presets and both schemes. Components may only
 | warning / fg | `#F59E0B` / `#000000` | `#FFB300` / `#000000` | `#DEDAD2` / `#111111` | `#2B2925` / `#F2F0EB` |
 | border = input | `#000000` | `#FFFFFF` | `#111111` | `#F2F0EB` |
 | ring | `#3D5AFE` | `#8C9EFF` | `#111111` | `#F2F0EB` |
-| shadow | `#000000` | `#5A5A5A` | `#111111` | `#5A5750` |
+| shadow | `#000000` | `#5A5A5A` | `#111111` | `#6E6A62` |
 | scrim | `#000000` | `#000000` | `#111111` | `#111111` |
 | elevation flat / control / card / overlay | 0 / 2 / 4 / 6 | 0 / 2 / 4 / 6 | 0 / 2 / 2 / 2 | 0 / 2 / 2 / 2 |
 

@@ -147,7 +147,7 @@ const rawDark: ColorScheme = {
   border: '#F2F0EB',
   input: '#F2F0EB',
   ring: '#F2F0EB',
-  shadow: '#5A5750',
+  shadow: '#6E6A62',
   scrim: '#111111',
 };
 
