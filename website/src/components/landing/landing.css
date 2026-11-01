@@ -79,9 +79,7 @@
 .lp-hero {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  gap: 40px;
-  min-height: calc(100svh - var(--fd-nav-height, 56px));
+  gap: 56px;
   padding-top: clamp(24px, 4vw, 56px);
 }
 .lp-h1 {
@@ -177,11 +175,11 @@
 }
 .lp-stage-inner {
   position: relative;
-  width: min(420px, 100%);
+  width: min(360px, 100%);
 }
 .lp-phone {
   position: relative;
-  aspect-ratio: 21 / 40;
+  aspect-ratio: 390 / 844;
   border: 3px solid var(--rule);
   background: var(--paper);
   box-shadow: 6px 6px 0 var(--shadow);
