@@ -74,18 +74,15 @@ export default function Home() {
       </section>
 
       <section className="section" aria-labelledby="looks-title">
-        <div className="page grid-12">
-          <div className="col-7 looks-copy">
+        <div className="page">
+          <LooksPhone>
             <h2 id="looks-title" className="t-h2">
               Two looks
             </h2>
             <p style={{ margin: 0, maxWidth: 480 }}>
               Two presets ship in the box. Edit colors.ts to make your own.
             </p>
-          </div>
-          <div className="col-5">
-            <LooksPhone />
-          </div>
+          </LooksPhone>
         </div>
       </section>
 

@@ -9,14 +9,11 @@ export function BuiltWith() {
       {BUILT_WITH.map((e) => (
         <li key={e.label}>
           <Frame shadow="card" className="built-shot">
-            {e.image ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={`${BASE_PATH}${e.image}`} alt={`${e.label} screen built with ApexRN`} />
-            ) : (
-              <span className="mono-label" data-muted="">
-                Screenshot not added yet
-              </span>
-            )}
+            {/* Both themes are present; CSS shows the one matching html[data-theme]. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="shot-light" src={`${BASE_PATH}${e.images.light}`} alt={e.alt} width={320} height={640} />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="shot-dark" src={`${BASE_PATH}${e.images.dark}`} alt="" aria-hidden="true" width={320} height={640} />
           </Frame>
           <MonoLabel as="p" className="built-caption">
             {e.label}
