@@ -46,9 +46,11 @@ export { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 export { Select, SelectTrigger, SelectContent, SelectItem, type SelectProps, type SelectTriggerProps, type SelectContentProps, type SelectItemProps } from './select';
 export { DatePicker, DatePickerTrigger, DatePickerContent, formatLocalDate, type DatePickerProps, type DatePickerTriggerProps, type DatePickerContentProps } from './date-picker';
 export { Accordion, AccordionItem, AccordionTrigger, AccordionContent, type AccordionProps, type AccordionItemProps, type AccordionTriggerProps } from './accordion';
+export { SegmentedControl, type SegmentedControlProps, type SegmentedControlItem } from './segmented-control';
 export { Tabs, TabsList, TabsTrigger, TabsContent, type TabsProps, type TabsTriggerProps, type TabsContentProps } from './tabs';
 export { AppBar, AppBarAction, type AppBarProps, type AppBarActionProps } from './app-bar';
 export { Drawer, DrawerTrigger, DrawerContent, DrawerHeader, DrawerList, DrawerSection, DrawerFooter, DrawerItem, type DrawerProps, type DrawerContentProps, type DrawerHeaderProps, type DrawerListProps, type DrawerSectionProps, type DrawerFooterProps, type DrawerItemProps } from './drawer';
 export { BottomNav, BottomNavItem, type BottomNavProps, type BottomNavItemProps } from './bottom-nav';
 export { default as SearchBar, type SearchBarProps } from './search-bar';
+export { EmptyState, EmptyStateIcon, EmptyStateTitle, EmptyStateDescription, EmptyStateActions, type EmptyStateProps, type EmptyStateIconProps, type EmptyStateTitleProps, type EmptyStateDescriptionProps, type EmptyStateActionsProps } from './empty-state';
 export { default as Chip, type ChipProps } from './chip';

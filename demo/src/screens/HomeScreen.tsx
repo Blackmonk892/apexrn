@@ -26,6 +26,7 @@ const GROUPS: { title: string; items: { id: string; name: string }[] }[] = [
       { id: 'progress', name: 'Progress' },
       { id: 'alert', name: 'Alert' },
       { id: 'card', name: 'Card' },
+      { id: 'emptystate', name: 'Empty state' },
       { id: 'listitem', name: 'List item' },
       { id: 'fab', name: 'FAB' },
     ],
@@ -40,6 +41,7 @@ const GROUPS: { title: string; items: { id: string; name: string }[] }[] = [
       { id: 'radiogroup', name: 'Radio group' },
       { id: 'slider', name: 'Slider' },
       { id: 'input_otp', name: 'Input OTP' },
+      { id: 'segmentedcontrol', name: 'Segmented control' },
     ],
   },
   {

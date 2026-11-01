@@ -36,6 +36,8 @@ import SheetScreen from './src/screens/SheetScreen';
 import DropdownScreen from './src/screens/DropdownScreen';
 import SelectScreen from './src/screens/SelectScreen';
 import DatePickerScreen from './src/screens/DatePickerScreen';
+import SegmentedControlScreen from './src/screens/SegmentedControlScreen';
+import EmptyStateScreen from './src/screens/EmptyStateScreen';
 import TabsScreen from './src/screens/TabsScreen';
 import SeparatorScreen from './src/screens/SeparatorScreen';
 import FABScreen from './src/screens/FABScreen';
@@ -182,7 +184,9 @@ function AppShell() {
       case 'sheet': return <SheetScreen onBack={() => setCurrentScreen('home')} />;
       case 'dropdown': return <DropdownScreen onBack={() => setCurrentScreen('home')} />;
       case 'select': return <SelectScreen onBack={() => setCurrentScreen('home')} />;
+      case 'emptystate': return <EmptyStateScreen onBack={() => setCurrentScreen('home')} />;
       case 'datepicker': return <DatePickerScreen onBack={() => setCurrentScreen('home')} />;
+      case 'segmentedcontrol': return <SegmentedControlScreen onBack={() => setCurrentScreen('home')} />;
       case 'tabs': return <TabsScreen onBack={() => setCurrentScreen('home')} />;
       case 'separator': return <SeparatorScreen onBack={() => setCurrentScreen('home')} />;
       case 'fab': return <FABScreen onBack={() => setCurrentScreen('home')} />;
