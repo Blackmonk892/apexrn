@@ -2,13 +2,18 @@ appId: dev.apexrn.demo
 ---
 # Included by component flows with `env: { ID: <screen id> }`. The leading underscore keeps it
 # out of config.yaml's flow globs: it is a helper, not a test.
-- launchApp
+# launchApp force-stops then restarts the app; on the CI emulator the restart is sometimes lost
+# and the launcher stays up (runs 41284994786: card, then badge), so relaunch once if Home never shows.
 # A link sent while JS is still booting is delivered to the activity before the Linking
 # listener exists and is lost, so wait for Home first.
-- extendedWaitUntil:
-    visible:
-      id: "home-screen"
-    timeout: 60000
+- retry:
+    maxRetries: 2
+    commands:
+      - launchApp
+      - extendedWaitUntil:
+          visible:
+            id: "home-screen"
+          timeout: 45000
 - openLink: apexrn-demo://c/${ID}
 - extendedWaitUntil:
     visible:
