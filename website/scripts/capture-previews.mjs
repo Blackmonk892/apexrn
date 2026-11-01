@@ -28,7 +28,11 @@ if (!existsSync(join(publicDir, "preview", "index.html"))) {
   process.exit(1);
 }
 const manifest = existsSync(manifestPath) ? JSON.parse(readFileSync(manifestPath, "utf8")) : {};
-const jobs = Object.entries(manifest).flatMap(([slug, list]) => list.map((ex) => ({ slug, id: ex.id })));
+// PREVIEW_SHOTS_ONLY=button,card limits the run to those slugs.
+const only = process.env.PREVIEW_SHOTS_ONLY?.split(",");
+const jobs = Object.entries(manifest)
+  .filter(([slug]) => !only || only.includes(slug))
+  .flatMap(([slug, list]) => list.map((ex) => ({ slug, id: ex.id })));
 
 const server = createServer((req, res) => {
   let path = decodeURIComponent((req.url ?? "/").split("?")[0]);
@@ -52,7 +56,7 @@ try {
   browser = await chromium.launch();
 }
 
-rmSync(outRoot, { recursive: true, force: true });
+if (!only) rmSync(outRoot, { recursive: true, force: true });
 let shot = 0;
 const failures = [];
 try {

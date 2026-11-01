@@ -26,6 +26,14 @@ function PartCount() {
   return <>{dataParts.length}</>;
 }
 
+function PartRange() {
+  return (
+    <>
+      {dataParts[0].number} to {dataParts[dataParts.length - 1].number}
+    </>
+  );
+}
+
 function TokenTable({ preset }: { preset: PresetKey }) {
   const { light, dark } = getPresetTokens(preset);
   const darkByName = new Map(dark.map((t) => [t.name, t.value]));
@@ -104,6 +112,7 @@ export function getMDXComponents(components?: MDXComponents) {
     CliStep,
     SetupCode,
     PartCount,
+    PartRange,
     TokenTable,
     ElevationTable,
     ...components,

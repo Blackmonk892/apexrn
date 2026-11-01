@@ -249,7 +249,7 @@ a[data-active="true"]:where(#nd-sidebar *, [role="dialog"] *) {
   font-weight: 700;
 }
 .prose :where(code):not(pre code) {
-  border: 2px solid var(--ax-border);
+  border: 1px solid var(--ax-border);
   background: var(--ax-muted);
   padding: 0 4px;
 }
@@ -527,4 +527,15 @@ figure.shiki figcaption {
   text-decoration: underline;
   text-decoration-thickness: 2px;
   text-underline-offset: 3px;
+}
+
+/* An iframe whose document differs in color-scheme from its parent gets an opaque canvas. */
+.ax-frame {
+  color-scheme: normal;
+}
+#nd-sidebar a[data-active] {
+  padding-inline: 8px;
+}
+.ax-page-actions {
+  margin-top: -8px;
 }
