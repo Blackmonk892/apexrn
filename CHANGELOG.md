@@ -14,7 +14,7 @@ Unreleased: the tag and npm publish are the owner's final step. Link: https://gi
 - Two theme presets, `neo` and `raw`, each with light and dark palettes: `<ApexRNProvider preset="raw">`. Colour roles live in `colors.ts`; every text, border, ring and shadow pair is checked by `registry/check-contrast.mjs` (`npm run tokens:check`, in CI).
 - New components: Number Input, Segmented Control, Empty State, and the Text type-scale primitive.
 - A 2px-stroke icon set on a 24 grid, including status icons. Status variants (`destructive`, `success`, `warning`) show an icon and a text label in addition to colour.
-- A specimen board and one reference screen per component in `demo/`, Jest + Testing Library smoke tests, and Maestro flows run on an Android emulator in CI.
+- A specimen board, one Lab screen per component and three reference screens (Settings, Checkout, Inbox) in `demo/`, Jest + Testing Library smoke tests, and Maestro flows run on an Android emulator in CI.
 - `scripts/fresh-app-check.mjs`: scaffolds a blank Expo app, runs `init` and `add --all` against the local registry, then typechecks and bundles it. Runs in CI on Linux and macOS.
 - CI on Linux and macOS: demo typecheck, tests and web export, registry and CLI tests, website build.
 
