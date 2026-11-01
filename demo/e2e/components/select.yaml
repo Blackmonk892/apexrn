@@ -12,13 +12,21 @@ appId: dev.apexrn.demo
 - tapOn: "Flutter"
 - assertNotVisible: "Jetpack Compose"
 - assertVisible: "Last change: framework flutter"
+# The searchable select sits below the fold on a phone screen.
+- scrollUntilVisible:
+    element:
+      id: "select-country"
+    direction: DOWN
 - tapOn:
     id: "select-country"
 - tapOn: "Search"
 - inputText: "nor"
 - assertNotVisible: "Brazil"
 - tapOn: "Norway"
-- assertVisible: "Last change: country norway"
+- scrollUntilVisible:
+    element:
+      text: "Last change: country norway"
+    direction: UP
 - assertNotVisible: "Render Error"
 - assertNotVisible: ".*TypeError.*"
 - takeScreenshot: select

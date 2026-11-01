@@ -29,7 +29,7 @@ export default function AlertDialogScreen({ onBack }: { onBack: () => void }) {
           <AlertDialog
             title="Delete account?"
             description="All your data is removed immediately. You cannot undo this."
-            actionText="Delete account"
+            actionText="Delete my account"
             onCancel={() => setLog('Cancelled')}
             onAction={() => setLog('Confirmed')}
           >
