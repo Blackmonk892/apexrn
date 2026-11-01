@@ -14,8 +14,8 @@ export function BuiltWith() {
           <figure>
             <div className="lp-built-frame">
               {/* eslint-disable @next/next/no-img-element -- static export, fixed dimensions */}
-              <img className="lp-img-light" src={`${BASE_PATH}/built-with/ref-${s.id}-light.png`} width={320} height={640} loading="lazy" alt={`${s.title} reference screen in the light look`} />
-              <img className="lp-img-dark" src={`${BASE_PATH}/built-with/ref-${s.id}-dark.png`} width={320} height={640} loading="lazy" alt={`${s.title} reference screen in the dark look`} />
+              <img className="lp-img-light" src={`${BASE_PATH}/built-with/ref-${s.id}-light.png`} width={320} height={640} alt={`${s.title} reference screen in the light look`} />
+              <img className="lp-img-dark" src={`${BASE_PATH}/built-with/ref-${s.id}-dark.png`} width={320} height={640} alt={`${s.title} reference screen in the dark look`} />
               {/* eslint-enable @next/next/no-img-element */}
             </div>
             <figcaption className="lp-label">

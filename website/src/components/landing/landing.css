@@ -558,11 +558,11 @@
   width: 100%;
   height: auto;
 }
-.lp-img-dark,
-.dark .lp-img-light {
+.lp-built-frame .lp-img-dark,
+.dark .lp-built-frame .lp-img-light {
   display: none;
 }
-.dark .lp-img-dark {
+.dark .lp-built-frame .lp-img-dark {
   display: block;
 }
 .lp-built figcaption {
@@ -639,6 +639,13 @@
 @media (max-width: 767px) {
   .lp {
     --gap: 80px;
+  }
+  .lp-hero {
+    min-height: 0;
+    gap: 48px;
+  }
+  .lp-h1 {
+    line-height: 1;
   }
   .lp-hero-row {
     grid-template-columns: minmax(0, 1fr);
