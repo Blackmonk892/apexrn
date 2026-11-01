@@ -117,13 +117,14 @@ Add a `Text` primitive whose `variant` is one of the roles below. Components nev
 |---|---|---|---|
 | `display` | 32 / 36 | 900 | Tracking −0.5. Screen titles and hero numbers only. |
 | `title` | 20 / 24 | 800 | Card, dialog, drawer and sheet titles. |
+| `strong` | 16 / 22 | 800 | Button and FAB labels, list-row titles. Sentence case. Added in Phase B: `title` at 20 was too loud for controls and rows. |
 | `body` | 16 / 22 | 400–500 | Sentence case. |
 | `label` | 12 / 16 | 700, **mono**, uppercase, tracking +1 | Field labels, section labels, badges, part numbers. |
 | `mono` | 14 / 20 | 500, tabular figures | Numbers, prices, dates, counts, codes. |
 
 - **Font families:** system sans for display/title/body. For mono, use `Menlo` (iOS), `monospace` (Android), `ui-monospace` (web).
 - **Font scale:** honour the OS font scale up to 1.3×, with layouts checked at 2×. Text wraps or truncates with an ellipsis; it never clips.
-- **Uppercase is for `label` only.** Button text is sentence case, set in title weight. This is the single biggest move away from the generic neo-brutalist look.
+- **Uppercase is for `label` only.** Button text is sentence case, set in `strong` (body size at title weight). This is the single biggest move away from the generic neo-brutalist look.
 
 ## 3. States (the same everywhere)
 

@@ -1,0 +1,15 @@
+appId: dev.apexrn.demo
+---
+- runFlow:
+    file: ../_open.yaml
+    env:
+      ID: numberinput
+- assertVisible: "Value: 2"
+- tapOn: "Increase"
+- tapOn: "Increase"
+- assertVisible:
+    id: "numberinput-log"
+- assertVisible: "Value: 4"
+- assertNotVisible: "Render Error"
+- assertNotVisible: ".*TypeError.*"
+- takeScreenshot: numberinput

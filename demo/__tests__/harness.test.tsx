@@ -1,8 +1,8 @@
 import { Text } from 'react-native';
 import { render, screen } from '@testing-library/react-native';
 import { useReducedMotion } from 'react-native-reanimated';
-import { Button } from '@apexrn/ui';
-import { renderWithTheme } from './utils/render';
+import { Button, presets, useTheme, type PresetName } from '@apexrn/ui';
+import { renderInPalettes, renderWithTheme } from './utils/render';
 
 describe('test harness', () => {
   it('renders a library component through @apexrn/ui', async () => {
@@ -36,5 +36,18 @@ describe('useReducedMotion mock', () => {
   it('defaults to false again on the next test', async () => {
     const screen = await render(<Probe />);
     expect(screen.getByText('full')).toBeTruthy();
+  });
+});
+
+describe('renderInPalettes', () => {
+  const Probe = () => <Text testID="bg">{useTheme().colors.background}</Text>;
+
+  it('renders once per preset and mode, labelled', async () => {
+    const results = await renderInPalettes(<Probe />);
+    expect(results.map((r) => r.palette)).toEqual(['neo-light', 'neo-dark', 'raw-light', 'raw-dark']);
+    for (const { palette, view } of results) {
+      const [preset, mode] = palette.split('-') as [PresetName, 'light' | 'dark'];
+      expect(view.getByTestId('bg').props.children).toBe(presets[preset][mode].background);
+    }
   });
 });

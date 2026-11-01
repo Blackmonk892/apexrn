@@ -1,0 +1,21 @@
+appId: dev.apexrn.demo
+---
+- runFlow:
+    file: ../_open.yaml
+    env:
+      ID: carousel
+- assertVisible:
+    id: "carousel-main"
+- assertVisible: "Index: 0"
+- swipe:
+    from:
+      id: "carousel-main"
+    direction: LEFT
+- assertVisible: "Index: 1"
+- tapOn: "Next slide"
+- assertVisible: "Index: 2"
+- assertVisible:
+    id: "carousel-log"
+- assertNotVisible: "Render Error"
+- assertNotVisible: ".*TypeError.*"
+- takeScreenshot: carousel

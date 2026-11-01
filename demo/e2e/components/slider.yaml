@@ -1,0 +1,13 @@
+appId: dev.apexrn.demo
+---
+- runFlow:
+    file: ../_open.yaml
+    env:
+      ID: slider
+- tapOn:
+    id: "slider-volume"
+    point: "100%,50%"
+- assertVisible: "Volume: 100"
+- assertNotVisible: "Render Error"
+- assertNotVisible: ".*TypeError.*"
+- takeScreenshot: slider

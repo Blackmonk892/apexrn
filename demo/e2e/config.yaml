@@ -1,0 +1,6 @@
+# Globs are relative to this folder. _open.yaml is a helper included with runFlow, so it is not listed.
+flows:
+  - "launch.yaml"
+  - "specimen.yaml"
+  - "components/*.yaml"
+  - "reference.yaml"

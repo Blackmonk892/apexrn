@@ -1,6 +1,17 @@
 import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { AlertDialog, Button } from '@apexrn/ui';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+  Button,
+} from '@apexrn/ui';
 import Layout from '../components/Layout';
 import Section, { Caption } from '../components/Section';
 
@@ -9,7 +20,7 @@ export default function AlertDialogScreen({ onBack }: { onBack: () => void }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <Layout title="ALERT DIALOG" onBack={onBack}>
+    <Layout id="alertdialog" title="ALERT DIALOG" onBack={onBack}>
       <Section
         title="Destructive (default)"
         note="Tapping the backdrop does nothing: the user has to choose. The Android back button and Escape count as Cancel."
@@ -18,17 +29,17 @@ export default function AlertDialogScreen({ onBack }: { onBack: () => void }) {
           <AlertDialog
             title="Delete account?"
             description="All your data is removed immediately. You cannot undo this."
-            actionText="Delete account"
-            onCancel={() => setLog('cancel')}
-            onAction={() => setLog('delete')}
+            actionText="Delete my account"
+            onCancel={() => setLog('Cancelled')}
+            onAction={() => setLog('Confirmed')}
           >
-            <Button title="Delete account" variant="destructive" />
+            <Button title="Delete account" variant="destructive" testID="alertdialog-open" />
           </AlertDialog>
         </View>
         <Caption>{`Last choice: ${log}`}</Caption>
       </Section>
 
-      <Section title="Non-destructive action" note="destructive={false} styles the action as a primary button.">
+      <Section title="Non-destructive action" note="destructive={false} styles the action as a primary button and drops the title icon.">
         <View style={styles.row}>
           <AlertDialog
             title="Sign out?"
@@ -36,10 +47,30 @@ export default function AlertDialogScreen({ onBack }: { onBack: () => void }) {
             cancelText="Stay signed in"
             actionText="Sign out"
             destructive={false}
-            onCancel={() => setLog('stay')}
-            onAction={() => setLog('sign out')}
+            onCancel={() => setLog('Stayed signed in')}
+            onAction={() => setLog('Signed out')}
           >
             <Button title="Sign out" variant="outline" />
+          </AlertDialog>
+        </View>
+      </Section>
+
+      <Section title="Compound parts" note="The same parts the convenience props are built from.">
+        <View style={styles.row}>
+          <AlertDialog destructive onCancel={() => setLog('Kept the project')}>
+            <AlertDialogTrigger asChild>
+              <Button title="Archive project" variant="outline" />
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Archive this project?</AlertDialogTitle>
+                <AlertDialogDescription>Members lose access until you restore it from settings.</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel title="Keep project" />
+                <AlertDialogAction title="Archive" onPress={() => setLog('Archived')} />
+              </AlertDialogFooter>
+            </AlertDialogContent>
           </AlertDialog>
         </View>
       </Section>
@@ -55,8 +86,8 @@ export default function AlertDialogScreen({ onBack }: { onBack: () => void }) {
           description="Your edits have not been saved."
           cancelText="Keep editing"
           actionText="Discard"
-          onAction={() => setLog('discard')}
-          onCancel={() => setLog('keep editing')}
+          onAction={() => setLog('Discarded')}
+          onCancel={() => setLog('Kept editing')}
         />
       </Section>
 

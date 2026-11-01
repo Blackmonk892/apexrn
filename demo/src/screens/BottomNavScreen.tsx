@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View } from 'react-native';
-import { BellIcon, BottomNav, BottomNavItem, HomeIcon, SearchIcon, UserIcon, useTheme } from '@apexrn/ui';
+import { BellIcon, BottomNav, BottomNavItem, HomeIcon, SearchIcon, Text as UIText, UserIcon, useTheme } from '@apexrn/ui';
 import Layout from '../components/Layout';
 import Section, { Caption } from '../components/Section';
 
@@ -13,8 +13,8 @@ export default function BottomNavScreen({ onBack }: { onBack: () => void }) {
   const frame = { borderWidth: 2, borderColor: colors.border };
 
   return (
-    <Layout title="BOTTOM NAV" onBack={onBack}>
-      <Section title="Controlled, four items" note="The selected block slides (transform only). Labels are always visible.">
+    <Layout id="bottomnav" title="BOTTOM NAV" onBack={onBack}>
+      <Section title="Controlled, four items" note="Every tab shows icon and label; the selected block slides (transform only) and inverts.">
         <View style={frame}>
           <BottomNav
             value={tab}
@@ -24,12 +24,13 @@ export default function BottomNavScreen({ onBack }: { onBack: () => void }) {
             }}
           >
             <BottomNavItem value="home" label="Home" icon={icon(HomeIcon)} />
-            <BottomNavItem value="search" label="Search" icon={icon(SearchIcon)} />
+            <BottomNavItem value="search" label="Search" testID="bottomnav-search" icon={icon(SearchIcon)} />
             <BottomNavItem value="alerts" label="Alerts" badge={unread} icon={icon(BellIcon)} />
             <BottomNavItem value="me" label="Me" icon={icon(UserIcon)} />
           </BottomNav>
         </View>
-        <Caption>{`Selected: ${tab}. The badge clears when Alerts opens.`}</Caption>
+        <UIText variant="mono" testID="bottomnav-log">{`Tab: ${tab}`}</UIText>
+        <Caption>The badge clears when Alerts opens.</Caption>
       </Section>
 
       <Section title="Uncontrolled, three items" note="defaultValue keeps its own state. String badges work too.">
@@ -42,7 +43,18 @@ export default function BottomNavScreen({ onBack }: { onBack: () => void }) {
         </View>
       </Section>
 
-      <Section title="Edge cases" note="Disabled item, two items, a long label, and a badge past two digits.">
+      <Section title="Label on selected only" note='labelMode="selected": inactive items are icon-only and keep their accessibility label.'>
+        <View style={frame}>
+          <BottomNav defaultValue="home" labelMode="selected">
+            <BottomNavItem value="home" label="Home" icon={icon(HomeIcon)} />
+            <BottomNavItem value="search" label="Search" icon={icon(SearchIcon)} />
+            <BottomNavItem value="alerts" label="Alerts" badge={5} icon={icon(BellIcon)} />
+            <BottomNavItem value="me" label="Me" icon={icon(UserIcon)} />
+          </BottomNav>
+        </View>
+      </Section>
+
+      <Section title="Edge cases" note="Disabled item, two items, a long label (truncates to one line), and a badge past two digits.">
         <View style={[frame, { gap: 16 }]}>
           <BottomNav defaultValue="a">
             <BottomNavItem value="a" label="Open" icon={icon(HomeIcon)} />

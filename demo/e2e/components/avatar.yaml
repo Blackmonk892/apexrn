@@ -1,0 +1,19 @@
+appId: dev.apexrn.demo
+---
+- runFlow:
+    file: ../_open.yaml
+    env:
+      ID: avatar
+- assertVisible:
+    id: "avatar-image-case"
+- assertVisible:
+    id: "avatar-initials-case"
+- scrollUntilVisible:
+    element:
+      id: "avatar-broken"
+    direction: DOWN
+- assertVisible:
+    id: "avatar-broken"
+- assertNotVisible: "Render Error"
+- assertNotVisible: ".*TypeError.*"
+- takeScreenshot: avatar

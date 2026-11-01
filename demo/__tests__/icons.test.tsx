@@ -4,9 +4,11 @@ import {
   BackIcon,
   BellIcon,
   CheckIcon,
+  ChevronDownIcon,
   CloseIcon,
   HomeIcon,
   InfoIcon,
+  PlusIcon,
   MenuIcon,
   SearchIcon,
   UserIcon,
@@ -24,6 +26,8 @@ const icons = {
   UserIcon,
   WarningIcon,
   InfoIcon,
+  PlusIcon,
+  ChevronDownIcon,
 };
 
 const CIRCLES: Record<string, number> = { SearchIcon: 1, UserIcon: 1 };

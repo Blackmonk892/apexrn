@@ -293,30 +293,49 @@ Rules of engagement:
 
 ### 5.4 Tracker (update as we go)
 
-`TODO` → `WIP` → `VERIFIED`
+`TODO` → `DONE`
 
-| Wave | Item | Status | Notes |
-|---|---|---|---|
-| 0 | Remove `packages/ui/node_modules` | **DONE** | Recurs on `npm install` until 0.1 lands. |
-| 0 | 0.1 Kill `file:` link, lib stubs | **DONE** | `npm install` in demo no longer recreates `packages/ui/node_modules` (tested). `@ui/*` kept as a transitional alias for old screens. |
-| 0 | 0.2 Metro: `blockList` + `nodeModulesPaths` + aliases | **DONE** | export clean, 861 modules |
-| 0 | 0.3 TS `paths`, typecheck from `demo/` | **DONE** | 0 errors; lib stub tsconfig also 0 |
-| 0 | 0.4 Babel: drop manual worklets + alias | **DONE** | |
-| 0 | 0.5 `doctor` script | **DONE** | `npm run doctor` in demo |
-| 0 | 0.6 Expo config drift (§2.6) | TODO | |
-| 0 | 0.7 Lab shell + ErrorBoundary + registry | TODO | |
-| 0 | 0.8 Jest + RNTL smoke harness | TODO | |
-| 0 | 0.9 Move unverified components to `_legacy/` | TODO | |
-| 1 | tokens + metrics | WIP | Added `touchTarget`, `controlHeight`, `opacity`, `motion`, `scrim`. Web-checked only. |
-| 1 | theme | WIP | Unchanged. |
-| 1 | cn / usePressPhysics | WIP | `usePressPhysics` now honours reduced motion. |
-| 1 | BrutalSurface | WIP | Dropped the `void _x` hack; unchanged behaviour. |
-| 2 | Button · Label · Separator · Badge · Avatar · Skeleton · Progress · Alert · Card · ListItem · FAB | WIP | Reworked + demo screens. Web-verified in headless Chrome (light + dark); not run on a device. |
-| 3 | Input · Textarea · Checkbox · Switch · RadioGroup · Slider · InputOTP | WIP | Reworked + demos. Real mouse drag/tap/typing tested on web; keyboard/IME behaviour untested on device. |
-| 4 | Marquee · Carousel · Accordion · Tabs · Toast | WIP | Reworked + demos. Carousel swipe/snap **not** exercised (web export only). |
-| 5 | Sheet · Dialog · AlertDialog · DropdownMenu · Select · DatePicker | WIP | Reworked + demos. Sheet now has its own `GestureHandlerRootView` in the Modal and a handle-only dismiss pan; **Android Modal/gesture behaviour is unverified**. |
+| Item | Status | Commit | Verified | Not verified |
+|---|---|---|---|---|
+| Button | DONE | 105a099, dfc0a5c | jest file; typecheck; review fixes applied; Maestro flow green on API 34 emulator (run 41246109825) | Physical Android, iOS, screen reader |
+| Label | DONE | 5a54d53, 52dbf09 | jest file; typecheck; review fixes applied; Maestro flow green on API 34 emulator (run 41246109825) | Physical Android, iOS, screen reader |
+| Separator | DONE | 11f80f0, 9aa0e09 | jest file; typecheck; review fixes applied; Maestro flow green on API 34 emulator (run 41246109825) | Physical Android, iOS, screen reader |
+| Badge | DONE | 667b738, 000b4f9 | jest file; typecheck; review fixes applied; Maestro flow green on API 34 emulator (run 41246109825) | Physical Android, iOS, screen reader |
+| Avatar | DONE | b937450, 9087dc2 | jest file; typecheck; review fixes applied; Maestro flow green on API 34 emulator (run 41246109825) | Physical Android, iOS, screen reader |
+| Skeleton | DONE | ac3bfd4, 3854877 | jest file; typecheck; review fixes applied; Maestro flow green on API 34 emulator (run 41246109825) | Physical Android, iOS, screen reader |
+| Progress | DONE | 3296d24, 8b0fa49 | jest file; typecheck; review fixes applied; Maestro flow green on API 34 emulator (run 41246109825) | Physical Android, iOS, screen reader |
+| Alert | DONE | 55b545a, ac99074 | jest file; typecheck; review fixes applied; Maestro flow green on API 34 emulator (run 41246109825) | Physical Android, iOS, screen reader |
+| Card | DONE | 0941135, e193337 | jest file; typecheck; review fixes applied; Maestro flow green on API 34 emulator (run 41246109825) | Physical Android, iOS, screen reader |
+| ListItem | DONE | fabc0eb, c0ccd0f, bee8f9a | jest file; typecheck; review fixes applied; Maestro flow green on API 34 emulator (run 41246109825) | Physical Android, iOS, screen reader |
+| FAB | DONE | 6edb036, bee8f9a | jest file; typecheck; review fixes applied; Maestro flow green on API 34 emulator (run 41246109825) | Physical Android, iOS, screen reader |
+| Input | DONE | 2a2d342, 5579958 | jest file; typecheck; review fixes applied; Maestro flow green on API 34 emulator (run 41246109825) | Physical Android, iOS, screen reader |
+| Textarea | TODO | | | |
+| Checkbox | DONE | 43c1f14 | jest file; typecheck; review fixes applied; Maestro flow green on API 34 emulator (run 41246109825) | Physical Android, iOS, screen reader |
+| Switch | DONE | 1bb53c2 | jest file; typecheck; review fixes applied; Maestro flow green on API 34 emulator (run 41246109825) | Physical Android, iOS, screen reader |
+| RadioGroup | DONE | 4142461 | jest file; typecheck; review fixes applied; Maestro flow green on API 34 emulator (run 41246109825) | Physical Android, iOS, screen reader |
+| Slider | TODO | | | |
+| InputOTP | TODO | | | |
+| Marquee | TODO | | | |
+| Carousel | TODO | | | |
+| Accordion | TODO | | | |
+| Tabs | TODO | | | |
+| Toast | TODO | | | |
+| AppBar | TODO | | | |
+| Drawer | TODO | | | |
+| BottomNav | TODO | | | |
+| SearchBar | TODO | | | |
+| Chip | TODO | | | |
+| Sheet | TODO | | | |
+| Dialog | TODO | | | |
+| AlertDialog | TODO | | | |
+| DropdownMenu | TODO | | | |
+| Select | TODO | | | |
+| DatePicker | TODO | | | |
+| SegmentedControl | TODO | | | |
+| EmptyState | TODO | | | |
+| NumberInput | TODO | | | |
 
-> **Not done for any row above (so none is `VERIFIED`):** device run (Android + iOS), screen-reader pass, Jest smoke tests (Wave 0.8 not built), per-component commit. Web checks were scripted with headless Chrome over CDP (mouse events, DOM/aria assertions, console-error capture); the scripts are not in the repo.
+Status moves TODO → DONE only with smoke tests and an emulator flow green; device feel is the owner's checklist (Phase C).
 
 ---
 

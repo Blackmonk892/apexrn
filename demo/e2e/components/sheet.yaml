@@ -1,0 +1,31 @@
+appId: dev.apexrn.demo
+---
+- runFlow:
+    file: ../_open.yaml
+    env:
+      ID: sheet
+- assertVisible:
+    id: "sheet-open"
+- tapOn:
+    id: "sheet-open"
+- assertVisible: "Order 4821"
+- tapOn:
+    id: "sheet-done"
+- assertNotVisible: "Order 4821"
+# The event log sits below the fold on a phone screen.
+- scrollUntilVisible:
+    element:
+      text: "Last: Order sheet closed"
+    direction: DOWN
+- scrollUntilVisible:
+    element:
+      id: "sheet-open"
+    direction: UP
+- tapOn:
+    id: "sheet-open"
+- assertVisible: "Order 4821"
+- back
+- assertNotVisible: "Order 4821"
+- assertNotVisible: "Render Error"
+- assertNotVisible: ".*TypeError.*"
+- takeScreenshot: sheet

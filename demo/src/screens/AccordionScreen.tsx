@@ -1,29 +1,27 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text } from 'react-native';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger, useTheme } from '@apexrn/ui';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger, Text } from '@apexrn/ui';
 import Layout from '../components/Layout';
-import Section, { Caption } from '../components/Section';
+import Section from '../components/Section';
 
 function Body({ children }: { children: string }) {
-  const { colors } = useTheme();
-  return <Text style={[styles.body, { color: colors.foreground }]}>{children}</Text>;
+  return <Text>{children}</Text>;
 }
 
 export default function AccordionScreen({ onBack }: { onBack: () => void }) {
   const [open, setOpen] = useState<string>('shipping');
 
   return (
-    <Layout title="ACCORDION" onBack={onBack}>
+    <Layout id="accordion" title="ACCORDION" onBack={onBack}>
       <Section title="Single, controlled" note="type single (default): opening one closes the others. value + onValueChange.">
         <Accordion type="single" value={open} onValueChange={(v) => setOpen(v as string)}>
           <AccordionItem value="shipping">
-            <AccordionTrigger>Shipping</AccordionTrigger>
+            <AccordionTrigger testID="accordion-shipping">Shipping</AccordionTrigger>
             <AccordionContent>
               <Body>Orders ship within two business days. You get a tracking link by email.</Body>
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="returns">
-            <AccordionTrigger>Returns</AccordionTrigger>
+            <AccordionTrigger testID="accordion-returns">Returns</AccordionTrigger>
             <AccordionContent>
               <Body>Return any unused item within 30 days for a full refund.</Body>
             </AccordionContent>
@@ -35,7 +33,7 @@ export default function AccordionScreen({ onBack }: { onBack: () => void }) {
             </AccordionContent>
           </AccordionItem>
         </Accordion>
-        <Caption>{`Open: ${open || 'none'}`}</Caption>
+        <Text variant="mono" testID="accordion-log">{`Open: ${open || 'none'}`}</Text>
       </Section>
 
       <Section title="Multiple, uncontrolled" note="type multiple with defaultValue. The first item starts open and must not animate on mount.">
@@ -57,8 +55,8 @@ export default function AccordionScreen({ onBack }: { onBack: () => void }) {
 
       <Section title="Disabled">
         <Accordion>
-          <AccordionItem value="x">
-            <AccordionTrigger disabled>Unavailable section</AccordionTrigger>
+          <AccordionItem value="x" disabled>
+            <AccordionTrigger>Unavailable section</AccordionTrigger>
             <AccordionContent>
               <Body>You cannot open this.</Body>
             </AccordionContent>
@@ -82,7 +80,3 @@ export default function AccordionScreen({ onBack }: { onBack: () => void }) {
     </Layout>
   );
 }
-
-const styles = StyleSheet.create({
-  body: { fontSize: 15, lineHeight: 21, fontWeight: '500' },
-});

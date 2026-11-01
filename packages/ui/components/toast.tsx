@@ -1,227 +1,243 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { StyleSheet, Text, View, type ViewProps } from 'react-native';
-import Animated, {
-  Easing,
-  runOnJS,
-  useAnimatedStyle,
-  useReducedMotion,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
+import { Pressable, StyleSheet, View, type ViewProps } from 'react-native';
+import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
+import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
-import { spacing, typography } from '../lib/colors';
+import { spacing, touchTarget, type ColorScheme } from '../lib/colors';
 import { CheckIcon, CloseIcon, WarningIcon } from '../lib/icons';
+import { useMotion } from '../lib/motion';
 import { useTheme } from '../lib/theme';
-import { cn } from '../lib/utils';
+import { variants } from '../lib/variants';
 import BrutalSurface from './brutal-surface';
+import Button from './button';
+import Text from './text';
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
+export interface ToastAction {
+  label: string;
+  onPress: () => void;
+}
+
 export interface ToastProps extends ViewProps {
-  /**
-   * Controls the visibility of the toast.
-   */
+  /** Controls the visibility of the toast. */
   visible: boolean;
-  /**
-   * The main heading text for the toast.
-   */
   title: string;
-  /**
-   * Optional secondary descriptive text.
-   */
   description?: string;
   /**
-   * The visual style of the toast. Status variants add an icon and a spoken
-   * prefix ("Error.", "Success.", "Warning."), so they are never colour-only.
+   * Status variants add an icon and a visible text label ("Error", "Success", "Warning"),
+   * so they are never colour-only.
    * @default 'default'
    */
   variant?: 'default' | 'primary' | 'destructive' | 'success' | 'warning';
-  /**
-   * Auto-dismiss duration in milliseconds.
-   * @default 3000
-   */
+  /** Auto-dismiss in milliseconds. @default 3000 */
   duration?: number;
-  /**
-   * Callback fired once the toast has slid out after being dismissed
-   * (manually or via timeout).
-   */
+  /** Rendered as a small Button under the text. Pressing it runs `onPress` and dismisses. */
+  action?: ToastAction;
+  /** Fires once the toast has left the screen, after a close tap, a swipe or the timeout. */
   onDismiss: () => void;
 }
 
-// ---------------------------------------------------------------------------
-// Design tokens
-// ---------------------------------------------------------------------------
 const HIDDEN_Y = -150;
 const GLYPH_SIZE = 22;
 const ICON_SIZE = 16;
+const SWIPE_DISMISS_DISTANCE = 96;
+const SWIPE_DISMISS_VELOCITY = 600;
+const SWIPE_FADE_DISTANCE = 220;
+const OFFSCREEN_X = 600;
 
 const STATUS = {
-  destructive: { Icon: CloseIcon, spoken: 'Error. ' },
-  success: { Icon: CheckIcon, spoken: 'Success. ' },
-  warning: { Icon: WarningIcon, spoken: 'Warning. ' },
+  destructive: { Icon: CloseIcon, label: 'Error' },
+  success: { Icon: CheckIcon, label: 'Success' },
+  warning: { Icon: WarningIcon, label: 'Warning' },
 } as const;
 
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
+type Tone = { fill: keyof ColorScheme; ink: keyof ColorScheme };
+
+const look = variants({
+  base: { tone: { fill: 'foreground', ink: 'background' } as Tone },
+  variants: {
+    variant: {
+      default: {},
+      primary: { tone: { fill: 'primary', ink: 'primaryForeground' } },
+      destructive: { tone: { fill: 'destructive', ink: 'destructiveForeground' } },
+      success: { tone: { fill: 'success', ink: 'successForeground' } },
+      warning: { tone: { fill: 'warning', ink: 'warningForeground' } },
+    },
+  },
+  defaultVariants: { variant: 'default' },
+});
+
 export function Toast({
   visible,
   title,
   description,
   variant = 'default',
   duration = 3000,
+  action,
   onDismiss,
   style,
   ...props
 }: ToastProps) {
   const { colors } = useTheme();
-  const reduceMotion = useReducedMotion();
-  const translateY = useSharedValue(HIDDEN_Y);
+  const { reduceMotion, enter, exit } = useMotion();
+  // Reduced motion drops the slide: the toast fades in place.
+  const translateY = useSharedValue(reduceMotion ? 0 : HIDDEN_Y);
+  const translateX = useSharedValue(0);
+  const fade = useSharedValue(0);
 
-  // Ref-stabilized so a re-created `onDismiss` identity doesn't restart
-  // the auto-dismiss timer on every parent render.
+  // Ref-stabilized so a new `onDismiss` identity doesn't restart the auto-dismiss timer.
   const onDismissRef = useRef(onDismiss);
   useEffect(() => {
     onDismissRef.current = onDismiss;
   }, [onDismiss]);
 
-  // One dismissal per showing: a tap followed by the auto-dismiss timer (or
-  // two quick taps) must notify the parent once.
+  // One dismissal per showing: a tap, a swipe and the timer must notify the parent once.
   const dismissing = useRef(false);
-
-  const variants = {
-    default: {
-      surface: { backgroundColor: colors.foreground },
-      text: { color: colors.background },
-    },
-    primary: {
-      surface: { backgroundColor: colors.primary },
-      text: { color: colors.primaryForeground },
-    },
-    destructive: {
-      surface: { backgroundColor: colors.destructive },
-      text: { color: colors.destructiveForeground },
-    },
-    success: {
-      surface: { backgroundColor: colors.success },
-      text: { color: colors.successForeground },
-    },
-    warning: {
-      surface: { backgroundColor: colors.warning },
-      text: { color: colors.warningForeground },
-    },
-  };
-  const activeVariant = variants[variant];
-  const status = variant in STATUS ? STATUS[variant as keyof typeof STATUS] : null;
-
-  const notifyDismissed = useCallback(() => {
+  const finish = useCallback(() => {
+    if (dismissing.current) return;
+    dismissing.current = true;
     onDismissRef.current();
   }, []);
 
-  const hideToast = useCallback(() => {
+  const hide = useCallback(() => {
     if (dismissing.current) return;
-    dismissing.current = true;
-    // Notify from the animation's completion callback (on the JS thread),
-    // and only if the slide-out actually finished.
-    translateY.value = withTiming(
-      HIDDEN_Y,
-      { duration: reduceMotion ? 0 : 250, easing: Easing.in(Easing.quad) },
-      (finished) => {
-        if (finished) runOnJS(notifyDismissed)();
-      },
-    );
-  }, [translateY, reduceMotion, notifyDismissed]);
+    translateY.value = withTiming(reduceMotion ? 0 : HIDDEN_Y, exit);
+    fade.value = withTiming(0, exit, (done) => {
+      if (done) runOnJS(finish)();
+    });
+  }, [translateY, fade, exit, reduceMotion, finish]);
 
   useEffect(() => {
     if (!visible) {
-      translateY.value = withTiming(HIDDEN_Y, {
-        duration: reduceMotion ? 0 : 250,
-        easing: Easing.in(Easing.quad),
-      });
+      translateY.value = withTiming(reduceMotion ? 0 : HIDDEN_Y, exit);
+      fade.value = withTiming(0, exit);
       return;
     }
-
     dismissing.current = false;
-    translateY.value = withTiming(0, {
-      duration: reduceMotion ? 0 : 300,
-      easing: reduceMotion ? Easing.linear : Easing.out(Easing.back(1.5)),
+    translateX.value = 0;
+    translateY.value = withTiming(0, enter);
+    fade.value = withTiming(1, enter);
+    const timeout = setTimeout(hide, duration);
+    return () => clearTimeout(timeout);
+  }, [visible, duration, enter, exit, reduceMotion, translateX, translateY, fade, hide]);
+
+  const pan = Gesture.Pan()
+    .enabled(visible)
+    // Horizontal only, so a vertical scroll under the toast is never stolen.
+    .activeOffsetX([-12, 12])
+    .failOffsetY([-12, 12])
+    .onUpdate((e) => {
+      translateX.value = e.translationX;
+    })
+    .onEnd((e) => {
+      const away = Math.abs(translateX.value) > SWIPE_DISMISS_DISTANCE || Math.abs(e.velocityX) > SWIPE_DISMISS_VELOCITY;
+      if (away) {
+        const dir = translateX.value === 0 ? Math.sign(e.velocityX) || 1 : Math.sign(translateX.value);
+        translateX.value = withTiming(dir * OFFSCREEN_X, exit, (done) => {
+          if (done) runOnJS(finish)();
+        });
+      } else {
+        translateX.value = withTiming(0, enter);
+      }
     });
 
-    const timeout = setTimeout(hideToast, duration);
-    return () => clearTimeout(timeout);
-  }, [visible, duration, reduceMotion, translateY, hideToast]);
-
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }],
+    opacity: fade.value * (1 - Math.min(Math.abs(translateX.value) / SWIPE_FADE_DISTANCE, 1)),
+    transform: [{ translateX: translateX.value }, { translateY: translateY.value }],
   }));
 
-  const label = `${status?.spoken ?? ''}${title}${description ? `. ${description}` : ''}`;
+  const { tone } = look({ variant });
+  const fill = colors[tone.fill];
+  const ink = colors[tone.ink];
+  const status = variant in STATUS ? STATUS[variant as keyof typeof STATUS] : null;
+  const destructive = variant === 'destructive';
 
   return (
-    <Animated.View
-      style={[styles.absoluteWrapper, { left: spacing.md, right: spacing.md }, style, animatedStyle]}
-      pointerEvents={visible ? 'auto' : 'none'}
-      accessibilityRole="alert"
-      accessibilityLiveRegion="assertive"
-      accessibilityElementsHidden={!visible}
-      importantForAccessibility={visible ? 'auto' : 'no-hide-descendants'}
-      {...props}
+    // Own root view: the toast is not guaranteed to sit under the app's GestureHandlerRootView.
+    <GestureHandlerRootView
+      style={[styles.wrapper, { left: spacing.md, right: spacing.md }, style]}
+      pointerEvents={visible ? 'box-none' : 'none'}
     >
-      <BrutalSurface
-        elevation="card"
-        borderWidth="container"
-        onPress={hideToast}
-        accessibilityRole="button"
-        accessibilityLabel={label}
-        accessibilityHint="Double tap to dismiss this notification"
-        surfaceStyle={cn(styles.surface, { padding: spacing.md }, activeVariant.surface)}
-      >
-        {status ? (
-          <View
-            testID={`status-icon-${variant}`}
-            style={[styles.glyph, { backgroundColor: activeVariant.text.color, marginRight: spacing.sm }]}
-            importantForAccessibility="no-hide-descendants"
-            accessibilityElementsHidden
+      <GestureDetector gesture={pan}>
+        <Animated.View
+          style={animatedStyle}
+          accessibilityRole={destructive ? 'alert' : undefined}
+          accessibilityLiveRegion={destructive ? 'assertive' : 'polite'}
+          accessibilityElementsHidden={!visible}
+          importantForAccessibility={visible ? 'auto' : 'no-hide-descendants'}
+          {...props}
+        >
+          <BrutalSurface
+            elevation="overlay"
+            borderWidth="container"
+            pressable={false}
+            backgroundColor={fill}
+            surfaceStyle={[styles.surface, { padding: spacing.md, gap: spacing.sm }]}
           >
-            <status.Icon size={ICON_SIZE} color={activeVariant.surface.backgroundColor} />
-          </View>
-        ) : null}
-        <View style={[styles.contentContainer, { gap: spacing.xs }]}>
-          <Text
-            style={cn(styles.title, { fontSize: typography.sm }, activeVariant.text)}
-            numberOfLines={2}
-            maxFontSizeMultiplier={1.3}
-          >
-            {title}
-          </Text>
-          {description ? (
-            <Text
-              style={cn(styles.description, { fontSize: typography.sm }, activeVariant.text)}
-              numberOfLines={3}
-              maxFontSizeMultiplier={1.3}
+            <View style={[styles.body, { gap: spacing.xs }]}>
+              {status ? (
+                <View style={[styles.statusRow, { gap: spacing.sm }]}>
+                  <View testID={`status-icon-${variant}`} style={[styles.glyph, { backgroundColor: ink }]}>
+                    <status.Icon size={ICON_SIZE} color={fill} />
+                  </View>
+                  <Text variant="label" tone="inherit" style={{ color: ink }}>
+                    {status.label}
+                  </Text>
+                </View>
+              ) : null}
+              <Text variant="strong" tone="inherit" numberOfLines={2} style={{ color: ink }}>
+                {title}
+              </Text>
+              {description ? (
+                <Text tone="inherit" numberOfLines={3} style={{ color: ink }}>
+                  {description}
+                </Text>
+              ) : null}
+              {action ? (
+                <View style={[styles.action, { marginTop: spacing.xs }]}>
+                  <Button
+                    title={action.label}
+                    size="sm"
+                    variant="outline"
+                    onPress={() => {
+                      action.onPress();
+                      hide();
+                    }}
+                  />
+                </View>
+              ) : null}
+            </View>
+            <Pressable
+              onPress={hide}
+              accessibilityRole="button"
+              accessibilityLabel="Dismiss notification"
+              hitSlop={8}
+              style={[styles.close, { width: touchTarget, height: touchTarget }]}
             >
-              {description}
-            </Text>
-          ) : null}
-        </View>
-      </BrutalSurface>
-    </Animated.View>
+              <CloseIcon size={ICON_SIZE} color={ink} />
+            </Pressable>
+          </BrutalSurface>
+        </Animated.View>
+      </GestureDetector>
+    </GestureHandlerRootView>
   );
 }
 
-// ---------------------------------------------------------------------------
-// Styles
-// ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
   // top is a plain default: the library has no safe-area dependency, so
   // consumers pass `style={{ top: insets.top + 8 }}` for notched devices.
-  absoluteWrapper: {
+  wrapper: {
     position: 'absolute',
     top: 60,
     zIndex: 9999,
   },
   surface: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  body: {
+    flex: 1,
+  },
+  statusRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
@@ -231,17 +247,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  contentContainer: {
-    flex: 1,
-    flexDirection: 'column',
+  action: {
+    alignSelf: 'flex-start',
   },
-  title: {
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
-  },
-  description: {
-    fontWeight: '500',
+  close: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: -spacing.sm,
+    marginRight: -spacing.sm,
   },
 });
 

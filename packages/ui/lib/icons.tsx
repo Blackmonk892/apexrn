@@ -92,3 +92,15 @@ export const InfoIcon = (p: IconProps) => (
     <Path d="M12 4V5M10 10H12V20M9 20H15" />
   </Icon>
 );
+
+export const PlusIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <Path d="M12 4V20M4 12H20" />
+  </Icon>
+);
+
+export const ChevronDownIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <Path d="M6 9L12 15L18 9" />
+  </Icon>
+);

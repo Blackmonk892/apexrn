@@ -3,6 +3,10 @@ import { screen } from '@testing-library/react-native';
 import {
   Alert,
   Badge,
+  Card,
+  CardContent,
+  CardDescription,
+  Chip,
   CheckIcon,
   CloseIcon,
   Toast,
@@ -22,6 +26,14 @@ const components: Record<string, (variant: Status) => ReactElement> = {
   Toast: (variant) => <Toast visible title="Saved" variant={variant} onDismiss={() => {}} />,
   Alert: (variant) => <Alert title="Saved" variant={variant} />,
   Badge: (variant) => <Badge label="Saved" variant={variant} />,
+  Chip: (variant) => <Chip label="Saved" variant={variant} />,
+  Card: (variant) => (
+    <Card variant={variant} statusLabel="Saved">
+      <CardContent>
+        <CardDescription>Changes were stored.</CardDescription>
+      </CardContent>
+    </Card>
+  ),
 };
 
 const preset: PresetName = 'raw';

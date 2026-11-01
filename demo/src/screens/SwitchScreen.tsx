@@ -1,60 +1,66 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { Switch, useTheme } from '@apexrn/ui';
+import { StyleSheet, View } from 'react-native';
+import { Switch, Text, spacing } from '@apexrn/ui';
 import Layout from '../components/Layout';
-import Section, { Caption } from '../components/Section';
-
-function Row({ label, muted, children }: { label: string; muted?: boolean; children: React.ReactNode }) {
-  const { colors } = useTheme();
-  return (
-    <View style={styles.row}>
-      {children}
-      <Text style={[styles.rowText, { color: muted ? colors.mutedForeground : colors.foreground }]}>{label}</Text>
-    </View>
-  );
-}
+import Section from '../components/Section';
 
 export default function SwitchScreen({ onBack }: { onBack: () => void }) {
   const [airplane, setAirplane] = useState(false);
-  const [wifi, setWifi] = useState(true);
-  const [last, setLast] = useState('none');
+  const [wifi, setWifi] = useState(false);
+  const [log, setLog] = useState('Nothing toggled yet');
 
   return (
-    <Layout title="SWITCH" onBack={onBack}>
-      <Section title="Controlled" note="checked + onCheckedChange. Position tells on from off, not just colour.">
-        <Row label="Airplane mode">
-          <Switch checked={airplane} onCheckedChange={setAirplane} accessibilityLabel="Airplane mode" />
-        </Row>
-        <Row label="Wi-Fi">
-          <Switch checked={wifi} onCheckedChange={setWifi} accessibilityLabel="Wi-Fi" />
-        </Row>
-        <Caption>{`airplane: ${airplane}, wifi: ${wifi}`}</Caption>
+    <Layout id="switch" title="SWITCH" onBack={onBack}>
+      <Text variant="mono" testID="switch-log">{log}</Text>
+
+      <Section title="Variants" note="Controlled, uncontrolled and with a label. On is the inverted track, so position and fill both say it.">
+        <View style={[styles.stack, { gap: spacing.md }]}>
+          <Switch
+            testID="switch-wifi"
+            checked={wifi}
+            onCheckedChange={(next) => {
+              setWifi(next);
+              setLog(`Wi-Fi: ${next ? 'on' : 'off'}`);
+            }}
+            accessibilityLabel="Wi-Fi"
+          />
+          <Switch
+            defaultChecked
+            accessibilityLabel="Sync over cellular"
+            onCheckedChange={(next) => setLog(`Sync over cellular: ${next ? 'on' : 'off'}`)}
+          />
+          <Switch
+            label="Airplane mode"
+            checked={airplane}
+            onCheckedChange={(next) => {
+              setAirplane(next);
+              setLog(`Airplane mode: ${next ? 'on' : 'off'}`);
+            }}
+          />
+        </View>
       </Section>
 
-      <Section title="Uncontrolled" note="defaultChecked keeps its own state.">
-        <Row label="Starts off">
-          <Switch accessibilityLabel="Starts off" onCheckedChange={(c) => setLast(`off-start -> ${c}`)} />
-        </Row>
-        <Row label="Starts on">
-          <Switch defaultChecked accessibilityLabel="Starts on" onCheckedChange={(c) => setLast(`on-start -> ${c}`)} />
-        </Row>
-        <Caption>{`Last change: ${last}`}</Caption>
+      <Section title="States" note="Disabled drops the shadow and dashes the border.">
+        <View style={[styles.stack, { gap: spacing.md }]}>
+          <Switch disabled accessibilityLabel="Bluetooth off" />
+          <Switch disabled checked accessibilityLabel="Bluetooth on" />
+          <Switch disabled label="Cellular data, managed by your carrier" />
+        </View>
       </Section>
 
-      <Section title="Disabled" note="Muted track and border, no thumb shadow, not pressable.">
-        <Row label="Bluetooth (off)" muted>
-          <Switch checked={false} disabled accessibilityLabel="Bluetooth" />
-        </Row>
-        <Row label="Cellular data (on)" muted>
-          <Switch checked disabled accessibilityLabel="Cellular data" />
-        </Row>
+      <Section title="In context" note="Rows are 44pt tall and the whole row toggles.">
+        <View style={[styles.stack, { gap: spacing.md }]}>
+          <Switch label="Notify me about new comments" defaultChecked />
+          <Switch label="Show previews on the lock screen" />
+        </View>
       </Section>
 
-      <Section title="Edge cases">
-        <View style={styles.narrow}>
-          <Row label="A setting name long enough to wrap next to its switch in a narrow column">
-            <Switch defaultChecked accessibilityLabel="Long setting" />
-          </Row>
+      <Section title="Edge cases" note="This controlled switch ignores every change, so it stays off.">
+        <View style={[styles.stack, { gap: spacing.md }]}>
+          <Switch checked={false} accessibilityLabel="Ignores changes" onCheckedChange={() => setLog('Change refused by the parent')} />
+          <View style={styles.narrow}>
+            <Switch label="A setting name long enough to wrap beside its switch in a narrow column" defaultChecked />
+          </View>
         </View>
       </Section>
     </Layout>
@@ -62,7 +68,6 @@ export default function SwitchScreen({ onBack }: { onBack: () => void }) {
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 4 },
-  rowText: { fontSize: 16, fontWeight: '600', flexShrink: 1 },
+  stack: { alignItems: 'flex-start' },
   narrow: { width: 260 },
 });

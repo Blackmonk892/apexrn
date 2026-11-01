@@ -32,7 +32,7 @@ export default function PlaygroundScreen({ componentId, onBack }: { componentId:
   const renderer = PLAYGROUND_RENDERERS[componentId];
 
   return (
-    <Layout title={`PLAYGROUND · ${componentId.toUpperCase()}`} onBack={onBack}>
+    <Layout id="playground" title={`PLAYGROUND · ${componentId.toUpperCase()}`} onBack={onBack}>
       <View style={[styles.stage, { borderColor: colors.border, backgroundColor: colors.muted }]}>
         {renderer ? (
           renderer(props)

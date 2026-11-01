@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { BackHandler, Platform } from 'react-native';
+import { BackHandler, Linking, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider, useShowcaseTheme } from './src/context/ThemeContext';
-import HomeScreen from './src/screens/HomeScreen';
+import HomeScreen, { SCREEN_IDS } from './src/screens/HomeScreen';
+import { screenFromUrl } from './src/deep-link';
 import ButtonScreen from './src/screens/ButtonScreen';
 import CardScreen from './src/screens/CardScreen';
 import FormsScreen from './src/screens/FormsScreen';
@@ -35,7 +36,13 @@ import SheetScreen from './src/screens/SheetScreen';
 import DropdownScreen from './src/screens/DropdownScreen';
 import SelectScreen from './src/screens/SelectScreen';
 import DatePickerScreen from './src/screens/DatePickerScreen';
+import NumberInputScreen from './src/screens/NumberInputScreen';
+import SegmentedControlScreen from './src/screens/SegmentedControlScreen';
+import EmptyStateScreen from './src/screens/EmptyStateScreen';
 import TabsScreen from './src/screens/TabsScreen';
+import SettingsScreen from './src/screens/reference/SettingsScreen';
+import CheckoutScreen from './src/screens/reference/CheckoutScreen';
+import InboxScreen from './src/screens/reference/InboxScreen';
 import SeparatorScreen from './src/screens/SeparatorScreen';
 import FABScreen from './src/screens/FABScreen';
 import LabelScreen from './src/screens/LabelScreen';
@@ -119,6 +126,17 @@ function AppShell() {
     };
   }, [setMode]);
 
+  // Maestro and `adb` open screens with apexrn-demo://c/<id>, at launch or while the app runs.
+  useEffect(() => {
+    const open = (url: string | null) => {
+      const id = screenFromUrl(url, SCREEN_IDS);
+      if (id) setCurrentScreen(id);
+    };
+    Linking.getInitialURL().then(open, () => {});
+    const sub = Linking.addEventListener('url', ({ url }) => open(url));
+    return () => sub.remove();
+  }, []);
+
   // Android hardware back navigates home instead of exiting the demo.
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -170,7 +188,13 @@ function AppShell() {
       case 'sheet': return <SheetScreen onBack={() => setCurrentScreen('home')} />;
       case 'dropdown': return <DropdownScreen onBack={() => setCurrentScreen('home')} />;
       case 'select': return <SelectScreen onBack={() => setCurrentScreen('home')} />;
+      case 'emptystate': return <EmptyStateScreen onBack={() => setCurrentScreen('home')} />;
       case 'datepicker': return <DatePickerScreen onBack={() => setCurrentScreen('home')} />;
+      case 'numberinput': return <NumberInputScreen onBack={() => setCurrentScreen('home')} />;
+      case 'segmentedcontrol': return <SegmentedControlScreen onBack={() => setCurrentScreen('home')} />;
+      case 'ref-settings': return <SettingsScreen onBack={() => setCurrentScreen('home')} />;
+      case 'ref-checkout': return <CheckoutScreen onBack={() => setCurrentScreen('home')} />;
+      case 'ref-inbox': return <InboxScreen onBack={() => setCurrentScreen('home')} />;
       case 'tabs': return <TabsScreen onBack={() => setCurrentScreen('home')} />;
       case 'separator': return <SeparatorScreen onBack={() => setCurrentScreen('home')} />;
       case 'fab': return <FABScreen onBack={() => setCurrentScreen('home')} />;

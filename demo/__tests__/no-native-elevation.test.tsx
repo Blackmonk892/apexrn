@@ -22,7 +22,7 @@ describe('no native elevation', () => {
   it('FAB and an open Dialog set no Android elevation', async () => {
     const view = await render(
       <ApexRNProvider defaultMode="light">
-        <FAB label="Add" />
+        <FAB accessibilityLabel="Add" label="Add" />
         <Dialog defaultOpen>
           <DialogContent>
             <DialogTitle>Title</DialogTitle>

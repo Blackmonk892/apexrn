@@ -1,154 +1,94 @@
 import type { ReactNode } from 'react';
-import {
-  type GestureResponderEvent,
-  Pressable,
-  type PressableProps,
-  type StyleProp,
-  StyleSheet,
-  View,
-  type ViewStyle,
-} from 'react-native';
-import Animated, { interpolateColor, useAnimatedStyle } from 'react-native-reanimated';
+import { Pressable, type PressableProps, type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native';
 
-import { borderWidths, spacing, touchTarget, typography } from '../lib/colors';
+import { opacity, spacing } from '../lib/colors';
 import { useTheme } from '../lib/theme';
-import { usePressPhysics } from '../lib/use-press-physics';
+import { Text } from './text';
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
-export interface ListItemProps extends Omit<PressableProps, 'style'> {
-  /**
-   * The main primary text of the list item.
-   */
+export interface ListItemProps extends Omit<PressableProps, 'style' | 'children'> {
   title: string;
-  /**
-   * Optional secondary descriptive text below the title.
-   */
+  /** One line, truncated. Raises the row from 56 to 72. */
   description?: string;
-  /**
-   * Optional React node to display on the leading (left) edge.
-   */
+  /** Mono text on the right, for times, counts and amounts. Sits before `trailing`. */
+  meta?: string;
   leading?: ReactNode;
-  /**
-   * Optional React node to display on the trailing (right) edge.
-   */
   trailing?: ReactNode;
-  /**
-   * Disables the list item.
-   * @default false
-   */
-  disabled?: boolean;
+  /** Without `onPress` the row is plain content: no role, no press feedback. */
+  onPress?: PressableProps['onPress'];
   style?: StyleProp<ViewStyle>;
 }
 
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-
 export function ListItem({
   title,
   description,
+  meta,
   leading,
   trailing,
-  disabled = false,
-  style,
   onPress,
-  onPressIn,
-  onPressOut,
+  disabled,
+  style,
+  testID,
   ...props
 }: ListItemProps) {
   const { colors } = useTheme();
-  const isPressable = typeof onPress === 'function';
-  const interactive = isPressable && !disabled;
 
-  const { pressed, handlePressIn, handlePressOut } = usePressPhysics({
-    depth: 0,
-    disabled: !interactive,
-    haptics: false,
-  });
+  // minHeight, not height: at large font scale the row grows instead of clipping.
+  const base: ViewStyle = { minHeight: description ? 72 : 56, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, gap: spacing.md };
+  // A row has no border to turn dashed, so the disabled cue is opacity alone.
+  const disabledStyle: ViewStyle | undefined = disabled ? { opacity: opacity.disabled } : undefined;
 
-  const handlePressInInternal = (e: GestureResponderEvent) => {
-    handlePressIn();
-    onPressIn?.(e);
-  };
-
-  const handlePressOutInternal = (e: GestureResponderEvent) => {
-    handlePressOut();
-    onPressOut?.(e);
-  };
-
-  // Pressed = the accent fill with its own foreground. A muted-on-white tint
-  // is nearly invisible, and accent text colours keep contrast in both themes.
-  const animatedRowStyle = useAnimatedStyle(() => ({
-    backgroundColor: interpolateColor(pressed.value, [0, 1], [colors.background, colors.accent]),
-  }));
-  const animatedTitleStyle = useAnimatedStyle(() => ({
-    color: interpolateColor(pressed.value, [0, 1], [colors.foreground, colors.accentForeground]),
-  }));
-  const animatedDescriptionStyle = useAnimatedStyle(() => ({
-    color: interpolateColor(pressed.value, [0, 1], [colors.mutedForeground, colors.accentForeground]),
-  }));
-
-  return (
-    <AnimatedPressable
-      onPress={onPress}
-      onPressIn={handlePressInInternal}
-      onPressOut={handlePressOutInternal}
-      disabled={disabled || !isPressable}
-      style={[
-        styles.container,
-        {
-          paddingVertical: spacing.md,
-          paddingHorizontal: spacing.md,
-          minHeight: isPressable ? touchTarget : undefined,
-          borderColor: colors.border,
-        },
-        animatedRowStyle,
-        // Disabled styling wins over the press animation so a disabled
-        // item never renders the enabled background.
-        disabled && { backgroundColor: colors.muted },
-        style,
-      ]}
-      accessibilityRole={isPressable ? 'button' : undefined}
-      accessibilityState={{ disabled }}
-      aria-disabled={disabled}
-      {...props}
-    >
-      {leading ? (
-        <View style={[styles.slot, { marginRight: spacing.md }]}>{leading}</View>
-      ) : null}
-
-      <View style={[styles.contentContainer, { gap: spacing.xs }]}>
-        <Animated.Text
-          style={[
-            styles.title,
-            { fontSize: typography.md },
-            animatedTitleStyle,
-            disabled && { color: colors.mutedForeground },
-          ]}
-          numberOfLines={1}
-          maxFontSizeMultiplier={1.3}
-        >
+  const content = (
+    <>
+      {leading ? <View style={styles.slot}>{leading}</View> : null}
+      <View style={styles.body}>
+        <Text variant="strong" numberOfLines={2}>
           {title}
-        </Animated.Text>
-
+        </Text>
         {description ? (
-          <Animated.Text
-            style={[styles.description, { fontSize: typography.sm }, animatedDescriptionStyle]}
-            numberOfLines={2}
-            maxFontSizeMultiplier={1.3}
-          >
+          <Text variant="body" tone="muted" numberOfLines={1}>
             {description}
-          </Animated.Text>
+          </Text>
         ) : null}
       </View>
-
-      {trailing ? (
-        <View style={[styles.slot, { marginLeft: spacing.md }]}>{trailing}</View>
+      {meta ? (
+        <Text variant="mono" tone="muted">
+          {meta}
+        </Text>
       ) : null}
-    </AnimatedPressable>
+      {trailing ? <View style={styles.slot}>{trailing}</View> : null}
+    </>
+  );
+
+  if (!onPress) {
+    return (
+      <View
+        testID={testID}
+        style={[styles.row, base, disabledStyle, style]}
+        accessibilityState={disabled ? { disabled: true } : undefined}
+      >
+        {content}
+      </View>
+    );
+  }
+
+  return (
+    <Pressable
+      {...props}
+      testID={testID}
+      onPress={onPress}
+      disabled={disabled}
+      accessibilityRole="button"
+      accessibilityState={{ disabled: !!disabled }}
+      style={({ pressed }) => [styles.row, base, pressed && { backgroundColor: colors.muted }, disabledStyle, style]}
+    >
+      {content}
+    </Pressable>
   );
 }
 
@@ -156,28 +96,9 @@ export function ListItem({
 // Styles
 // ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'stretch',
-    borderBottomWidth: borderWidths.control,
-    borderRadius: 0,
-  },
-  contentContainer: {
-    flex: 1,
-    flexDirection: 'column',
-    justifyContent: 'center',
-  },
-  slot: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  title: {
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
-  },
-  description: {},
+  row: { flexDirection: 'row', alignItems: 'center', alignSelf: 'stretch' },
+  body: { flex: 1 },
+  slot: { justifyContent: 'center', alignItems: 'center' },
 });
 
 export default ListItem;
