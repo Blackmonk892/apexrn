@@ -10,7 +10,7 @@ import { ThemeSwitch } from "./ThemeSwitch";
 const LINKS = [
   { href: "/docs", label: "Docs" },
   { href: "/docs/components", label: "Components" },
-  { href: "/docs/installation#cli", label: "CLI" },
+  { href: "/docs/cli", label: "CLI" },
 ];
 
 export function TopBar() {

@@ -15,7 +15,7 @@ if (!process.env.NEXT_PUBLIC_SITE_URL) {
   );
 }
 
-const STATIC_ROUTES = ["/", "/docs", "/docs/introduction", "/docs/installation", "/docs/theming", "/docs/components"];
+const STATIC_ROUTES = ["/", "/docs", "/docs/installation", "/docs/theming", "/docs/cli", "/docs/components"];
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const components = getAllComponents();
