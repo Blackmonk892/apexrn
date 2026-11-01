@@ -59,6 +59,7 @@ export function FAB({
   }));
 
   const edge = spacing.lg;
+  const extended: ViewStyle = { paddingHorizontal: spacing.lg, gap: spacing.sm };
   const position: ViewStyle =
     placement === 'bottom-center'
       ? { left: 0, right: 0, alignItems: 'center' }
@@ -80,7 +81,7 @@ export function FAB({
         borderWidth="container"
         backgroundColor={colors.primary}
         disabled={disabled}
-        surfaceStyle={[styles.surface, label ? styles.extended : styles.square]}
+        surfaceStyle={[styles.surface, label ? extended : styles.square]}
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel}
         accessibilityState={{ disabled }}
@@ -94,7 +95,7 @@ export function FAB({
         ) : null}
         {label ? (
           <Text
-            variant="title"
+            variant="strong"
             tone="inherit"
             numberOfLines={1}
             importantForAccessibility="no-hide-descendants"
@@ -113,7 +114,6 @@ const styles = StyleSheet.create({
   root: { position: 'absolute', zIndex: 10 },
   surface: { height: SIZE, alignItems: 'center', justifyContent: 'center', flexDirection: 'row' },
   square: { width: SIZE },
-  extended: { paddingHorizontal: spacing.lg, gap: spacing.sm },
   label: { flexShrink: 1 },
 });
 

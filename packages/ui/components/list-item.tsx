@@ -47,7 +47,7 @@ export function ListItem({
     <>
       {leading ? <View style={styles.slot}>{leading}</View> : null}
       <View style={styles.body}>
-        <Text variant="body" numberOfLines={2}>
+        <Text variant="strong" numberOfLines={2}>
           {title}
         </Text>
         {description ? (
