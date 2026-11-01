@@ -10,7 +10,7 @@ export const MODE_KEY = "apexrn-site-theme";
 export const PRESET_KEY = "apexrn-site-preset";
 
 /** Runs before first paint (inlined in layout) so the page never flashes the wrong theme. */
-export const NO_FLASH_SCRIPT = `(function(){var d=document.documentElement;try{var m=localStorage.getItem("${MODE_KEY}");if(m!=="light"&&m!=="dark"){m=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}var p=localStorage.getItem("${PRESET_KEY}");if(p!=="neo"&&p!=="raw"){p="neo"}d.setAttribute("data-theme",m);d.setAttribute("data-preset",p)}catch(e){d.setAttribute("data-theme","light");d.setAttribute("data-preset","neo")}})();`;
+export const NO_FLASH_SCRIPT = `(function(){var d=document.documentElement;try{var q=new URLSearchParams(location.search).get("theme");var m=q==="light"||q==="dark"?q:localStorage.getItem("${MODE_KEY}");if(m!=="light"&&m!=="dark"){m=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}var p=localStorage.getItem("${PRESET_KEY}");if(p!=="neo"&&p!=="raw"){p="neo"}d.setAttribute("data-theme",m);d.setAttribute("data-preset",p)}catch(e){d.setAttribute("data-theme","light");d.setAttribute("data-preset","neo")}})();`;
 
 const listeners = new Set<() => void>();
 
