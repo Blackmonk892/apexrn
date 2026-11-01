@@ -120,6 +120,27 @@ export function PlanCard() {
 
 Use `CardText` instead of `Text` inside a card: React Native text does not inherit colour, so `CardText` picks up the card variant's foreground. Give `Card` an `onPress` and it becomes a button.
 
+### EmptyState
+
+```tsx
+import { Button, EmptyState, EmptyStateActions, EmptyStateDescription, EmptyStateIcon, EmptyStateTitle, InfoIcon } from '@/components/apexrn';
+
+export function NoMessages() {
+  return (
+    <EmptyState>
+      <EmptyStateIcon>{(color) => <InfoIcon color={color} />}</EmptyStateIcon>
+      <EmptyStateTitle>No messages yet</EmptyStateTitle>
+      <EmptyStateDescription>New mail shows up here.</EmptyStateDescription>
+      <EmptyStateActions>
+        <Button onPress={() => {}}>Compose</Button>
+      </EmptyStateActions>
+    </EmptyState>
+  );
+}
+```
+
+`align="start"` left-aligns everything. The icon block is decorative and hidden from screen readers.
+
 ### Badge
 
 ```tsx
@@ -297,6 +318,44 @@ export function Preferences() {
   );
 }
 ```
+
+### SegmentedControl
+
+```tsx
+import { useState } from 'react';
+import { SegmentedControl } from '@/components/apexrn';
+
+export function Range() {
+  const [range, setRange] = useState('week');
+  return (
+    <SegmentedControl
+      value={range}
+      onValueChange={setRange}
+      segments={[
+        { value: 'day', label: 'Day' },
+        { value: 'week', label: 'Week' },
+        { value: 'month', label: 'Month' },
+      ]}
+    />
+  );
+}
+```
+
+Two to five segments. The selected one is an inverted block that slides into place.
+
+### NumberInput
+
+```tsx
+import { useState } from 'react';
+import { NumberInput } from '@/components/apexrn';
+
+export function Quantity() {
+  const [qty, setQty] = useState(1);
+  return <NumberInput label="Quantity" value={qty} onValueChange={setQty} min={1} max={10} />;
+}
+```
+
+Holding minus or plus repeats with an accelerating interval. Screen readers adjust it with swipe up/down.
 
 ### Slider
 
