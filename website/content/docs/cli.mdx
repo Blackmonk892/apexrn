@@ -1,0 +1,55 @@
+---
+title: CLI
+description: The apexrn commands, init, add, add --overwrite, diff and list, each with the output the CLI printed when this site was built.
+---
+
+`apexrn` copies source files into your Expo app. Every output on this page was captured by running the CLI against this repo's registry in an empty Expo-shaped folder when the site was built. Peer installs were skipped there; in your app they run.
+
+## init
+
+Writes `apexrn.json` and the shared theme, colours and metrics files. Run it once per app.
+
+<CliStep id="init" />
+
+## add
+
+Copies one or more parts, plus the shared files and parts they depend on. Files that already exist are kept.
+
+<CliStep id="add" />
+
+### Run it again
+
+Running it twice is safe. Nothing you edited is touched.
+
+<CliStep id="add-again" />
+
+### add --overwrite
+
+Replaces only the parts you name with the registry version. Dependencies stay as they are, so edits to shared files survive.
+
+<CliStep id="add-overwrite" />
+
+## diff
+
+Compares your copy of a part with the registry and prints what differs.
+
+<CliStep id="diff" />
+
+### After a local edit
+
+Lines starting with `-` are yours, lines starting with `+` are upstream.
+
+<CliStep id="diff-again" />
+
+## list
+
+Prints every part in the registry with its one-line description.
+
+<CliStep id="list" />
+
+## Flags
+
+- `--dry-run` prints what would be written.
+- `--no-install` skips the peer install and only prints the command.
+- `--cwd <dir>` runs against another folder.
+- `--registry <url|path>` reads from a different registry.

@@ -84,8 +84,23 @@ jobs:
         working-directory: website
       - run: npm run typecheck
         working-directory: website
+      # prebuild shoots every example with Playwright; ubuntu-latest ships Google Chrome (channel chrome).
       - run: npm run build
         working-directory: website
+      - name: Add the registry next to the site, as deploy-site does
+        run: cp -r registry/public/. website/out/
+      - run: npm run check:output
+        working-directory: website
+      - name: Rebuild under a base path and check every URL is prefixed
+        run: |
+          npm run build
+          cp -r ../registry/public/. out/
+          npm run check:output
+        working-directory: website
+        env:
+          NEXT_PUBLIC_BASE_PATH: /apexrn
+          SKIP_PREVIEW_BUILD: '1'
+          SKIP_PREVIEW_SHOTS: '1'
 
   registry-and-cli:
     strategy:
