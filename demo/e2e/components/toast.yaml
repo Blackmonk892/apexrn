@@ -1,0 +1,16 @@
+appId: dev.apexrn.demo
+---
+- runFlow:
+    file: ../_open.yaml
+    env:
+      ID: toast
+- tapOn:
+    id: "toast-show"
+- assertVisible: "File uploaded"
+- tapOn: "Dismiss notification"
+- extendedWaitUntil:
+    notVisible: "File uploaded"
+    timeout: 5000
+- assertNotVisible: "Render Error"
+- assertNotVisible: ".*TypeError.*"
+- takeScreenshot: toast

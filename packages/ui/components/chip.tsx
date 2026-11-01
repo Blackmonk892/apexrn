@@ -1,24 +1,17 @@
 import { useState, type ReactNode } from 'react';
-import {
-  type GestureResponderEvent,
-  Pressable,
-  type StyleProp,
-  StyleSheet,
-  Text,
-  View,
-  type ViewStyle,
-} from 'react-native';
+import { type GestureResponderEvent, Pressable, type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native';
 
-import { borderWidths, spacing, touchTarget, typography } from '../lib/colors';
-import { CheckIcon, CloseIcon } from '../lib/icons';
+import { borderWidths, spacing, touchTarget, type ColorScheme } from '../lib/colors';
+import { CheckIcon, CloseIcon, WarningIcon } from '../lib/icons';
 import { useTheme } from '../lib/theme';
+import { variants } from '../lib/variants';
 import BrutalSurface from './brutal-surface';
+import Text from './text';
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
 export interface ChipProps {
   label: string;
+  /** @default 'default' */
+  variant?: 'default' | 'destructive' | 'success' | 'warning';
   /**
    * Makes the chip a toggle (a filter). Controlled; pair with `onSelectedChange`.
    * A selected chip is an inverted block with a check mark, so the state reads
@@ -37,24 +30,37 @@ export interface ChipProps {
   onRemove?: () => void;
   /** Accessibility label of the remove control. @default `Remove ${label}` */
   removeLabel?: string;
-  /** Icon shown before the label. Decorative; may be a function of the contrast colour. */
+  /** Icon shown before the label. Decorative; may be a function of the ink colour. */
   icon?: ReactNode | ((color: string) => ReactNode);
   disabled?: boolean;
+  testID?: string;
   /** Outer wrapper style. */
   style?: StyleProp<ViewStyle>;
 }
 
-// ---------------------------------------------------------------------------
-// Design tokens
-// ---------------------------------------------------------------------------
-const SHADOW_OFFSET = 2;
-const CHIP_HEIGHT = 36;
+const CHIP_HEIGHT = 32;
+const ICON_SIZE = 14;
 
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
+const STATUS_ICONS = { destructive: CloseIcon, success: CheckIcon, warning: WarningIcon } as const;
+
+type Tone = { fill: keyof ColorScheme; ink: keyof ColorScheme };
+
+const look = variants({
+  base: { tone: { fill: 'background', ink: 'foreground' } as Tone },
+  variants: {
+    variant: {
+      default: {},
+      destructive: { tone: { fill: 'destructive', ink: 'destructiveForeground' } },
+      success: { tone: { fill: 'success', ink: 'successForeground' } },
+      warning: { tone: { fill: 'warning', ink: 'warningForeground' } },
+    },
+  },
+  defaultVariants: { variant: 'default' },
+});
+
 export function Chip({
   label,
+  variant = 'default',
   selected: selectedProp,
   defaultSelected,
   onSelectedChange,
@@ -63,6 +69,7 @@ export function Chip({
   removeLabel,
   icon,
   disabled = false,
+  testID,
   style,
 }: ChipProps) {
   const { colors } = useTheme();
@@ -70,11 +77,15 @@ export function Chip({
   const isToggle =
     selectedProp !== undefined || defaultSelected !== undefined || onSelectedChange !== undefined;
   const selected = isToggle && (selectedProp ?? internalSelected);
+  const canPress = isToggle || !!onPress;
 
-  const bg = disabled ? colors.muted : selected ? colors.foreground : colors.background;
-  const fg = disabled ? colors.mutedForeground : selected ? colors.background : colors.foreground;
-  const border = disabled ? colors.mutedForeground : colors.border;
+  const { tone } = look({ variant });
+  const isStatus = variant !== 'default';
+  // Selected swaps fill and ink, so the state survives without the check mark.
+  const fill = colors[selected ? tone.ink : tone.fill];
+  const ink = colors[selected ? tone.fill : tone.ink];
   const hitSlop = Math.max(0, Math.ceil((touchTarget - CHIP_HEIGHT) / 2));
+  const StatusIcon = isStatus ? STATUS_ICONS[variant] : null;
 
   const handlePress = (e: GestureResponderEvent) => {
     if (disabled) return;
@@ -87,70 +98,65 @@ export function Chip({
 
   const content = (
     <>
-      {selected ? <CheckIcon size={14} color={fg} strokeWidth={4} /> : null}
-      {icon ? (
+      {StatusIcon ? (
+        <View testID={`status-icon-${variant}`} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+          <StatusIcon size={ICON_SIZE} color={ink} />
+        </View>
+      ) : selected ? (
         <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-          {typeof icon === 'function' ? icon(fg) : icon}
+          <CheckIcon size={ICON_SIZE} color={ink} />
         </View>
       ) : null}
-      <Text
-        numberOfLines={1}
-        maxFontSizeMultiplier={1.3}
-        style={[styles.label, { color: fg, fontSize: typography.xs }]}
-      >
+      {icon ? (
+        <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+          {typeof icon === 'function' ? icon(ink) : icon}
+        </View>
+      ) : null}
+      <Text variant="label" tone="inherit" numberOfLines={1} style={[styles.label, { color: ink }]}>
         {label}
       </Text>
     </>
   );
 
-  const surfaceStyle = [
-    styles.surface,
-    {
-      minHeight: CHIP_HEIGHT,
-      paddingHorizontal: spacing.md,
-      gap: spacing.xs,
-      borderStyle: disabled ? ('dashed' as const) : ('solid' as const),
-    },
-  ];
+  const role = canPress ? 'button' : 'text';
+  const state = { selected, disabled };
 
-  // A removable chip holds two controls (toggle/press and remove), so the
-  // outer block cannot itself be a Pressable: nested touchables would merge
-  // into one accessibility node and hide the remove button from screen readers.
+  // A removable chip holds two controls, so the outer block cannot itself be a
+  // Pressable: nested touchables would merge into one accessibility node and
+  // hide the remove button from screen readers.
   if (onRemove) {
-    const canPress = isToggle || !!onPress;
     return (
       <BrutalSurface
+        testID={testID}
         style={[styles.root, style]}
         pressable={false}
-        offset={SHADOW_OFFSET}
-        borderWidth="standard"
-        hasShadow={!disabled}
-        backgroundColor={bg}
-        borderColor={border}
-        surfaceStyle={[styles.surface, { minHeight: CHIP_HEIGHT, borderStyle: disabled ? 'dashed' : 'solid' }]}
+        disabled={disabled}
+        elevation="control"
+        borderWidth="control"
+        backgroundColor={fill}
+        surfaceStyle={[styles.surface, { minHeight: CHIP_HEIGHT }]}
       >
         <Pressable
           onPress={handlePress}
           disabled={disabled || !canPress}
           hitSlop={{ top: hitSlop, bottom: hitSlop }}
           style={[styles.part, { paddingLeft: spacing.md, paddingRight: spacing.sm, gap: spacing.xs }]}
-          accessibilityRole={isToggle ? 'checkbox' : canPress ? 'button' : 'text'}
+          accessibilityRole={role}
           accessibilityLabel={label}
-          accessibilityState={isToggle ? { checked: selected, disabled } : { disabled }}
-          aria-disabled={disabled}
+          accessibilityState={state}
         >
           {content}
         </Pressable>
         <Pressable
-          onPress={disabled ? undefined : onRemove}
+          onPress={onRemove}
           disabled={disabled}
-          hitSlop={{ top: hitSlop, bottom: hitSlop, right: 4 }}
-          style={[styles.remove, { borderLeftColor: border, paddingHorizontal: spacing.sm }]}
+          hitSlop={{ top: hitSlop, bottom: hitSlop, left: 4, right: 4 }}
+          style={[styles.remove, { borderLeftColor: colors.border, paddingHorizontal: spacing.sm }]}
           accessibilityRole="button"
           accessibilityLabel={removeLabel ?? `Remove ${label}`}
           accessibilityState={{ disabled }}
         >
-          <CloseIcon size={14} color={fg} strokeWidth={4} />
+          <CloseIcon size={ICON_SIZE} color={ink} />
         </Pressable>
       </BrutalSurface>
     );
@@ -158,30 +164,25 @@ export function Chip({
 
   return (
     <BrutalSurface
+      testID={testID}
       style={[styles.root, style]}
-      surfaceStyle={surfaceStyle}
-      offset={SHADOW_OFFSET}
-      borderWidth="standard"
-      hasShadow={!disabled}
+      surfaceStyle={[styles.surface, { minHeight: CHIP_HEIGHT, paddingHorizontal: spacing.md, gap: spacing.xs }]}
+      elevation="control"
+      borderWidth="control"
+      pressable={canPress}
       disabled={disabled}
       onPress={handlePress}
-      backgroundColor={bg}
-      borderColor={border}
+      backgroundColor={fill}
       hitSlop={hitSlop}
-      accessibilityRole={isToggle ? 'checkbox' : onPress ? 'button' : 'text'}
+      accessibilityRole={role}
       accessibilityLabel={label}
-      accessibilityState={isToggle ? { checked: selected, disabled } : { disabled }}
-      aria-checked={isToggle ? selected : undefined}
-      aria-disabled={disabled}
+      accessibilityState={state}
     >
       {content}
     </BrutalSurface>
   );
 }
 
-// ---------------------------------------------------------------------------
-// Styles
-// ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
   root: {
     alignSelf: 'flex-start',
@@ -203,14 +204,9 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     alignItems: 'center',
     justifyContent: 'center',
-    borderLeftWidth: borderWidths.standard,
+    borderLeftWidth: borderWidths.control,
   },
-  label: {
-    flexShrink: 1,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
-  },
+  label: { flexShrink: 1 },
 });
 
 export default Chip;

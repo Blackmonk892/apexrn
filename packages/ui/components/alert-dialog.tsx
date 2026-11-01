@@ -1,191 +1,234 @@
-import { useState, type ReactNode } from 'react';
-import { StyleSheet, View } from 'react-native';
-
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogFooter,
-  DialogTitle,
-  DialogDescription
-} from './dialog';
-import Button from './button';
+import { createContext, useCallback, useContext, useMemo, useRef, type ReactNode } from 'react';
+import { type GestureResponderEvent, StyleSheet, View, type ViewProps } from 'react-native';
 
 import { spacing } from '../lib/colors';
+import { CloseIcon } from '../lib/icons';
+import { useTheme } from '../lib/theme';
+import Button, { type ButtonProps } from './button';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  type DialogContentProps,
+  type DialogTriggerProps,
+} from './dialog';
+import type { TextProps } from './text';
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-export interface AlertDialogProps {
-  /**
-   * The controlled open state of the alert dialog. Omit for uncontrolled use.
-   */
+interface AlertDialogContextState {
+  destructive: boolean;
+  /** Cancel and Action mark the close as handled so the close that follows is not reported as a back-press cancel. */
+  markHandled: () => void;
+  cancel: () => void;
+}
+
+const AlertDialogContext = createContext<AlertDialogContextState | undefined>(undefined);
+
+function useAlertDialogContext(part: string) {
+  const context = useContext(AlertDialogContext);
+  if (!context) {
+    throw new Error(`${part} must be used within AlertDialog`);
+  }
+  return context;
+}
+
+interface AlertDialogRootProps {
+  /** Controlled open state. Omit for an uncontrolled dialog. */
   open?: boolean;
-  /**
-   * Initial open state when uncontrolled.
-   * @default false
-   */
+  /** Initial open state when uncontrolled. @default false */
   defaultOpen?: boolean;
-  /**
-   * Callback fired when the open state changes.
-   */
   onOpenChange?: (open: boolean) => void;
-  /**
-   * The main heading text for the alert.
-   */
-  title: string;
-  /**
-   * Secondary descriptive text explaining the consequences of the action.
-   */
-  description?: string;
-  /**
-   * Text for the cancel button.
-   * @default "Cancel"
-   */
-  cancelText?: string;
-  /**
-   * Text for the action (destructive) button.
-   * @default "Continue"
-   */
-  actionText?: string;
-  /**
-   * Styles the action button as destructive. Set false for actions that are
-   * not destructive (for example "Sign out").
-   * @default true
-   */
-  destructive?: boolean;
-  /**
-   * Callback fired when the user cancels: the cancel button, the Android back
-   * button, or the Escape key.
-   */
+  /** Cancel button, Android back or Escape. */
   onCancel?: () => void;
-  /**
-   * Callback fired when the action button is pressed.
-   */
-  onAction?: () => void;
-  /**
-   * The component that triggers the alert dialog to open.
-   */
+  /** Styles the action as destructive and adds the status icon to the title. @default true with `title`, false with compound parts */
+  destructive?: boolean;
+}
+
+export interface AlertDialogCompoundProps extends AlertDialogRootProps {
+  title?: undefined;
   children?: ReactNode;
 }
 
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
+export interface AlertDialogConvenienceProps extends AlertDialogRootProps {
+  title: string;
+  description?: string;
+  /** @default "Cancel" */
+  cancelText?: string;
+  /** @default "Continue" */
+  actionText?: string;
+  onAction?: () => void;
+  /** The element that opens the dialog. It receives the press through `asChild`. */
+  children?: ReactNode;
+}
 
-export function AlertDialog({
-  open,
-  defaultOpen = false,
-  onOpenChange,
+export type AlertDialogProps = AlertDialogCompoundProps | AlertDialogConvenienceProps;
+
+export function AlertDialog(props: AlertDialogProps) {
+  const { open, defaultOpen, onOpenChange, onCancel } = props;
+  const destructive = props.destructive ?? props.title !== undefined;
+  const handled = useRef(false);
+
+  const handleOpenChange = useCallback(
+    (next: boolean) => {
+      if (!next) {
+        // Back and Escape reach Dialog as a bare close request; that is the cancel path.
+        if (!handled.current) onCancel?.();
+        handled.current = false;
+      }
+      onOpenChange?.(next);
+    },
+    [onCancel, onOpenChange],
+  );
+
+  const context = useMemo(
+    () => ({
+      destructive,
+      markHandled: () => {
+        handled.current = true;
+      },
+      cancel: () => onCancel?.(),
+    }),
+    [destructive, onCancel],
+  );
+
+  return (
+    <AlertDialogContext.Provider value={context}>
+      <Dialog open={open} defaultOpen={defaultOpen} onOpenChange={handleOpenChange}>
+        {props.title !== undefined ? <Convenience {...props} /> : props.children}
+      </Dialog>
+    </AlertDialogContext.Provider>
+  );
+}
+
+function Convenience({
   title,
   description,
   cancelText = 'Cancel',
   actionText = 'Continue',
-  destructive = true,
-  onCancel,
   onAction,
   children,
-}: AlertDialogProps) {
-  const [internalOpen, setInternalOpen] = useState(defaultOpen);
-  const isControlled = open !== undefined;
-
-  const currentOpen = isControlled ? open : internalOpen;
-
-  const handleOpenChange = (newState: boolean) => {
-    if (!isControlled) {
-      setInternalOpen(newState);
-    }
-    onOpenChange?.(newState);
-  };
-
-  const handleCancel = () => {
-    onCancel?.();
-    handleOpenChange(false);
-  };
-
-  // Back button / Escape reach us as a close request from the Dialog. That is
-  // a cancel: the cancel button already runs handleCancel itself.
-  const handleDialogOpenChange = (newState: boolean) => {
-    if (!newState) onCancel?.();
-    handleOpenChange(newState);
-  };
-
-  const handleAction = () => {
-    onAction?.();
-    handleOpenChange(false);
-  };
-
-  // Alert Dialogs intentionally intercept outside interactions.
-  // Passing this empty function prevents the underlying Dialog from closing
-  // when the user taps the backdrop, forcing them to make a distinct choice.
-  const handleInteractOutside = () => {};
-
+}: AlertDialogConvenienceProps) {
   return (
-    <Dialog open={currentOpen} onOpenChange={handleDialogOpenChange}>
-      {children && (
-        <DialogTrigger asChild>
-          {children}
-        </DialogTrigger>
-      )}
-
-      <DialogContent
-        onInteractOutside={handleInteractOutside}
-        accessibilityRole="alert"
-        accessibilityLabel={description ? `${title}. ${description}` : title}
-      >
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          {description ? (
-            <DialogDescription>{description}</DialogDescription>
-          ) : null}
-        </DialogHeader>
-
-        {/* The required forced footer layout for alerts */}
-        <DialogFooter style={[styles.footerLayout, { gap: spacing.sm, marginTop: spacing.md }]}>
-          <View style={styles.buttonWrapper}>
-            <Button
-              variant="outline"
-              title={cancelText}
-              onPress={handleCancel}
-              style={styles.fill}
-            />
-          </View>
-          <View style={styles.buttonWrapper}>
-            <Button
-              variant={destructive ? 'destructive' : 'primary'}
-              title={actionText}
-              onPress={handleAction}
-              style={styles.fill}
-            />
-          </View>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <>
+      {children ? <AlertDialogTrigger asChild>{children}</AlertDialogTrigger> : null}
+      <AlertDialogContent accessibilityLabel={description ? `${title}. ${description}` : title}>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{title}</AlertDialogTitle>
+          {description ? <AlertDialogDescription>{description}</AlertDialogDescription> : null}
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel title={cancelText} />
+          <AlertDialogAction title={actionText} onPress={onAction} />
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </>
   );
 }
 
-// ---------------------------------------------------------------------------
-// Styles
-// ---------------------------------------------------------------------------
+export function AlertDialogTrigger(props: DialogTriggerProps) {
+  useAlertDialogContext('AlertDialogTrigger');
+  return <DialogTrigger {...props} />;
+}
+
+// A no-op keeps the scrim from closing and takes it out of the screen-reader tree: the user has to choose.
+const ignoreOutside = () => {};
+
+export function AlertDialogContent(props: Omit<DialogContentProps, 'onInteractOutside'>) {
+  useAlertDialogContext('AlertDialogContent');
+  return <DialogContent accessibilityRole="alert" onInteractOutside={ignoreOutside} {...props} />;
+}
+
+export function AlertDialogHeader(props: ViewProps) {
+  useAlertDialogContext('AlertDialogHeader');
+  return <DialogHeader {...props} />;
+}
+
+export function AlertDialogTitle({ children, ...props }: TextProps) {
+  const { destructive } = useAlertDialogContext('AlertDialogTitle');
+  const { colors } = useTheme();
+
+  if (!destructive) return <DialogTitle {...props}>{children}</DialogTitle>;
+
+  return (
+    <View style={[styles.titleRow, { gap: spacing.sm }]}>
+      <View testID="status-icon-destructive" style={[styles.glyph, { backgroundColor: colors.destructive }]}>
+        <CloseIcon size={20} color={colors.destructiveForeground} />
+      </View>
+      <View style={styles.titleText}>
+        <DialogTitle {...props}>{children}</DialogTitle>
+      </View>
+    </View>
+  );
+}
+
+export function AlertDialogDescription(props: TextProps) {
+  useAlertDialogContext('AlertDialogDescription');
+  return <DialogDescription {...props} />;
+}
+
+export function AlertDialogFooter({ style, ...props }: ViewProps) {
+  useAlertDialogContext('AlertDialogFooter');
+  return <DialogFooter style={[{ marginTop: spacing.md }, style]} {...props} />;
+}
+
+export type AlertDialogCancelProps = Omit<ButtonProps, 'variant'>;
+
+export function AlertDialogCancel({ onPress, style, ...props }: AlertDialogCancelProps) {
+  const { markHandled, cancel } = useAlertDialogContext('AlertDialogCancel');
+
+  const handlePress = (e: GestureResponderEvent) => {
+    markHandled();
+    cancel();
+    onPress?.(e);
+  };
+
+  return (
+    <View style={styles.buttonWrapper}>
+      <DialogClose asChild>
+        <Button variant="outline" onPress={handlePress} style={[styles.fill, style]} {...props} />
+      </DialogClose>
+    </View>
+  );
+}
+
+export interface AlertDialogActionProps extends Omit<ButtonProps, 'variant'> {
+  /** Defaults to destructive when the dialog is destructive, primary otherwise. */
+  variant?: 'primary' | 'destructive';
+}
+
+export function AlertDialogAction({ variant, onPress, style, ...props }: AlertDialogActionProps) {
+  const { destructive, markHandled } = useAlertDialogContext('AlertDialogAction');
+
+  const handlePress = (e: GestureResponderEvent) => {
+    markHandled();
+    onPress?.(e);
+  };
+
+  return (
+    <View style={styles.buttonWrapper}>
+      <DialogClose asChild>
+        <Button
+          variant={variant ?? (destructive ? 'destructive' : 'primary')}
+          onPress={handlePress}
+          style={[styles.fill, style]}
+          {...props}
+        />
+      </DialogClose>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  footerLayout: {
-    // Ensures the buttons have a consistent gap and wrap cleanly on very small screens
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    flexWrap: 'wrap',
-  },
-  buttonWrapper: {
-    // Sized to its label, then grown to share the row. A label that does not
-    // fit next to its neighbour wraps to its own row instead of truncating.
-    flexGrow: 1,
-    flexShrink: 1,
-    flexBasis: 'auto',
-    minWidth: 100,
-  },
-  fill: {
-    alignSelf: 'stretch',
-  },
+  titleRow: { flexDirection: 'row', alignItems: 'center' },
+  titleText: { flex: 1 },
+  glyph: { width: 28, height: 28, alignItems: 'center', justifyContent: 'center' },
+  // Sized to its label, then grown to share the row; a label that does not fit beside its neighbour wraps to its own row.
+  buttonWrapper: { flexGrow: 1, flexShrink: 1, flexBasis: 'auto', minWidth: 100 },
+  fill: { alignSelf: 'stretch' },
 });
 
 export default AlertDialog;

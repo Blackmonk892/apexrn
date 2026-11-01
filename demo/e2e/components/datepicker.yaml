@@ -1,0 +1,25 @@
+appId: dev.apexrn.demo
+---
+- runFlow:
+    file: ../_open.yaml
+    env:
+      ID: datepicker
+- assertVisible:
+    id: "date-delivery"
+- tapOn:
+    id: "date-delivery"
+- assertVisible: "November 2026"
+- tapOn: "Next month"
+- assertVisible: "December 2026"
+- tapOn: "Thursday, 3 December 2026"
+- assertNotVisible: "December 2026"
+- assertVisible: "Last change: 2026-12-03"
+- assertVisible: "3 December 2026"
+- tapOn:
+    id: "date-delivery"
+- assertVisible: "December 2026"
+- back
+- assertNotVisible: "December 2026"
+- assertNotVisible: "Render Error"
+- assertNotVisible: ".*TypeError.*"
+- takeScreenshot: datepicker

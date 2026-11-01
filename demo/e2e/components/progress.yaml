@@ -1,0 +1,18 @@
+appId: dev.apexrn.demo
+---
+- runFlow:
+    file: ../_open.yaml
+    env:
+      ID: progress
+- scrollUntilVisible:
+    element:
+      id: "progress-advance"
+    direction: DOWN
+- tapOn:
+    id: "progress-advance"
+- assertVisible: "Value: 50"
+- assertVisible:
+    id: "progress-live"
+- assertNotVisible: "Render Error"
+- assertNotVisible: ".*TypeError.*"
+- takeScreenshot: progress

@@ -1,0 +1,57 @@
+name: deploy-site
+
+# One Pages deploy holds both the website and the registry, because the CLI's default
+# registry is the site URL (index.json and r/<name>.json sit next to the pages).
+# Runs on pushes to main only once the owner sets the PAGES_ENABLED repository variable
+# to true (Settings -> Pages -> Source: GitHub Actions first); it can always be run by hand.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    if: github.event_name == 'workflow_dispatch' || vars.PAGES_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    env:
+      # A custom domain serves from the root; the github.io address serves from /apexrn.
+      NEXT_PUBLIC_SITE_URL: ${{ vars.SITE_DOMAIN && format('https://{0}', vars.SITE_DOMAIN) || 'https://blackmonk892.github.io/apexrn' }}
+      NEXT_PUBLIC_BASE_PATH: ${{ vars.SITE_DOMAIN && '' || '/apexrn' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            website/package-lock.json
+            preview/package-lock.json
+      - run: node registry/build.mjs
+      - run: npm ci
+        working-directory: preview
+      - run: npm ci
+        working-directory: website
+      - run: npm run build
+        working-directory: website
+      - name: Add the registry next to the site
+        run: cp -r registry/public/. website/out/
+      - name: Custom domain
+        if: vars.SITE_DOMAIN != ''
+        run: echo "${{ vars.SITE_DOMAIN }}" > website/out/CNAME
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: website/out
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,115 +1,120 @@
-import { PressableProps, StyleProp, StyleSheet, Text, ViewStyle } from 'react-native';
+import { useEffect, type ReactNode } from 'react';
+import { PressableProps, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
-import { shadowOffset, spacing, typography } from '../lib/colors';
+import { spacing } from '../lib/colors';
+import { useMotion } from '../lib/motion';
 import { useTheme } from '../lib/theme';
 import BrutalSurface from './brutal-surface';
+import Text from './text';
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-export interface FABProps extends Omit<PressableProps, 'style' | 'disabled'> {
-  /**
-   * The icon or short text label to display inside the floating action button.
-   */
+export interface FABProps extends Omit<PressableProps, 'style' | 'disabled' | 'children' | 'accessibilityLabel'> {
+  /** Required: an icon-only button has no other name. Read instead of `label` by screen readers. */
+  accessibilityLabel: string;
+  /** Glyph shown in the square. It should use `colors.primaryForeground`; it is hidden from assistive tech. */
+  icon?: ReactNode;
+  /** Makes the button extended. Sentence case, one line. */
   label?: string;
+  /** Slides and fades out when false, leaving the accessibility tree and ignoring touches. @default true */
+  visible?: boolean;
+  /** Which bottom edge position it sits at, inside its positioned parent. @default 'bottom-right' */
+  placement?: 'bottom-right' | 'bottom-left' | 'bottom-center';
   /**
-   * Optional icon element to pass as children.
+   * Safe-area insets added to the edge offset. The library has no safe-area dependency:
+   * pass values from `useSafeAreaInsets()`.
    */
-  children?: React.ReactNode;
-  /**
-   * Disables the button.
-   * @default false
-   */
+  insets?: { bottom?: number; left?: number; right?: number };
   disabled?: boolean;
-  /**
-   * Side length of the square icon button (label mode uses it as the minimum height).
-   * @default 56
-   */
-  size?: number;
+  /** Style for the outer positioned wrapper. */
   style?: StyleProp<ViewStyle>;
 }
 
-// ---------------------------------------------------------------------------
-// Design tokens
-// ---------------------------------------------------------------------------
-const SHADOW_OFFSET_ELEVATED = shadowOffset.elevated.width;
-const FAB_SIZE = 56;
+const SIZE = 56;
+// Distance the button travels while fading out; short enough to read as leaving the edge, not the screen.
+const SLIDE = 24;
 
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
 export function FAB({
+  accessibilityLabel,
+  icon,
   label,
-  children,
+  visible = true,
+  placement = 'bottom-right',
+  insets,
   disabled = false,
-  size = FAB_SIZE,
   style,
+  testID,
   ...props
 }: FABProps) {
   const { colors } = useTheme();
-  const isExtended = label !== undefined && label.length > 0;
+  const { reduceMotion, enter, exit } = useMotion();
+  const progress = useSharedValue(visible ? 1 : 0);
+
+  useEffect(() => {
+    progress.value = withTiming(visible ? 1 : 0, visible ? enter : exit);
+  }, [visible, enter, exit, progress]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: progress.value,
+    transform: reduceMotion ? [] : [{ translateY: (1 - progress.value) * SLIDE }],
+  }));
+
+  const edge = spacing.lg;
+  const extended: ViewStyle = { paddingHorizontal: spacing.lg, gap: spacing.sm };
+  const position: ViewStyle =
+    placement === 'bottom-center'
+      ? { left: 0, right: 0, alignItems: 'center' }
+      : placement === 'bottom-left'
+        ? { left: edge + (insets?.left ?? 0) }
+        : { right: edge + (insets?.right ?? 0) };
 
   return (
-    <BrutalSurface
-      style={[styles.portalAnchor, { bottom: spacing['2xl'], right: spacing['2xl'] }, style]}
-      surfaceStyle={[
-        styles.surface,
-        // Icon mode is a fixed square; label mode extends horizontally with
-        // padding so text is never clipped by the fixed box.
-        isExtended
-          ? { minHeight: size, paddingHorizontal: spacing.lg }
-          : { width: size, height: size },
-        {
-          backgroundColor: disabled ? colors.muted : colors.primary,
-          borderColor: disabled ? colors.mutedForeground : colors.border,
-        },
-      ]}
-      offset={SHADOW_OFFSET_ELEVATED}
-      disabled={disabled}
-      hasShadow={!disabled}
-      accessibilityRole="button"
-      accessibilityLabel={label || 'Floating Action Button'}
-      accessibilityHint="Activates the primary action"
-      accessibilityState={{ disabled }}
-      hitSlop={8}
-      {...props}
+    <Animated.View
+      testID={testID ? `${testID}-root` : undefined}
+      pointerEvents={visible ? 'box-none' : 'none'}
+      accessibilityElementsHidden={!visible}
+      importantForAccessibility={visible ? 'auto' : 'no-hide-descendants'}
+      style={[styles.root, { bottom: edge + (insets?.bottom ?? 0) }, position, style, animatedStyle]}
     >
-      {isExtended ? (
-        <Text
-          style={[
-            styles.text,
-            { fontSize: typography.lg, color: disabled ? colors.mutedForeground : colors.primaryForeground },
-          ]}
-          numberOfLines={1}
-          maxFontSizeMultiplier={1.3}
-        >
-          {label}
-        </Text>
-      ) : (
-        children
-      )}
-    </BrutalSurface>
+      <BrutalSurface
+        testID={testID}
+        elevation="overlay"
+        borderWidth="container"
+        backgroundColor={colors.primary}
+        disabled={disabled}
+        surfaceStyle={[styles.surface, label ? extended : styles.square]}
+        accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel}
+        accessibilityState={{ disabled }}
+        hitSlop={spacing.sm}
+        {...props}
+      >
+        {icon ? (
+          <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+            {icon}
+          </View>
+        ) : null}
+        {label ? (
+          <Text
+            variant="strong"
+            tone="inherit"
+            numberOfLines={1}
+            importantForAccessibility="no-hide-descendants"
+            accessibilityElementsHidden
+            style={[styles.label, { color: colors.primaryForeground }]}
+          >
+            {label}
+          </Text>
+        ) : null}
+      </BrutalSurface>
+    </Animated.View>
   );
 }
 
-// ---------------------------------------------------------------------------
-// Styles
-// ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
-  portalAnchor: {
-    position: 'absolute',
-    zIndex: 999,
-    elevation: 6,
-  },
-  surface: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  text: {
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
-  },
+  root: { position: 'absolute', zIndex: 10 },
+  surface: { height: SIZE, alignItems: 'center', justifyContent: 'center', flexDirection: 'row' },
+  square: { width: SIZE },
+  label: { flexShrink: 1 },
 });
 
 export default FAB;

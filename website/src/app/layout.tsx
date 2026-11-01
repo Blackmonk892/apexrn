@@ -1,52 +1,30 @@
 import type { Metadata } from "next";
-import { Space_Grotesk, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import { Footer } from "@/components/Footer";
+import { TopBar } from "@/components/TopBar";
+import { NO_FLASH_SCRIPT } from "@/lib/site-theme";
 
-const display = Space_Grotesk({
-  variable: "--font-display",
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
-});
-
-const body = Inter({
-  variable: "--font-body",
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-});
-
-const mono = JetBrains_Mono({
-  variable: "--font-mono",
-  subsets: ["latin"],
-  weight: ["400", "500"],
-});
+// Canonical URLs must be absolute, so they exist only when the deploy supplies the origin.
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL;
 
 export const metadata: Metadata = {
-  title: "ApexRN — brutalist UI components for React Native",
+  metadataBase: SITE_URL ? new URL(SITE_URL) : undefined,
+  title: { default: "ApexRN: brutalist UI parts for React Native", template: "%s | ApexRN" },
   description:
-    "Copy-paste React Native components with hard borders, offset shadows and real press physics. Built for Expo, themeable with one file, owned by your codebase.",
-  keywords: [
-    "React Native",
-    "Expo",
-    "UI library",
-    "brutalist UI",
-    "component library",
-    "TypeScript",
-  ],
+    "A catalogue of React Native components you copy into your app with one command. Thick borders, zero radius, hard shadows. You own the code.",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="en"
-      className={`${display.variable} ${body.variable} ${mono.variable}`}
-      data-theme="dark"
-      suppressHydrationWarning
-    >
-      <body>{children}</body>
+    <html lang="en" data-theme="light" data-preset="neo" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: NO_FLASH_SCRIPT }} />
+      </head>
+      <body>
+        <TopBar />
+        <main id="main">{children}</main>
+        <Footer />
+      </body>
     </html>
   );
 }

@@ -1,0 +1,25 @@
+appId: dev.apexrn.demo
+---
+- runFlow:
+    file: ../_open.yaml
+    env:
+      ID: skeleton
+- scrollUntilVisible:
+    element:
+      id: "skeleton-load"
+    direction: DOWN
+- assertVisible:
+    id: "skeleton-placeholder"
+- tapOn:
+    id: "skeleton-load"
+- scrollUntilVisible:
+    element:
+      text: "Event: Loaded"
+    direction: DOWN
+- assertVisible:
+    id: "skeleton-content"
+- assertNotVisible:
+    id: "skeleton-placeholder"
+- assertNotVisible: "Render Error"
+- assertNotVisible: ".*TypeError.*"
+- takeScreenshot: skeleton

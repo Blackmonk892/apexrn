@@ -1,0 +1,12 @@
+appId: dev.apexrn.demo
+---
+- runFlow:
+    file: ../_open.yaml
+    env:
+      ID: switch
+- tapOn:
+    id: "switch-wifi"
+- assertVisible: "Wi-Fi: on"
+- assertNotVisible: "Render Error"
+- assertNotVisible: ".*TypeError.*"
+- takeScreenshot: switch

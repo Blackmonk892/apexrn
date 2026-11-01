@@ -2,13 +2,25 @@ name: ci
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'ship/**']
   pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   demo:
-    # Linux on purpose: catches filename-case bugs that Windows/macOS hide.
-    runs-on: ubuntu-latest
+    # Linux catches filename-case bugs that Windows/macOS hide; macOS is the ship gate's second OS.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -22,17 +34,87 @@ jobs:
         working-directory: demo
       - run: npm run typecheck
         working-directory: demo
+      - run: npm test -- --ci
+        working-directory: demo
       - run: npx expo export --platform web
         working-directory: demo
 
-  registry-and-cli:
+  preview:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+          cache-dependency-path: preview/package-lock.json
+      - run: npm ci
+        working-directory: preview
+      - run: npm run doctor
+        working-directory: preview
+      - run: npm run typecheck
+        working-directory: preview
+      - run: npm run build:web
+        working-directory: preview
+
+  website:
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_SITE_URL: https://blackmonk892.github.io/apexrn
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            website/package-lock.json
+            preview/package-lock.json
+      - run: node registry/build.mjs
+      # The site's prebuild exports preview/ into public/preview for the embedded previews.
+      - run: npm ci
+        working-directory: preview
+      - run: npm ci
+        working-directory: website
+      - run: npm run check:no-rn
+        working-directory: website
+      - run: npm run test:scripts
+        working-directory: website
+      - run: npm run lint
+        working-directory: website
+      - run: npm run typecheck
+        working-directory: website
+      - run: npm run build
+        working-directory: website
+
+  registry-and-cli:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
       - run: node registry/check-contrast.mjs
+      - run: npm run tokens:test
       - run: node registry/build.mjs
       - run: npm test
         working-directory: packages/cli
+
+  fresh-app:
+    # Scaffolds a blank Expo app, runs the CLI against the local registry, typechecks and bundles.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/fresh-app-check.mjs

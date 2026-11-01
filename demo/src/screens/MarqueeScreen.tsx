@@ -5,8 +5,8 @@ import Section, { Caption } from '../components/Section';
 
 export default function MarqueeScreen({ onBack }: { onBack: () => void }) {
   return (
-    <Layout title="MARQUEE" onBack={onBack}>
-      <Section title="Default" note="60 px per second, repeating with a bullet divider.">
+    <Layout id="marquee" title="MARQUEE" onBack={onBack}>
+      <Section title="Default" note="60 px per second, repeating with a bullet divider. Press and hold to pause.">
         <Marquee text="Breaking news" />
       </Section>
 
@@ -25,7 +25,7 @@ export default function MarqueeScreen({ onBack }: { onBack: () => void }) {
         <Marquee text="Currently unavailable" disabled />
       </Section>
 
-      <Section title="Edge cases" note="Reduced motion also renders the text static.">
+      <Section title="Edge cases" note="Reduced motion shows the message static and truncated to one line.">
         <Caption>Short text (repeats to fill the row)</Caption>
         <Marquee text="Go" />
         <Caption>Long text (wider than the screen)</Caption>

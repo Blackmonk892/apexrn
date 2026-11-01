@@ -10,21 +10,27 @@ export default function ChipScreen({ onBack }: { onBack: () => void }) {
   const [picked, setPicked] = useState<string[]>(['Code']);
   const [people, setPeople] = useState(['ada@x.dev', 'grace@x.dev', 'a-very-long-address-that-must-truncate@example.com']);
   const [taps, setTaps] = useState(0);
+  const [log, setLog] = useState('none');
 
   return (
-    <Layout title="CHIP" onBack={onBack}>
+    <Layout id="chip" title="CHIP" onBack={onBack}>
       <Section title="Filter chips (toggle)" note="Selected is an inverted block plus a check mark, so state does not rely on colour. Controlled here.">
         <View style={styles.wrap}>
           {TAGS.map((t) => (
             <Chip
               key={t}
               label={t}
+              testID={`chip-${t.toLowerCase()}`}
               selected={picked.includes(t)}
-              onSelectedChange={(on) => setPicked((p) => (on ? [...p, t] : p.filter((x) => x !== t)))}
+              onSelectedChange={(on) => {
+                setPicked((p) => (on ? [...p, t] : p.filter((x) => x !== t)));
+                setLog(`${t} ${on ? 'on' : 'off'}`);
+              }}
             />
           ))}
         </View>
         <Caption>{`Selected: ${picked.join(', ') || 'none'}`}</Caption>
+        <Caption>{`Event: ${log}`}</Caption>
       </Section>
 
       <Section title="Uncontrolled + icon" note="defaultSelected keeps its own state.">
@@ -48,6 +54,14 @@ export default function ChipScreen({ onBack }: { onBack: () => void }) {
           ))}
         </View>
         <Caption>{people.length ? `${people.length} recipients` : 'All removed'}</Caption>
+      </Section>
+
+      <Section title="Status" note="Destructive, success and warning carry an icon as well as colour.">
+        <View style={styles.wrap}>
+          <Chip variant="destructive" label="Overdue" />
+          <Chip variant="success" label="Paid" />
+          <Chip variant="warning" label="Pending" />
+        </View>
       </Section>
 
       <Section title="Disabled">

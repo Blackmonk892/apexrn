@@ -1,6 +1,5 @@
-import { forwardRef, useEffect, type ReactNode } from 'react';
+import { forwardRef, type ComponentRef, useId, useState, type ReactNode } from 'react';
 import {
-  Pressable,
   type StyleProp,
   StyleSheet,
   TextInput,
@@ -9,213 +8,188 @@ import {
   View,
   type ViewStyle,
 } from 'react-native';
-import {
-  Easing,
-  useAnimatedStyle,
-  useReducedMotion,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
 
-import { controlHeight, spacing, typography } from '../lib/colors';
+import { controlHeight, spacing, textStyles, touchTarget, type ColorScheme } from '../lib/colors';
+import { CloseIcon } from '../lib/icons';
 import { useTheme } from '../lib/theme';
-import { cn } from '../lib/utils';
+import { variants } from '../lib/variants';
 import BrutalSurface from './brutal-surface';
+import Label from './label';
+import Text from './text';
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-export interface InputProps extends TextInputProps {
-  /**
-   * Optional icon to display on the left side of the input. Decorative.
-   */
-  leadingIcon?: ReactNode;
-  /**
-   * Optional icon to display on the right side of the input.
-   */
-  trailingIcon?: ReactNode;
-  /**
-   * Makes the trailing icon tappable. When provided, the trailing icon is
-   * wrapped in a Pressable with button semantics.
-   */
-  onTrailingIconPress?: () => void;
-  /**
-   * Accessibility label for the tappable trailing icon.
-   * @default 'Input action'
-   */
-  trailingIconLabel?: string;
-  /**
-   * Marks the value as invalid. The border and shadow switch to the
-   * destructive colour and the shadow stays on even without focus, so the
-   * state is readable without relying on hue alone.
-   * @default false
-   */
-  error?: boolean;
-  /**
-   * Disables the input, applying muted styles and preventing interactions.
-   * @default false
-   */
+type Size = 'sm' | 'md' | 'lg';
+
+export interface InputProps extends Omit<TextInputProps, 'style'> {
+  /** Visible label, wired to the field for screen readers on both platforms. */
+  label?: string;
+  /** Adds `*` to the label and announces the field as required. */
+  required?: boolean;
+  /** Helper text under the label. Read with the field. */
+  description?: string;
+  /** Marks the value as invalid: destructive border and `aria-invalid`. */
+  invalid?: boolean;
+  /** Shown under the field with an icon while `invalid`, and read with the field. */
+  errorMessage?: string;
+  /** Dashed border, not editable, no focus ring. */
   disabled?: boolean;
-  /**
-   * Style overrides for the underlying TextInput.
-   */
+  /** @default 'md' */
+  size?: Size;
+  /** Sits inside the border before the text. Not hidden from assistive tech, so a decorative icon should hide itself. */
+  leading?: ReactNode;
+  /** Sits inside the border after the text. May be interactive, such as a clear button. */
+  trailing?: ReactNode;
+  /** Fires with the new text, alongside `onChangeText`. */
+  onValueChange?: (value: string) => void;
+  /** Outer wrapper style. */
+  style?: StyleProp<ViewStyle>;
+  /** Style for the underlying TextInput. */
   inputStyle?: StyleProp<TextStyle>;
-  /**
-   * Style overrides for the brutalist surface (borders, background).
-   */
+  /** Style for the bordered surface around the TextInput and its slots. */
   surfaceStyle?: StyleProp<ViewStyle>;
 }
 
-// ---------------------------------------------------------------------------
-// Design tokens
-// ---------------------------------------------------------------------------
-const SHADOW_OFFSET = 4;
+// Resolved per render: theme colours change with mode and preset.
+const inputStyles = (c: ColorScheme) =>
+  variants({
+    base: {
+      surface: { flexDirection: 'row', alignItems: 'center' } as ViewStyle,
+      input: { flex: 1, alignSelf: 'stretch', color: c.foreground, paddingVertical: spacing.sm } as TextStyle,
+    },
+    variants: {
+      size: {
+        sm: { surface: { minHeight: controlHeight.sm } },
+        md: { surface: { minHeight: controlHeight.md } },
+        lg: { surface: { minHeight: controlHeight.lg } },
+      },
+    },
+    defaultVariants: { size: 'md' },
+  });
 
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
-const Input = forwardRef<TextInput, InputProps>(({
-  leadingIcon,
-  trailingIcon,
-  onTrailingIconPress,
-  trailingIconLabel = 'Input action',
-  error = false,
-  disabled = false,
-  inputStyle,
-  surfaceStyle,
-  style,
-  onFocus,
-  onBlur,
-  placeholderTextColor,
-  ...props
-}, ref) => {
+const ERROR_ICON_SIZE = 16;
+
+export const Input = forwardRef<ComponentRef<typeof TextInput>, InputProps>(function Input(
+  {
+    label,
+    required = false,
+    description,
+    invalid = false,
+    errorMessage,
+    disabled = false,
+    editable = true,
+    size = 'md',
+    leading,
+    trailing,
+    onValueChange,
+    onChangeText,
+    onFocus,
+    onBlur,
+    placeholderTextColor,
+    accessibilityLabel,
+    accessibilityHint,
+    style,
+    inputStyle,
+    surfaceStyle,
+    ...props
+  },
+  ref,
+) {
   const { colors } = useTheme();
-  const reduceMotion = useReducedMotion();
-  // 0 = resting, 1 = shadow fully shown (focused).
-  const focusProgress = useSharedValue(0);
+  const [focused, setFocused] = useState(false);
+  const labelId = useId();
+  const look = inputStyles(colors)({ size });
+  const showError = invalid && !!errorMessage;
+  const height = controlHeight[size];
 
-  const animateTo = (to: number) => {
-    focusProgress.value = reduceMotion
-      ? to
-      : withTiming(to, { duration: to ? 100 : 80, easing: to ? Easing.out(Easing.quad) : Easing.in(Easing.quad) });
-  };
-
-  // Disabling mid-focus must not leave the focus shadow stuck on.
-  useEffect(() => {
-    if (disabled) focusProgress.value = 0;
-  }, [disabled, focusProgress]);
-
-  const handleFocus: NonNullable<TextInputProps['onFocus']> = (e) => {
-    if (!disabled) animateTo(1);
-    onFocus?.(e);
-  };
-
-  const handleBlur: NonNullable<TextInputProps['onBlur']> = (e) => {
-    animateTo(0);
-    onBlur?.(e);
-  };
-
-  // The shadow layer is always laid out (so size never changes between
-  // states); focus only fades its opacity. Errors keep it visible.
-  const animatedShadowStyle = useAnimatedStyle(() => ({
-    opacity: error && !disabled ? 1 : focusProgress.value,
-  }));
-
-  const accent = error && !disabled ? colors.destructive : colors.border;
+  // The hint is the one channel that carries both pieces of helper copy with the field.
+  const hint = [accessibilityHint, description, showError ? errorMessage : undefined].filter(Boolean).join('. ') || undefined;
+  // iOS has no accessibilityLabelledBy, so the label text is repeated on the field.
+  const spoken = accessibilityLabel ?? (label ? (required ? `${label}, required` : label) : undefined);
 
   return (
-    <View style={cn(styles.container, style)}>
+    <View style={[styles.root, style]}>
+      {label ? (
+        <Label
+          nativeID={labelId}
+          required={required}
+          disabled={disabled}
+          // iOS reads the field's own label; Android needs this node reachable for accessibilityLabelledBy.
+          accessibilityElementsHidden
+        >
+          {label}
+        </Label>
+      ) : null}
+      {description ? (
+        <Text tone="muted" style={styles.description} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+          {description}
+        </Text>
+      ) : null}
+
       <BrutalSurface
         pressable={false}
-        hasShadow
-        shadowStyle={animatedShadowStyle}
-        offset={SHADOW_OFFSET}
-        borderWidth="heavy"
-        backgroundColor={disabled ? colors.muted : colors.background}
-        borderColor={disabled ? colors.mutedForeground : accent}
-        shadowColor={error && !disabled ? colors.destructive : undefined}
-        surfaceStyle={[styles.surface, { minHeight: controlHeight.md }, surfaceStyle]}
+        elevation="flat"
+        borderWidth="control"
+        disabled={disabled}
+        invalid={invalid}
+        focused={focused}
+        borderColor={colors.input}
+        surfaceStyle={[look.surface, surfaceStyle]}
       >
-        {leadingIcon ? (
-          <View
-            style={[styles.iconContainer, { paddingLeft: spacing.md }]}
-            importantForAccessibility="no-hide-descendants"
-            accessibilityElementsHidden
-          >
-            {leadingIcon}
-          </View>
-        ) : null}
-
+        {leading ? <View style={{ paddingLeft: spacing.md }}>{leading}</View> : null}
         <TextInput
           ref={ref}
-          style={cn(
-            styles.input,
-            {
-              fontSize: typography.md,
-              paddingVertical: spacing.sm,
-              paddingHorizontal: spacing.md,
-              color: colors.foreground,
-            },
-            disabled && { color: colors.mutedForeground },
-            inputStyle
-          )}
-          editable={!disabled}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
+          style={[
+            textStyles.body,
+            look.input,
+            { paddingLeft: leading ? spacing.sm : spacing.md, paddingRight: trailing ? spacing.sm : spacing.md },
+            inputStyle,
+          ]}
+          editable={editable && !disabled}
+          onFocus={(e) => {
+            setFocused(true);
+            onFocus?.(e);
+          }}
+          onBlur={(e) => {
+            setFocused(false);
+            onBlur?.(e);
+          }}
+          onChangeText={(text) => {
+            onChangeText?.(text);
+            onValueChange?.(text);
+          }}
           placeholderTextColor={placeholderTextColor ?? colors.mutedForeground}
           maxFontSizeMultiplier={1.3}
-          aria-invalid={error || undefined}
+          hitSlop={Math.max(0, Math.ceil((touchTarget - height) / 2))}
+          aria-invalid={invalid || undefined}
           accessibilityState={{ disabled }}
+          accessibilityLabel={spoken}
+          accessibilityLabelledBy={label ? labelId : undefined}
+          accessibilityHint={hint}
           {...props}
         />
-
-        {trailingIcon ? (
-          onTrailingIconPress && !disabled ? (
-            <Pressable
-              onPress={onTrailingIconPress}
-              style={[styles.iconContainer, { paddingRight: spacing.md }]}
-              accessibilityRole="button"
-              accessibilityLabel={trailingIconLabel}
-              hitSlop={8}
-            >
-              {trailingIcon}
-            </Pressable>
-          ) : (
-            <View
-              style={[styles.iconContainer, { paddingRight: spacing.md }]}
-              importantForAccessibility="no-hide-descendants"
-              accessibilityElementsHidden
-            >
-              {trailingIcon}
-            </View>
-          )
-        ) : null}
+        {trailing ? <View style={{ paddingRight: spacing.md }}>{trailing}</View> : null}
       </BrutalSurface>
+
+      {showError ? (
+        // The field's hint already carries this text, so screen readers skip the row.
+        <View style={styles.error} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+          <View testID="input-error-icon">
+            <CloseIcon size={ERROR_ICON_SIZE} color={colors.destructive} />
+          </View>
+          <Text variant="label" tone="inherit" style={[styles.errorText, { color: colors.destructive }]}>
+            {errorMessage}
+          </Text>
+        </View>
+      ) : null}
     </View>
   );
 });
 
-Input.displayName = 'Input';
-export { Input };
-export default Input;
-
-// ---------------------------------------------------------------------------
-// Styles
-// ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
-  // stretch (not width: 100%) so the shadow's margin doesn't push past the parent.
-  container: {
-    alignSelf: 'stretch',
-  },
-  surface: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  input: {
-    flex: 1,
-  },
-  iconContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+  // stretch rather than width: 100% so the wrapper never pushes past its parent.
+  root: { alignSelf: 'stretch' },
+  description: { marginBottom: spacing.xs },
+  error: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: spacing.sm },
+  errorText: { flexShrink: 1 },
 });
+
+export default Input;

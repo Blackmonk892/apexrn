@@ -11,6 +11,10 @@ interface HomeScreenProps {
 // One entry per component demo, in dependency order (plan §5.3).
 const GROUPS: { title: string; items: { id: string; name: string }[] }[] = [
   {
+    title: 'Design system',
+    items: [{ id: 'specimen', name: 'Specimen' }],
+  },
+  {
     title: 'Atoms',
     items: [
       { id: 'button', name: 'Button' },
@@ -22,6 +26,7 @@ const GROUPS: { title: string; items: { id: string; name: string }[] }[] = [
       { id: 'progress', name: 'Progress' },
       { id: 'alert', name: 'Alert' },
       { id: 'card', name: 'Card' },
+      { id: 'emptystate', name: 'Empty state' },
       { id: 'listitem', name: 'List item' },
       { id: 'fab', name: 'FAB' },
     ],
@@ -36,6 +41,7 @@ const GROUPS: { title: string; items: { id: string; name: string }[] }[] = [
       { id: 'radiogroup', name: 'Radio group' },
       { id: 'slider', name: 'Slider' },
       { id: 'input_otp', name: 'Input OTP' },
+      { id: 'segmentedcontrol', name: 'Segmented control' },
     ],
   },
   {
@@ -62,6 +68,15 @@ const GROUPS: { title: string; items: { id: string; name: string }[] }[] = [
       { id: 'dropdown', name: 'Dropdown menu' },
       { id: 'select', name: 'Select' },
       { id: 'datepicker', name: 'Date picker' },
+      { id: 'numberinput', name: 'Number input' },
+    ],
+  },
+  {
+    title: 'Reference',
+    items: [
+      { id: 'ref-settings', name: 'Settings' },
+      { id: 'ref-checkout', name: 'Checkout' },
+      { id: 'ref-inbox', name: 'Inbox' },
     ],
   },
   {
@@ -76,34 +91,39 @@ const GROUPS: { title: string; items: { id: string; name: string }[] }[] = [
   },
 ];
 
+export const SCREEN_IDS = GROUPS.flatMap((group) => group.items.map((item) => item.id));
+
 export default function HomeScreen({ onNavigate }: HomeScreenProps) {
   const { colors } = useTheme();
 
   return (
-    <Layout title="APEXRN">
-      <Text style={[styles.lede, { color: colors.foreground }]}>
-        Every screen renders the real component from the library barrel, with its variants and states.
-      </Text>
+    <Layout id="home" title="APEXRN">
+      <View testID="home-screen">
+        <Text style={[styles.lede, { color: colors.foreground }]}>
+          Every screen renders the real component from the library barrel, with its variants and states.
+        </Text>
 
-      {GROUPS.map((group) => (
-        <Section key={group.title} title={group.title}>
-          <View style={styles.list}>
-            {group.items.map((item) => (
-              <BrutalSurface
-                key={item.id}
-                offset={4}
-                onPress={() => onNavigate(item.id)}
-                accessibilityRole="button"
-                accessibilityLabel={`${item.name} demo`}
-                surfaceStyle={styles.row}
-              >
-                <Text style={[styles.name, { color: colors.foreground }]}>{item.name}</Text>
-                <Text style={[styles.arrow, { color: colors.foreground }]}>→</Text>
-              </BrutalSurface>
-            ))}
-          </View>
-        </Section>
-      ))}
+        {GROUPS.map((group) => (
+          <Section key={group.title} title={group.title}>
+            <View style={styles.list}>
+              {group.items.map((item) => (
+                <BrutalSurface
+                  key={item.id}
+                  testID={`home-${item.id}`}
+                  elevation="card"
+                  onPress={() => onNavigate(item.id)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${item.name} demo`}
+                  surfaceStyle={styles.row}
+                >
+                  <Text style={[styles.name, { color: colors.foreground }]}>{item.name}</Text>
+                  <Text style={[styles.arrow, { color: colors.foreground }]}>→</Text>
+                </BrutalSurface>
+              ))}
+            </View>
+          </Section>
+        ))}
+      </View>
     </Layout>
   );
 }

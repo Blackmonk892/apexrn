@@ -1,60 +1,37 @@
 import { useEffect, useState } from 'react';
-import { Pressable, type PressableProps, StyleSheet, View } from 'react-native';
+import { Pressable, type PressableProps, type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native';
 import Animated, {
-  Easing,
-  interpolateColor,
   useAnimatedStyle,
-  useReducedMotion,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
 
-import { borderWidths } from '../lib/colors';
+import { borderWidths, spacing, touchTarget } from '../lib/colors';
+import { useMotion } from '../lib/motion';
 import { useTheme } from '../lib/theme';
 import BrutalSurface from './brutal-surface';
+import { Text } from './text';
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-export interface SwitchProps extends Omit<PressableProps, 'onPress' | 'onPressIn' | 'onPressOut'> {
-  /**
-   * The controlled checked state. Omit for an uncontrolled switch.
-   */
+export interface SwitchProps extends Omit<PressableProps, 'onPress' | 'onPressIn' | 'onPressOut' | 'children' | 'style'> {
+  /** Controlled state. Omit for an uncontrolled switch. */
   checked?: boolean;
-  /**
-   * Initial state when uncontrolled.
-   * @default false
-   */
+  /** Initial state when uncontrolled. @default false */
   defaultChecked?: boolean;
-  /**
-   * Callback fired when the switch state changes.
-   */
   onCheckedChange?: (checked: boolean) => void;
-  /**
-   * Disables the switch.
-   * @default false
-   */
   disabled?: boolean;
+  /** Renders a pressable row with the label beside the switch; the whole row is the hit target. */
+  label?: string;
+  /** Style for the outer wrapper. */
+  style?: StyleProp<ViewStyle>;
 }
 
-// ---------------------------------------------------------------------------
-// Design tokens
-// ---------------------------------------------------------------------------
-const SHADOW_OFFSET = 2;
 const TRACK_WIDTH = 56;
 const TRACK_HEIGHT = 32;
 const TRACK_PADDING = 2;
-const THUMB_SIZE = 24;
-// The thumb container includes its shadow margin, and the track's border
-// sits inside its width, so both come off the travel distance:
-// 56 - 2*2 (border) - 2*2 (padding) - (24 + 2) = 22.
-const THUMB_TRAVEL_DISTANCE =
-  TRACK_WIDTH - borderWidths.standard * 2 - TRACK_PADDING * 2 - (THUMB_SIZE + SHADOW_OFFSET);
+const THUMB_SIZE = 20;
+const TRAVEL = TRACK_WIDTH - borderWidths.control * 2 - TRACK_PADDING * 2 - THUMB_SIZE;
+const TRACK_SLOP = Math.ceil((touchTarget - TRACK_HEIGHT) / 2);
 
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const AnimatedView = Animated.createAnimatedComponent(View);
 
 export function Switch({
@@ -62,92 +39,120 @@ export function Switch({
   defaultChecked = false,
   onCheckedChange,
   disabled = false,
+  label,
   style,
-  hitSlop = 8,
+  testID,
+  accessibilityLabel,
   ...props
 }: SwitchProps) {
   const { colors } = useTheme();
-  const reduceMotion = useReducedMotion();
+  const { reduceMotion, selection } = useMotion();
   const [internalChecked, setInternalChecked] = useState(defaultChecked);
   const checked = checkedProp ?? internalChecked;
-  const isChecked = useSharedValue(checked ? 1 : 0);
+  const progress = useSharedValue(checked ? 1 : 0);
 
   useEffect(() => {
     const to = checked ? 1 : 0;
-    isChecked.value = reduceMotion
-      ? to
-      : withTiming(to, { duration: 150, easing: Easing.inOut(Easing.quad) });
-  }, [checked, reduceMotion, isChecked]);
+    progress.value = reduceMotion ? to : withTiming(to, selection);
+    // `selection` is a stable token object per motion mode.
+  }, [checked, reduceMotion, progress, selection]);
 
-  const handlePress = () => {
+  const toggle = () => {
     if (disabled) return;
     if (checkedProp === undefined) setInternalChecked(!checked);
     onCheckedChange?.(!checked);
   };
 
-  const animatedTrackStyle = useAnimatedStyle(() => ({
-    backgroundColor: interpolateColor(isChecked.value, [0, 1], [colors.muted, colors.primary]),
+  // Only the thumb travels; the fills swap instantly so the state never reads as "in between".
+  const thumbStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: progress.value * TRAVEL }],
   }));
+  const trackFill = { backgroundColor: checked ? colors.foreground : colors.background };
+  const thumbFill = { backgroundColor: checked ? colors.background : colors.foreground };
 
-  const animatedThumbStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: isChecked.value * THUMB_TRAVEL_DISTANCE }],
-  }));
+  const switchState = {
+    accessibilityRole: 'switch' as const,
+    accessibilityState: { checked, disabled },
+    'aria-checked': checked,
+    'aria-disabled': disabled,
+  };
 
+  const thumb = (
+    <AnimatedView
+      testID={testID ? `${testID}-thumb` : undefined}
+      style={[styles.thumb, { borderColor: colors.border }, thumbFill, thumbStyle]}
+    />
+  );
+
+  if (!label) {
+    return (
+      <BrutalSurface
+        elevation="control"
+        borderWidth="control"
+        disabled={disabled}
+        hitSlop={{ top: TRACK_SLOP, bottom: TRACK_SLOP }}
+        onPress={toggle}
+        surfaceStyle={[styles.track, trackFill]}
+        style={style}
+        testID={testID}
+        accessibilityLabel={accessibilityLabel}
+        {...switchState}
+        {...props}
+      >
+        {thumb}
+      </BrutalSurface>
+    );
+  }
+
+  // The row is the one switch node; the track inside is decoration and carries no press physics.
   return (
-    <AnimatedPressable
-      onPress={handlePress}
-      style={[
-        styles.track,
-        { borderColor: colors.border },
-        animatedTrackStyle,
-        // Disabled styling wins over the animated track color so a
-        // disabled-ON switch doesn't render a primary track + muted thumb.
-        disabled && { backgroundColor: colors.muted, borderColor: colors.mutedForeground },
-        style,
-      ]}
-      accessibilityRole="switch"
-      accessibilityState={{ checked, disabled }}
-      aria-checked={checked}
-      aria-disabled={disabled}
+    <Pressable
+      onPress={toggle}
       disabled={disabled}
-      hitSlop={hitSlop}
+      testID={testID}
+      accessibilityLabel={accessibilityLabel ?? label}
+      style={[styles.row, { gap: spacing.md }, style]}
+      {...switchState}
       {...props}
     >
-      <AnimatedView style={[styles.thumbContainer, animatedThumbStyle]}>
-        <BrutalSurface
-          pressable={false}
-          hasShadow={!disabled}
-          offset={SHADOW_OFFSET}
-          backgroundColor={disabled ? colors.muted : colors.background}
-          borderColor={disabled ? colors.mutedForeground : colors.border}
-          surfaceStyle={styles.thumbSurface}
-        />
-      </AnimatedView>
-    </AnimatedPressable>
+      <BrutalSurface
+        elevation="control"
+        borderWidth="control"
+        disabled={disabled}
+        pressable={false}
+        surfaceStyle={[styles.track, trackFill]}
+        accessible={false}
+        importantForAccessibility="no-hide-descendants"
+        aria-hidden
+      >
+        {thumb}
+      </BrutalSurface>
+      <Text variant="body" tone={disabled ? 'muted' : 'default'} style={styles.label} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+        {label}
+      </Text>
+    </Pressable>
   );
 }
 
-// ---------------------------------------------------------------------------
-// Styles
-// ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
   track: {
     width: TRACK_WIDTH,
     height: TRACK_HEIGHT,
-    borderWidth: borderWidths.standard,
-    borderRadius: 0,
     justifyContent: 'center',
     paddingHorizontal: TRACK_PADDING,
   },
-  thumbContainer: {
-    position: 'relative',
-    width: THUMB_SIZE + SHADOW_OFFSET,
-    height: THUMB_SIZE + SHADOW_OFFSET,
-  },
-  thumbSurface: {
+  thumb: {
     width: THUMB_SIZE,
     height: THUMB_SIZE,
+    borderWidth: borderWidths.control,
+    borderRadius: 0,
   },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: touchTarget,
+  },
+  label: { flexShrink: 1 },
 });
 
 export default Switch;

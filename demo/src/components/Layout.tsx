@@ -1,9 +1,11 @@
 import React from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { borderWidths, touchTarget, useTheme } from '@apexrn/ui';
 
 interface LayoutProps {
+  /** Screen id as listed on Home; becomes the `screen-<id>` testID that e2e flows wait for. */
+  id: string;
   title: string;
   children: React.ReactNode;
   onBack?: () => void;
@@ -12,13 +14,15 @@ interface LayoutProps {
 }
 
 /** Demo chrome. Every colour comes from the library theme, so a broken theme looks broken here. */
-export default function Layout({ title, children, onBack, overlay }: LayoutProps) {
+export default function Layout({ id, title, children, onBack, overlay }: LayoutProps) {
   const { colors, isDark, toggleTheme } = useTheme();
-  const isEmbed = typeof window !== 'undefined' && (window.location.search.includes('embed=1') || window.location.search.includes('frame=0'));
+  // Native aliases window to global but defines no location, so a typeof window check is not enough.
+  const search = Platform.OS === 'web' ? window.location?.search ?? '' : '';
+  const isEmbed = search.includes('embed=1') || search.includes('frame=0');
 
   if (isEmbed) {
     return (
-      <SafeAreaView style={[styles.root, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
+      <SafeAreaView testID={`screen-${id}`} style={[styles.root, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
         <ScrollView contentContainerStyle={[styles.container, { padding: 14 }]} keyboardShouldPersistTaps="handled">
           {children}
         </ScrollView>
@@ -28,7 +32,7 @@ export default function Layout({ title, children, onBack, overlay }: LayoutProps
   }
 
   return (
-    <SafeAreaView style={[styles.root, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
+    <SafeAreaView testID={`screen-${id}`} style={[styles.root, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
       <View style={[styles.header, { backgroundColor: colors.muted, borderBottomColor: colors.border }]}>
         <View style={styles.headerLeft}>
           {onBack && (
@@ -75,7 +79,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderBottomWidth: borderWidths.heavy,
+    borderBottomWidth: borderWidths.container,
     gap: 8,
   },
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flexShrink: 1 },
@@ -83,7 +87,7 @@ const styles = StyleSheet.create({
     minHeight: touchTarget - 8,
     justifyContent: 'center',
     paddingHorizontal: 10,
-    borderWidth: borderWidths.standard,
+    borderWidth: borderWidths.control,
   },
   chipText: { fontSize: 12, fontWeight: '800', letterSpacing: 0.5 },
   headerTitle: { fontSize: 20, fontWeight: '900', letterSpacing: -0.5, flexShrink: 1 },

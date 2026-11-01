@@ -100,25 +100,48 @@ export function Filters() {
 ### Card
 
 ```tsx
-import { Button, Card, CardFooter, CardHeader, CardText } from '@/components/apexrn';
+import { Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/apexrn';
 
 export function PlanCard() {
   return (
-    <Card variant="accent">
+    <Card>
       <CardHeader>
-        <CardText tone="title">Pro plan</CardText>
+        <CardTitle>Pro plan</CardTitle>
+        <CardDescription>$9 a month, billed yearly.</CardDescription>
       </CardHeader>
-      <CardText tone="title">$9 / month</CardText>
-      <CardText tone="muted">Unlimited projects.</CardText>
+      <CardContent>
+        <CardDescription>Unlimited projects and team seats.</CardDescription>
+      </CardContent>
       <CardFooter>
-        <Button variant="primary">Upgrade</Button>
+        <Button>Upgrade</Button>
       </CardFooter>
     </Card>
   );
 }
 ```
 
-Use `CardText` instead of `Text` inside a card: React Native text does not inherit colour, so `CardText` picks up the card variant's foreground. Give `Card` an `onPress` and it becomes a button.
+`variant="destructive" | "success" | "warning"` adds a top rule, an icon and a label. Give `Card` an `onPress` and it becomes a button that sinks when pressed. The parts throw outside a `Card`.
+
+### EmptyState
+
+```tsx
+import { Button, EmptyState, EmptyStateActions, EmptyStateDescription, EmptyStateIcon, EmptyStateTitle, InfoIcon } from '@/components/apexrn';
+
+export function NoMessages() {
+  return (
+    <EmptyState>
+      <EmptyStateIcon>{(color) => <InfoIcon color={color} />}</EmptyStateIcon>
+      <EmptyStateTitle>No messages yet</EmptyStateTitle>
+      <EmptyStateDescription>New mail shows up here.</EmptyStateDescription>
+      <EmptyStateActions>
+        <Button onPress={() => {}}>Compose</Button>
+      </EmptyStateActions>
+    </EmptyState>
+  );
+}
+```
+
+`align="start"` left-aligns everything. The icon block is decorative and hidden from screen readers.
 
 ### Badge
 
@@ -297,6 +320,44 @@ export function Preferences() {
   );
 }
 ```
+
+### SegmentedControl
+
+```tsx
+import { useState } from 'react';
+import { SegmentedControl } from '@/components/apexrn';
+
+export function Range() {
+  const [range, setRange] = useState('week');
+  return (
+    <SegmentedControl
+      value={range}
+      onValueChange={setRange}
+      segments={[
+        { value: 'day', label: 'Day' },
+        { value: 'week', label: 'Week' },
+        { value: 'month', label: 'Month' },
+      ]}
+    />
+  );
+}
+```
+
+Two to five segments. The selected one is an inverted block that slides into place.
+
+### NumberInput
+
+```tsx
+import { useState } from 'react';
+import { NumberInput } from '@/components/apexrn';
+
+export function Quantity() {
+  const [qty, setQty] = useState(1);
+  return <NumberInput label="Quantity" value={qty} onValueChange={setQty} min={1} max={10} />;
+}
+```
+
+Holding minus or plus repeats with an accelerating interval. Screen readers adjust it with swipe up/down.
 
 ### Slider
 
@@ -564,6 +625,23 @@ export function Tile() {
     <BrutalSurface pressable onPress={() => {}} accessibilityRole="button" accessibilityLabel="Open tile">
       <Text>Tap me</Text>
     </BrutalSurface>
+  );
+}
+```
+
+### Text
+
+The type scale: `display`, `title`, `body`, `label` and `mono`. Colour comes from the theme; `tone="inherit"` leaves it to the parent, for text on a filled control.
+
+```tsx
+import { Text } from '@/components/apexrn';
+
+export function Heading() {
+  return (
+    <>
+      <Text variant="title">Orders</Text>
+      <Text tone="muted">Shipped this week</Text>
+    </>
   );
 }
 ```

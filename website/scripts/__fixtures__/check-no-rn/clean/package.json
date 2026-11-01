@@ -1,0 +1,5 @@
+{
+  "name": "clean",
+  "description": "works like react-native",
+  "dependencies": { "react": "19.2.8" }
+}

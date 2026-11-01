@@ -1,0 +1,16 @@
+appId: dev.apexrn.demo
+---
+- runFlow:
+    file: ../_open.yaml
+    env:
+      ID: radiogroup
+- assertVisible:
+    id: "radio-express"
+- tapOn:
+    id: "radio-express"
+- assertVisible:
+    id: "radiogroup-log"
+- assertVisible: "Shipping: express"
+- assertNotVisible: "Render Error"
+- assertNotVisible: ".*TypeError.*"
+- takeScreenshot: radiogroup

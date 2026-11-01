@@ -2,11 +2,12 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Platform, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { ApexRNProvider, useTheme } from '@apexrn/ui';
+import { ApexRNProvider, useTheme, type PresetName } from '@apexrn/ui';
 
 import { PreviewErrorBoundary } from './src/error-boundary';
-import { isRenderMessage, postToParent, type PreviewTheme, type RenderMessage } from './src/protocol';
+import { isPresetMessage, isRenderMessage, isThemeMessage, postToParent, type PreviewTheme, type RenderMessage } from './src/protocol';
 import { resolveComponent } from './src/registry';
+import { Showcase } from './src/showcase';
 
 function isEmbed(): boolean {
   if (Platform.OS !== 'web' || typeof window === 'undefined') return false;
@@ -29,14 +30,40 @@ function initialRenderMessage(): RenderMessage | null {
   };
 }
 
+function initialPreset(): PresetName {
+  if (Platform.OS !== 'web' || typeof window === 'undefined') return 'neo';
+  return new URLSearchParams(window.location.search).get('preset') === 'raw' ? 'raw' : 'neo';
+}
+
+function isShowcase(): boolean {
+  if (Platform.OS !== 'web' || typeof window === 'undefined') return false;
+  return new URLSearchParams(window.location.search).get('view') === 'showcase';
+}
+
+/** Applies a theme message to the provider's own state, so nothing remounts. */
+function ModeSync({ mode }: { mode: 'light' | 'dark' | null }) {
+  const { setMode } = useTheme();
+  useEffect(() => {
+    if (mode) setMode(mode);
+  }, [mode, setMode]);
+  return null;
+}
+
 export default function App() {
   const embed = isEmbed();
   const [message, setMessage] = useState<RenderMessage | null>(initialRenderMessage);
+  const [mode, setMode] = useState<'light' | 'dark' | null>(null);
+  const [preset, setPreset] = useState<PresetName>(initialPreset);
 
   useEffect(() => {
+    if (Platform.OS !== 'web') return;
     function onMessage(event: MessageEvent) {
       if (isRenderMessage(event.data)) {
         setMessage(event.data);
+      } else if (isThemeMessage(event.data)) {
+        setMode(event.data.mode);
+      } else if (isPresetMessage(event.data)) {
+        setPreset(event.data.preset);
       }
     }
     window.addEventListener('message', onMessage);
@@ -49,7 +76,8 @@ export default function App() {
   return (
     <GestureHandlerRootView style={styles.flex}>
       <SafeAreaProvider>
-        <ApexRNProvider defaultMode={theme}>
+        <ApexRNProvider defaultMode={theme} preset={preset}>
+          <ModeSync mode={mode} />
           <PreviewRoot embed={embed} message={message} />
         </ApexRNProvider>
       </SafeAreaProvider>
@@ -70,7 +98,7 @@ function PreviewRoot({ embed, message }: { embed: boolean; message: RenderMessag
       onLayout={handleLayout}
     >
       <PreviewErrorBoundary>
-        {message ? <RenderedComponent message={message} /> : !embed ? <Placeholder /> : null}
+        {message ? <RenderedComponent message={message} /> : isShowcase() ? <Showcase /> : !embed ? <Placeholder /> : null}
       </PreviewErrorBoundary>
     </View>
   );

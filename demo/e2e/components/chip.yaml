@@ -1,0 +1,17 @@
+appId: dev.apexrn.demo
+---
+- runFlow:
+    file: ../_open.yaml
+    env:
+      ID: chip
+- assertVisible:
+    id: "chip-design"
+- tapOn:
+    id: "chip-design"
+- assertVisible: "Event: Design on"
+- tapOn:
+    id: "chip-design"
+- assertVisible: "Event: Design off"
+- assertNotVisible: "Render Error"
+- assertNotVisible: ".*TypeError.*"
+- takeScreenshot: chip

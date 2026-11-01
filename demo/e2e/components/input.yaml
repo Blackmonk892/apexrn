@@ -1,0 +1,16 @@
+appId: dev.apexrn.demo
+---
+- runFlow:
+    file: ../_open.yaml
+    env:
+      ID: input
+- assertVisible:
+    id: "input-email"
+- tapOn:
+    id: "input-email"
+- inputText: "ada@example.com"
+- hideKeyboard
+- assertVisible: "Value: ada@example.com"
+- assertNotVisible: "Render Error"
+- assertNotVisible: ".*TypeError.*"
+- takeScreenshot: input

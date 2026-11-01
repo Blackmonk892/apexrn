@@ -1,0 +1,17 @@
+appId: dev.apexrn.demo
+---
+- runFlow:
+    file: ../_open.yaml
+    env:
+      ID: button
+- assertVisible:
+    id: "button-primary"
+- tapOn:
+    id: "button-primary"
+- scrollUntilVisible:
+    element:
+      text: "Pressed: primary"
+    direction: DOWN
+- assertNotVisible: "Render Error"
+- assertNotVisible: ".*TypeError.*"
+- takeScreenshot: button
