@@ -3,23 +3,22 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "predev": "node scripts/generate-docs.mjs",
+    "predev": "node scripts/generate-docs.mjs && node scripts/generate-theme-docs.mjs && node scripts/capture-cli.mjs && node scripts/capture-cli-docs.mjs",
     "dev": "next dev",
-    "prebuild": "node scripts/generate-docs.mjs",
+    "prebuild": "node scripts/generate-docs.mjs && node scripts/generate-theme-docs.mjs && node scripts/capture-cli.mjs && node scripts/capture-cli-docs.mjs && node scripts/build-preview.mjs",
     "build": "next build",
     "postbuild": "node scripts/build-search-index.mjs",
     "start": "next start",
     "lint": "eslint",
-    "pretypecheck": "node scripts/generate-docs.mjs",
+    "pretypecheck": "node scripts/generate-docs.mjs && node scripts/generate-theme-docs.mjs && node scripts/capture-cli.mjs && node scripts/capture-cli-docs.mjs",
     "typecheck": "tsc --noEmit",
     "check:no-rn": "node scripts/check-no-rn.mjs",
-    "test:scripts": "node --test \"scripts/*.test.mjs\""
+    "test:scripts": "node --test \"scripts/*.test.mjs\"",
+    "build:preview": "node scripts/build-preview.mjs"
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.3.3",
     "clsx": "^2.1.1",
-    "framer-motion": "^13.4.6",
-    "lucide-react": "^1.49.0",
     "next": "16.3.7",
     "postcss": "^8.5.28",
     "react": "19.2.8",
