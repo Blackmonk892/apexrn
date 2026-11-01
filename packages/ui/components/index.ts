@@ -9,7 +9,7 @@ export { default as Checkbox, type CheckboxProps } from './checkbox';
 export { default as Badge, type BadgeProps } from './badge';
 export { default as Avatar, type AvatarProps } from './avatar';
 export { default as Alert, AlertDescription, AlertTitle, type AlertProps } from './alert';
-export { default as AlertDialog, type AlertDialogProps } from './alert-dialog';
+export { default as AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction, type AlertDialogProps, type AlertDialogCancelProps, type AlertDialogActionProps } from './alert-dialog';
 export { default as Toast, type ToastProps } from './toast';
 export { Toaster, useToast, type ToastApi, type ToastOptions, type ToasterProps } from './toaster';
 export { default as ListItem, type ListItemProps } from './list-item';

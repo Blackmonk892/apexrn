@@ -1,0 +1,23 @@
+appId: dev.apexrn.demo
+---
+- runFlow:
+    file: ../_open.yaml
+    env:
+      ID: alertdialog
+- tapOn:
+    id: "alertdialog-open"
+- assertVisible: "Delete account?"
+- tapOn: "Cancel"
+- assertNotVisible: "Delete account?"
+- assertVisible: "Last choice: Cancelled"
+- tapOn:
+    id: "alertdialog-open"
+- assertVisible: "Delete account?"
+- tapOn:
+    text: "Delete account"
+    index: 1
+- assertNotVisible: "Delete account?"
+- assertVisible: "Last choice: Confirmed"
+- assertNotVisible: "Render Error"
+- assertNotVisible: ".*TypeError.*"
+- takeScreenshot: alertdialog
