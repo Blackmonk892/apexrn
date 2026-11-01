@@ -58,7 +58,7 @@ ${entries.join('\n')}
 const indexPath = join(root, 'index.ts');
 
 if (check) {
-  if (!existsSync(indexPath) || readFileSync(indexPath, 'utf8') !== out) {
+  if (!existsSync(indexPath) || readFileSync(indexPath, 'utf8').replaceAll('\r\n', '\n') !== out) {
     problems.push('src/examples/index.ts is out of date (run npm run gen:examples)');
   }
 } else if (!problems.length) {

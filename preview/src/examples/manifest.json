@@ -1,4 +1,40 @@
 {
+  "accordion": [
+    { "id": "demo", "title": "Accordion" },
+    { "id": "multiple", "title": "Multiple" },
+    { "id": "controlled", "title": "Controlled" }
+  ],
+  "alert": [
+    { "id": "demo", "title": "Alert" },
+    { "id": "variants", "title": "Variants" },
+    { "id": "with-action", "title": "With action" }
+  ],
+  "alert-dialog": [
+    { "id": "demo", "title": "Alert dialog" },
+    { "id": "compound", "title": "Compound parts" }
+  ],
+  "app-bar": [
+    { "id": "demo", "title": "App bar" },
+    { "id": "variants", "title": "Variants" },
+    { "id": "large", "title": "Large with subtitle" }
+  ],
+  "avatar": [
+    { "id": "demo", "title": "Avatar" },
+    { "id": "sizes", "title": "Sizes" }
+  ],
+  "badge": [
+    { "id": "demo", "title": "Badge" },
+    { "id": "variants", "title": "Variants" },
+    { "id": "count", "title": "Count" }
+  ],
+  "bottom-nav": [
+    { "id": "demo", "title": "Bottom nav" },
+    { "id": "selected-label", "title": "Selected label only" }
+  ],
+  "brutal-surface": [
+    { "id": "demo", "title": "Brutal surface" },
+    { "id": "elevations", "title": "Elevations" }
+  ],
   "button": [
     { "id": "demo", "title": "Button" },
     { "id": "variants", "title": "Variants" },
@@ -6,5 +42,150 @@
     { "id": "with-icon", "title": "With icon" },
     { "id": "loading", "title": "Loading" },
     { "id": "disabled", "title": "Disabled" }
+  ],
+  "card": [
+    { "id": "demo", "title": "Card" },
+    { "id": "status", "title": "Status" },
+    { "id": "pressable", "title": "Pressable" }
+  ],
+  "carousel": [
+    { "id": "demo", "title": "Carousel" },
+    { "id": "controls", "title": "With controls" }
+  ],
+  "checkbox": [
+    { "id": "demo", "title": "Checkbox" },
+    { "id": "states", "title": "States" },
+    { "id": "controlled", "title": "Controlled" }
+  ],
+  "chip": [
+    { "id": "demo", "title": "Chip" },
+    { "id": "removable", "title": "Removable" },
+    { "id": "variants", "title": "Variants" },
+    { "id": "disabled", "title": "Disabled" }
+  ],
+  "date-picker": [
+    { "id": "demo", "title": "Date picker" },
+    { "id": "limits", "title": "Date limits" },
+    { "id": "controlled", "title": "Controlled" }
+  ],
+  "dialog": [
+    { "id": "demo", "title": "Dialog" },
+    { "id": "with-close", "title": "With close button" },
+    { "id": "controlled", "title": "Controlled" }
+  ],
+  "drawer": [
+    { "id": "demo", "title": "Drawer" },
+    { "id": "sections", "title": "Sections and footer" },
+    { "id": "right-side", "title": "Right side" }
+  ],
+  "dropdown-menu": [
+    { "id": "demo", "title": "Dropdown menu" },
+    { "id": "destructive", "title": "Destructive item" }
+  ],
+  "empty-state": [
+    { "id": "demo", "title": "Empty state" },
+    { "id": "start-aligned", "title": "Start aligned" }
+  ],
+  "floating-action-button": [
+    { "id": "demo", "title": "Floating action button" },
+    { "id": "extended", "title": "Extended" }
+  ],
+  "input": [
+    { "id": "demo", "title": "Input" },
+    { "id": "validation", "title": "Validation" },
+    { "id": "sizes", "title": "Sizes" },
+    { "id": "with-icon", "title": "With icon" },
+    { "id": "disabled", "title": "Disabled" }
+  ],
+  "input-otp": [
+    { "id": "demo", "title": "Input OTP" },
+    { "id": "invalid", "title": "Invalid code" }
+  ],
+  "label": [
+    { "id": "demo", "title": "Label" },
+    { "id": "required", "title": "Required and disabled" }
+  ],
+  "list-item": [
+    { "id": "demo", "title": "List item" },
+    { "id": "rich", "title": "Leading, meta and trailing" }
+  ],
+  "marquee": [
+    { "id": "demo", "title": "Marquee" },
+    { "id": "divider", "title": "Custom divider and speed" }
+  ],
+  "number-input": [
+    { "id": "demo", "title": "Number input" },
+    { "id": "step", "title": "Step" },
+    { "id": "invalid", "title": "Invalid" }
+  ],
+  "progress": [
+    { "id": "demo", "title": "Progress" },
+    { "id": "indeterminate", "title": "Indeterminate" },
+    { "id": "live", "title": "Live value" }
+  ],
+  "radio-group": [
+    { "id": "demo", "title": "Radio group" },
+    { "id": "disabled", "title": "Disabled" },
+    { "id": "controlled", "title": "Controlled" }
+  ],
+  "search-bar": [
+    { "id": "demo", "title": "Search bar" },
+    { "id": "recent", "title": "Recent searches" }
+  ],
+  "segmented-control": [
+    { "id": "demo", "title": "Segmented control" },
+    { "id": "disabled-segment", "title": "Disabled segment" },
+    { "id": "with-icons", "title": "With icons" }
+  ],
+  "select": [
+    { "id": "demo", "title": "Select" },
+    { "id": "placeholder", "title": "Placeholder" },
+    { "id": "disabled-item", "title": "Disabled item" }
+  ],
+  "separator": [
+    { "id": "demo", "title": "Separator" },
+    { "id": "label", "title": "With label" },
+    { "id": "vertical", "title": "Vertical" }
+  ],
+  "sheet": [
+    { "id": "demo", "title": "Sheet" },
+    { "id": "with-trigger", "title": "Trigger and footer" }
+  ],
+  "skeleton": [
+    { "id": "demo", "title": "Skeleton" },
+    { "id": "card", "title": "Card placeholder" },
+    { "id": "paused", "title": "Paused" }
+  ],
+  "slider": [
+    { "id": "demo", "title": "Slider" },
+    { "id": "formatted", "title": "Formatted value" },
+    { "id": "disabled", "title": "Disabled" }
+  ],
+  "switch": [
+    { "id": "demo", "title": "Switch" },
+    { "id": "states", "title": "States" }
+  ],
+  "tabs": [
+    { "id": "demo", "title": "Tabs" },
+    { "id": "controlled", "title": "Controlled" }
+  ],
+  "text": [
+    { "id": "demo", "title": "Text" },
+    { "id": "variants", "title": "Variants" },
+    { "id": "tones", "title": "Tones" }
+  ],
+  "textarea": [
+    { "id": "demo", "title": "Textarea" },
+    { "id": "invalid", "title": "Invalid" },
+    { "id": "disabled", "title": "Disabled" }
+  ],
+  "toast": [
+    { "id": "demo", "title": "Toast" },
+    { "id": "variants", "title": "Variants" },
+    { "id": "with-action", "title": "With action" }
+  ],
+  "toaster": [
+    { "id": "demo", "title": "Toaster" },
+    { "id": "options", "title": "Custom options" }
   ]
 }
