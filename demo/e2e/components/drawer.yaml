@@ -14,7 +14,15 @@ appId: dev.apexrn.demo
     id: "drawer-item-home"
 - tapOn:
     id: "drawer-item-inbox"
-- assertVisible: "Selected: Inbox"
+# The event log sits below the fold on a phone screen.
+- scrollUntilVisible:
+    element:
+      text: "Selected: Inbox"
+    direction: DOWN
+- scrollUntilVisible:
+    element:
+      id: "drawer-open"
+    direction: UP
 - tapOn:
     id: "drawer-open"
 - assertVisible:
@@ -22,7 +30,10 @@ appId: dev.apexrn.demo
 - back
 - assertNotVisible:
     id: "drawer-item-home"
-- assertVisible: "Drawer: closed"
+- scrollUntilVisible:
+    element:
+      text: "Drawer: closed"
+    direction: DOWN
 - assertNotVisible: "Render Error"
 - assertNotVisible: ".*TypeError.*"
 - takeScreenshot: drawer
