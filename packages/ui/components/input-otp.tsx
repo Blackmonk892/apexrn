@@ -131,8 +131,9 @@ export const InputOTP = forwardRef<TextInput, InputOTPProps>(function InputOTP(
         ))}
       </Pressable>
 
-      {/* Stretched transparent over the cells so taps, screen-reader focus and test drivers land on a
-          real-sized target; a 1px input is unreachable for all three. */}
+      {/* Stretched over the cells so taps, screen-reader focus and test drivers land on a real-sized
+          target. Opacity stays just above 0: Android reports a fully transparent view as not visible
+          to the user, which hides it from TalkBack and Maestro; the text colour keeps it unseen. */}
       <TextInput
         ref={inputRef}
         value={value}
@@ -163,7 +164,7 @@ export const InputOTP = forwardRef<TextInput, InputOTPProps>(function InputOTP(
 
 const styles = StyleSheet.create({
   root: { alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center' },
-  hiddenInput: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, opacity: 0 },
+  hiddenInput: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, opacity: 0.01, color: 'transparent' },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
   cell: { alignItems: 'center', justifyContent: 'center' },
 });
