@@ -1,22 +1,22 @@
 appId: dev.apexrn.demo
 ---
-# Maestro reads text as a regex, so the title's "?" is escaped; unescaped it also
-# matches the 'Delete account?' trigger and the dialog never reads as closed.
+# Maestro reads text as a regex, so the title's "?" is escaped (single quotes: YAML
+# double quotes reject "\?"); unescaped it also matches the "Delete account" trigger.
 - runFlow:
     file: ../_open.yaml
     env:
       ID: alertdialog
 - tapOn:
     id: "alertdialog-open"
-- assertVisible: "Delete account\?"
+- assertVisible: 'Delete account\?'
 - tapOn: "Cancel"
-- assertNotVisible: "Delete account\?"
+- assertNotVisible: 'Delete account\?'
 - assertVisible: "Last choice: Cancelled"
 - tapOn:
     id: "alertdialog-open"
-- assertVisible: "Delete account\?"
+- assertVisible: 'Delete account\?'
 - tapOn: "Delete my account"
-- assertNotVisible: "Delete account\?"
+- assertNotVisible: 'Delete account\?'
 - assertVisible: "Last choice: Confirmed"
 - assertNotVisible: "Render Error"
 - assertNotVisible: ".*TypeError.*"
