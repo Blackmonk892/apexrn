@@ -15,8 +15,12 @@ concurrency:
 
 jobs:
   demo:
-    # Linux on purpose: catches filename-case bugs that Windows/macOS hide.
-    runs-on: ubuntu-latest
+    # Linux catches filename-case bugs that Windows/macOS hide; macOS is the ship gate's second OS.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -79,7 +83,11 @@ jobs:
         working-directory: website
 
   registry-and-cli:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -90,3 +98,18 @@ jobs:
       - run: node registry/build.mjs
       - run: npm test
         working-directory: packages/cli
+
+  fresh-app:
+    # Scaffolds a blank Expo app, runs the CLI against the local registry, typechecks and bundles.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/fresh-app-check.mjs

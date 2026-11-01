@@ -1,7 +1,7 @@
 {
   "descriptions": {
     "accordion": "Collapsible sections with animated chevron; single or multiple open.",
-    "alert": "Inline status message (info, success, warning, danger).",
+    "alert": "Inline status message (default, success, warning, destructive) with title, description and action parts.",
     "alert-dialog": "Confirm/cancel modal for destructive or blocking decisions.",
     "app-bar": "Top bar with title, back button and actions; takes a safe-area topInset.",
     "avatar": "Image or initials avatar in a hard-shadowed frame.",
@@ -9,7 +9,7 @@
     "bottom-nav": "Bottom tab bar with a sliding block, badges and a safe-area bottomInset.",
     "brutal-surface": "The surface primitive: border, hard offset shadow and press physics. Everything blocky is built on it.",
     "button": "Pressable button with variants, sizes, loading state and press physics.",
-    "card": "Bordered container with header/footer slots and CardText, which takes the variant's foreground colour; pressable when given onPress.",
+    "card": "Bordered container with title, description, content and footer parts and status variants; pressable when given onPress.",
     "carousel": "Snapping horizontal carousel with pagination dots.",
     "checkbox": "Controlled/uncontrolled checkbox.",
     "chip": "Toggleable, removable filter/tag chip.",

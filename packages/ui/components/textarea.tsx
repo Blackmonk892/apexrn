@@ -1,5 +1,6 @@
 import { forwardRef, type ComponentRef, useId, useState } from 'react';
 import {
+  Platform,
   type StyleProp,
   StyleSheet,
   TextInput,
@@ -97,7 +98,11 @@ export const Textarea = forwardRef<ComponentRef<typeof TextInput>, TextareaProps
   const spoken = accessibilityLabel ?? (label ? (required ? `${label}, required` : label) : undefined);
 
   const handleContentSize = (e: Parameters<NonNullable<TextInputProps['onContentSizeChange']>>[0]) => {
-    setContent(e.nativeEvent.contentSize.height);
+    // On web the reported height is the element's scrollHeight: it already includes the padding
+    // and never drops below the current height, so adding the padding again grew the field on
+    // every render (an update loop without maxRows).
+    const measured = e.nativeEvent.contentSize.height - (Platform.OS === 'web' ? pad * 2 : 0);
+    setContent((prev) => (Math.abs(prev - measured) < 1 ? prev : measured));
     onContentSizeChange?.(e);
   };
 
