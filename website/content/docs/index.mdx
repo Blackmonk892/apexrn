@@ -1,0 +1,28 @@
+---
+title: Introduction
+description: ApexRN is a brutalist component library for React Native and Expo. A CLI copies the source into your app, and you own it.
+---
+
+ApexRN is <PartCount /> components for React Native and Expo with thick borders, square corners and hard offset shadows. Each one is a single readable file. The CLI copies it into your project, so you edit it like any other file in your app.
+
+## How it works
+
+1. Run `npx apexrn init` in an Expo app. It writes `apexrn.json` and the shared theme, colour and metric files.
+2. Run `npx apexrn add button`. It copies `button.tsx` and anything it imports.
+3. Import it from your own `components/apexrn` folder.
+
+The only packages added to your app are the peers the copied parts import: Reanimated, Worklets, Gesture Handler, SVG and Expo Haptics.
+
+## What is in the box
+
+- <PartCount /> parts, numbered AX-001 to AX-<PartCount />, from `Accordion` to `Toaster`. Every part has a page with its source, props and accessibility notes.
+- Two presets, **neo** and **raw**, each in light and dark. Use the controls in the top bar to switch this site between them. Colours live in one file, `lib/apexrn/colors.ts`.
+- Compound parts such as `Dialog`, `DialogTrigger` and `DialogContent` share state through context. Value controls take `value`, `defaultValue` and `onValueChange`; overlays take `open`, `defaultOpen` and `onOpenChange`.
+- Accessibility is part of each component: roles and state on interactive nodes, 44 point hit targets, and overlays that close on Android back.
+
+## Next
+
+- [Installation](/docs/installation): init, add, peers and the app root.
+- [Theming](/docs/theming): every colour token for both presets.
+- [CLI](/docs/cli): each command with the output it printed.
+- [Components](/docs/components): all parts, with part numbers.
