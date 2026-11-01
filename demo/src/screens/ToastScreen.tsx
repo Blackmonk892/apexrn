@@ -24,12 +24,18 @@ const CONTENT: Record<Kind, { title: string; description?: string; variant: 'def
 function ImperativeDemo() {
   const toast = useToast();
   return (
-    <Section title="toast() API" note="Wrap the app in <Toaster>, then call toast('Saved') from anywhere. Rapid calls queue, one on screen at a time.">
+    <Section title="toast() API" note="Wrap the app in <Toaster>, then call toast('Saved') from anywhere. Up to three stack; the rest queue. Swipe sideways to dismiss.">
       <View style={styles.row}>
         <Button title="toast('Saved')" size="sm" onPress={() => toast('Saved')} />
         <Button title="success" size="sm" onPress={() => toast.success('Uploaded', 'report.pdf is ready.')} />
         <Button title="error" size="sm" variant="destructive" onPress={() => toast.error('Could not save')} />
-        <Button title="Queue 3" size="sm" variant="outline" onPress={() => { toast('One'); toast('Two'); toast.warning('Three'); }} />
+        <Button title="Queue 5" size="sm" variant="outline" onPress={() => { toast('One'); toast('Two'); toast.warning('Three'); toast('Four'); toast.error('Five'); }} />
+        <Button
+          title="With action"
+          size="sm"
+          variant="outline"
+          onPress={() => toast({ title: 'Message deleted', duration: 6000, action: { label: 'Undo', onPress: () => toast.success('Restored') } })}
+        />
       </View>
     </Section>
   );
@@ -66,9 +72,9 @@ function ControlledToastScreen({ onBack }: { onBack: () => void }) {
         />
       }
     >
-      <Section title="Variants" note="Slides in from the top, dismisses itself after 3 seconds, or on tap. Destructive adds an error glyph and is announced as an error.">
+      <Section title="Variants" note="Slides in from the top, dismisses itself after 3 seconds, by the close button or by swiping sideways. Status variants carry an icon and a label; destructive is announced as an alert.">
         <View style={styles.row}>
-          <Button title="Default" onPress={() => setActive('default')} />
+          <Button title="Default" testID="toast-show" onPress={() => setActive('default')} />
           <Button title="Primary" variant="primary" onPress={() => setActive('primary')} />
           <Button title="Destructive" variant="destructive" onPress={() => setActive('destructive')} />
           <Button title="Success" onPress={() => setActive('success')} />

@@ -1,7 +1,8 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import { StyleSheet, View } from 'react-native';
 
 import { spacing } from '../lib/colors';
-import { Toast, type ToastProps } from './toast';
+import { Toast, type ToastAction, type ToastProps } from './toast';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -13,6 +14,7 @@ export interface ToastOptions {
   variant?: ToastProps['variant'];
   /** Auto-dismiss in milliseconds. @default 3000 */
   duration?: number;
+  action?: ToastAction;
 }
 
 export interface ToastApi {
@@ -52,21 +54,19 @@ export function useToast(): ToastApi {
 
 let nextId = 0;
 
-// One toast is on screen at a time; the rest wait in order. Stacking would
-// cover the app bar and make later messages unreadable on a phone.
+const MAX_VISIBLE = 3;
+
+// At most three toasts are on screen, stacked top-down in arrival order; the rest wait their turn.
 export function Toaster({ children, topInset = 0 }: ToasterProps) {
-  const [state, setState] = useState<{ current: QueuedToast | null; queue: QueuedToast[] }>({
-    current: null,
-    queue: [],
-  });
+  const [toasts, setToasts] = useState<QueuedToast[]>([]);
 
   const show = useCallback((input: string | ToastOptions) => {
     const item: QueuedToast = { id: ++nextId, ...(typeof input === 'string' ? { title: input } : input) };
-    setState((prev) => (prev.current ? { ...prev, queue: [...prev.queue, item] } : { current: item, queue: [] }));
+    setToasts((prev) => [...prev, item]);
   }, []);
 
-  const dismissed = useCallback(() => {
-    setState((prev) => ({ current: prev.queue[0] ?? null, queue: prev.queue.slice(1) }));
+  const dismiss = useCallback((id: number) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
   const api = useMemo<ToastApi>(() => {
@@ -77,25 +77,36 @@ export function Toaster({ children, topInset = 0 }: ToasterProps) {
     return fn;
   }, [show]);
 
-  const { current } = state;
   return (
     <ToastContext.Provider value={api}>
       {children}
-      {current ? (
-        // key: each toast mounts fresh so it slides in again instead of reusing the last one's animation.
-        <Toast
-          key={current.id}
-          visible
-          title={current.title}
-          description={current.description}
-          variant={current.variant}
-          duration={current.duration}
-          onDismiss={dismissed}
-          style={{ top: topInset + spacing.sm }}
-        />
-      ) : null}
+      <View
+        pointerEvents="box-none"
+        style={[styles.stack, { top: topInset + spacing.sm, gap: spacing.sm, paddingHorizontal: spacing.md }]}
+      >
+        {toasts.slice(0, MAX_VISIBLE).map((t) => (
+          // key: each toast mounts fresh so it slides in on its own timeline.
+          <Toast
+            key={t.id}
+            visible
+            title={t.title}
+            description={t.description}
+            variant={t.variant}
+            duration={t.duration}
+            action={t.action}
+            onDismiss={() => dismiss(t.id)}
+            style={styles.item}
+          />
+        ))}
+      </View>
     </ToastContext.Provider>
   );
 }
+
+const styles = StyleSheet.create({
+  stack: { position: 'absolute', left: 0, right: 0, zIndex: 9999 },
+  // The stack owns position and inset; each toast sits in flow.
+  item: { position: 'relative', top: 0, left: 0, right: 0 },
+});
 
 export default Toaster;
