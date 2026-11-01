@@ -51,17 +51,25 @@ describe('BottomNav', () => {
     expect(screen.getByRole('tab', { name: 'Home' })).toBeSelected();
   });
 
-  it('shows the label on the selected item only; inactive items keep an accessibility label', async () => {
+  it('shows every label by default', async () => {
     await renderWithTheme(<Bar defaultValue="home" />);
+    for (const l of ['Home', 'Search', 'Me']) {
+      expect(screen.getByText(l, { includeHiddenElements: true })).toBeTruthy();
+    }
+  });
+
+  it('labelMode="selected" shows only the selected label; inactive items keep an accessibility label', async () => {
+    await renderWithTheme(<Bar defaultValue="home" labelMode="selected" />);
     expect(screen.getByText('Home', { includeHiddenElements: true })).toBeTruthy();
     expect(screen.queryByText('Search', { includeHiddenElements: true })).toBeNull();
     expect(screen.getByTestId('nav-search').props.accessibilityLabel).toBe('Search');
   });
 
-  it('hides the label above 1.3x font scale', async () => {
+  it.each(['all', 'selected'] as const)('hides labels above 1.3x font scale (labelMode=%s)', async (labelMode) => {
     mockFontScale = 1.6;
-    await renderWithTheme(<Bar defaultValue="home" />);
+    await renderWithTheme(<Bar defaultValue="home" labelMode={labelMode} />);
     expect(screen.queryByText('Home', { includeHiddenElements: true })).toBeNull();
+    expect(screen.queryByText('Search', { includeHiddenElements: true })).toBeNull();
     expect(screen.getByRole('tab', { name: 'Home' })).toBeSelected();
   });
 

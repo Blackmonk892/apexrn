@@ -27,6 +27,7 @@ const MAX_LABEL_FONT_SCALE = 1.3;
 interface BottomNavContextState {
   value: string;
   showLabel: boolean;
+  labelMode: 'all' | 'selected';
   onValueChange: (value: string) => void;
   registerLayout: (value: string, layout: LayoutRectangle) => void;
 }
@@ -52,13 +53,20 @@ export interface BottomNavProps extends ViewProps {
    * extends through it so the bar reads as one slab. @default 0
    */
   bottomInset?: number;
+  /**
+   * Which items show their label. `'all'` shows icon + label on every item;
+   * `'selected'` shows the label on the selected item only and leaves the rest
+   * icon-only (still announced via `accessibilityLabel`). Above 1.3x font scale
+   * labels are hidden in both modes. @default 'all'
+   */
+  labelMode?: 'all' | 'selected';
   children?: ReactNode;
 }
 
 export interface BottomNavItemProps extends Omit<PressableProps, 'onPress' | 'style' | 'children'> {
   /** Destination id reported through `onValueChange`. */
   value: string;
-  /** Shown on the selected item only (hidden above 1.3x font scale); always the accessibility label. */
+  /** Visible per the bar's `labelMode` (hidden above 1.3x font scale); always the accessibility label. */
   label: string;
   /** Icon element, or a function receiving the contrast colour for the current state. */
   icon?: ReactNode | ((color: string) => ReactNode);
@@ -75,6 +83,7 @@ export function BottomNav({
   defaultValue = '',
   onValueChange,
   bottomInset = 0,
+  labelMode = 'all',
   children,
   style,
   ...props
@@ -103,13 +112,14 @@ export function BottomNav({
     () => ({
       value,
       showLabel: fontScale <= MAX_LABEL_FONT_SCALE,
+      labelMode,
       registerLayout,
       onValueChange: (next) => {
         if (!controlled) setInternalValue(next);
         onValueChange?.(next);
       },
     }),
-    [value, fontScale, controlled, onValueChange, registerLayout],
+    [value, fontScale, labelMode, controlled, onValueChange, registerLayout],
   );
 
   const active = layouts[value];
@@ -165,7 +175,7 @@ export function BottomNavItem({
   disabled = false,
   ...props
 }: BottomNavItemProps) {
-  const { value: selected, showLabel, onValueChange, registerLayout } = useBottomNavContext();
+  const { value: selected, showLabel, labelMode, onValueChange, registerLayout } = useBottomNavContext();
   const { colors } = useTheme();
   const isSelected = selected === value;
   const fg = disabled ? colors.mutedForeground : isSelected ? colors.background : colors.foreground;
@@ -214,7 +224,7 @@ export function BottomNavItem({
           </View>
         ) : null}
       </View>
-      {isSelected && showLabel ? (
+      {showLabel && (labelMode === 'all' || isSelected) ? (
         <Text
           numberOfLines={1}
           importantForAccessibility="no-hide-descendants"

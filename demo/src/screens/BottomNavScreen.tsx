@@ -14,7 +14,7 @@ export default function BottomNavScreen({ onBack }: { onBack: () => void }) {
 
   return (
     <Layout id="bottomnav" title="BOTTOM NAV" onBack={onBack}>
-      <Section title="Controlled, four items" note="The selected block slides (transform only) and carries the label; other items are icon-only.">
+      <Section title="Controlled, four items" note="Every tab shows icon and label; the selected block slides (transform only) and inverts.">
         <View style={frame}>
           <BottomNav
             value={tab}
@@ -43,7 +43,18 @@ export default function BottomNavScreen({ onBack }: { onBack: () => void }) {
         </View>
       </Section>
 
-      <Section title="Edge cases" note="Disabled item, two items, a long label, and a badge past two digits.">
+      <Section title="Label on selected only" note='labelMode="selected": inactive items are icon-only and keep their accessibility label.'>
+        <View style={frame}>
+          <BottomNav defaultValue="home" labelMode="selected">
+            <BottomNavItem value="home" label="Home" icon={icon(HomeIcon)} />
+            <BottomNavItem value="search" label="Search" icon={icon(SearchIcon)} />
+            <BottomNavItem value="alerts" label="Alerts" badge={5} icon={icon(BellIcon)} />
+            <BottomNavItem value="me" label="Me" icon={icon(UserIcon)} />
+          </BottomNav>
+        </View>
+      </Section>
+
+      <Section title="Edge cases" note="Disabled item, two items, a long label (truncates to one line), and a badge past two digits.">
         <View style={[frame, { gap: 16 }]}>
           <BottomNav defaultValue="a">
             <BottomNavItem value="a" label="Open" icon={icon(HomeIcon)} />
