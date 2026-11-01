@@ -1,0 +1,17 @@
+appId: dev.apexrn.demo
+---
+- runFlow:
+    file: ../_open.yaml
+    env:
+      ID: segmentedcontrol
+- assertVisible:
+    id: "segment-month"
+- assertVisible: "Value: week"
+- tapOn:
+    id: "segment-month"
+- assertVisible:
+    id: "segmented-log"
+- assertVisible: "Value: month"
+- assertNotVisible: "Render Error"
+- assertNotVisible: ".*TypeError.*"
+- takeScreenshot: segmentedcontrol

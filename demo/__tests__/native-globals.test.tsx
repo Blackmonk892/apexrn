@@ -28,7 +28,7 @@ describe('native globals', () => {
   it('Layout renders on native without window.location', async () => {
     setWindow('location', undefined);
     await renderWithTheme(
-      <Layout title="APEXRN">
+      <Layout id="home" title="APEXRN">
         <Text>child</Text>
       </Layout>,
     );
@@ -47,7 +47,7 @@ describe('native globals', () => {
     jest.replaceProperty(Platform, 'OS', 'web');
     setWindow('location', { search: '?embed=1' });
     await renderWithTheme(
-      <Layout title="APEXRN">
+      <Layout id="home" title="APEXRN">
         <Text>child</Text>
       </Layout>,
     );

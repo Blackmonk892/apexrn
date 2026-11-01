@@ -1,0 +1,16 @@
+appId: dev.apexrn.demo
+---
+- runFlow:
+    file: ../_open.yaml
+    env:
+      ID: textarea
+- assertVisible:
+    id: "textarea-bio"
+- tapOn:
+    id: "textarea-bio"
+- inputText: "hello there"
+- hideKeyboard
+- assertVisible: "Value: hello there"
+- assertNotVisible: "Render Error"
+- assertNotVisible: ".*TypeError.*"
+- takeScreenshot: textarea

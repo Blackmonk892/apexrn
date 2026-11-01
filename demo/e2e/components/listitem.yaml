@@ -1,0 +1,16 @@
+appId: dev.apexrn.demo
+---
+- runFlow:
+    file: ../_open.yaml
+    env:
+      ID: listitem
+- assertVisible:
+    id: "listitem-account"
+- tapOn:
+    id: "listitem-account"
+- assertVisible:
+    id: "listitem-log"
+- assertVisible: "Opened: Account"
+- assertNotVisible: "Render Error"
+- assertNotVisible: ".*TypeError.*"
+- takeScreenshot: listitem

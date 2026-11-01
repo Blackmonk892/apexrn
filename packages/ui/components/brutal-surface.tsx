@@ -17,7 +17,7 @@ import { useTheme } from '../lib/theme';
 import { usePressPhysics } from '../lib/use-press-physics';
 
 export interface BrutalSurfaceProps
-  extends Omit<PressableProps, 'style' | 'children'> {
+  extends Omit<PressableProps, 'style' | 'children' | 'disabled'> {
   children?: ReactNode;
   /** Shadow depth from the theme's elevation ladder. @default 'card' */
   elevation?: 'flat' | 'control' | 'card' | 'overlay';

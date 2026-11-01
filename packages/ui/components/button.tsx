@@ -1,24 +1,22 @@
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import {
-  ActivityIndicator,
   type GestureResponderEvent,
   type StyleProp,
   StyleSheet,
-  Text,
+  type TextStyle,
   View,
   type ViewStyle,
 } from 'react-native';
 
-import { controlHeight, spacing, touchTarget, typography } from '../lib/colors';
+import { controlHeight, spacing, touchTarget, type ColorScheme } from '../lib/colors';
+import { CheckIcon, CloseIcon, WarningIcon } from '../lib/icons';
+import { LoadingBlocks } from '../lib/loading-blocks';
 import { useTheme } from '../lib/theme';
-import { cn } from '../lib/utils';
-import BrutalSurface from './brutal-surface';
+import { variants } from '../lib/variants';
+import BrutalSurface, { type BrutalSurfaceProps } from './brutal-surface';
+import Text from './text';
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-type Variant = 'default' | 'primary' | 'outline' | 'destructive';
+type Variant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'destructive' | 'success' | 'warning';
 type Size = 'sm' | 'md' | 'lg';
 
 export interface ButtonProps {
@@ -26,37 +24,69 @@ export interface ButtonProps {
   children?: ReactNode;
   /** Label as a prop. Use this or `children`. */
   title?: string;
-  /** Press handler. */
   onPress?: (e: GestureResponderEvent) => void;
-  /** Visual variant. @default 'default' */
+  /** @default 'primary' */
   variant?: Variant;
   /** @default 'md' */
   size?: Size;
-  /** Disables the button. */
   disabled?: boolean;
-  /** Shows a spinner and blocks presses; the label keeps its width. */
+  /** Swaps the label for loading blocks without changing the width. Presses are ignored; the look stays live. */
   loading?: boolean;
-  /** Optional icon element rendered beside the title. */
-  icon?: ReactNode;
-  /** Which side the icon sits on. @default 'left' */
+  /** Decorative. A function receives the label colour. Sits beside, never in place of, a status icon. */
+  icon?: ReactNode | ((color: string) => ReactNode);
+  /** @default 'left' */
   iconPosition?: 'left' | 'right';
   /** Outer wrapper style. */
   style?: StyleProp<ViewStyle>;
-  /** Accessibility label (falls back to the label text). */
+  /** Falls back to the label text. Required when the button has an icon and no label. */
   accessibilityLabel?: string;
-  /** Accessibility hint. */
   accessibilityHint?: string;
+  /** Lands on the pressable itself. */
+  testID?: string;
 }
 
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
+const STATUS_ICONS = { destructive: CloseIcon, success: CheckIcon, warning: WarningIcon } as const;
+const ICON_SIZE = 20;
+
+// Resolved per render: theme colours change with mode and preset, spacing with window size.
+const buttonStyles = (c: ColorScheme) =>
+  variants({
+    base: {
+      surface: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' } as ViewStyle,
+      label: { flexShrink: 1 } as TextStyle,
+      depth: { elevation: 'card' } as { elevation: NonNullable<BrutalSurfaceProps['elevation']> },
+    },
+    variants: {
+      variant: {
+        primary: { surface: { backgroundColor: c.primary }, label: { color: c.primaryForeground } },
+        secondary: { surface: { backgroundColor: c.secondary }, label: { color: c.secondaryForeground } },
+        outline: { surface: { backgroundColor: c.background }, label: { color: c.foreground }, depth: { elevation: 'control' } },
+        // The transparent border keeps ghost the same size as its siblings.
+        ghost: {
+          surface: { backgroundColor: 'transparent', borderColor: 'transparent' },
+          label: { color: c.foreground },
+          depth: { elevation: 'flat' },
+        },
+        destructive: { surface: { backgroundColor: c.destructive }, label: { color: c.destructiveForeground } },
+        success: { surface: { backgroundColor: c.success }, label: { color: c.successForeground } },
+        warning: { surface: { backgroundColor: c.warning }, label: { color: c.warningForeground } },
+      },
+      size: {
+        sm: { surface: { minHeight: controlHeight.sm, paddingHorizontal: spacing.md } },
+        md: { surface: { minHeight: controlHeight.md, paddingHorizontal: spacing.lg } },
+        lg: { surface: { minHeight: controlHeight.lg, paddingHorizontal: spacing.xl } },
+      },
+    },
+    defaultVariants: { variant: 'primary', size: 'md' },
+  });
+
+let warnedIconOnly = false;
 
 export function Button({
   children,
   title,
   onPress,
-  variant = 'default',
+  variant = 'primary',
   size = 'md',
   disabled = false,
   loading = false,
@@ -65,77 +95,73 @@ export function Button({
   style,
   accessibilityLabel,
   accessibilityHint,
+  testID,
 }: ButtonProps) {
   const { colors } = useTheme();
+  const [held, setHeld] = useState(false);
   const label = children ?? title;
-
-  // Variants as data. Resolved per render so theme changes apply.
-  const variants: Record<Variant, { bg: string; fg: string; hasShadow: boolean }> = {
-    default: { bg: colors.background, fg: colors.foreground, hasShadow: true },
-    primary: { bg: colors.primary, fg: colors.primaryForeground, hasShadow: true },
-    outline: { bg: 'transparent', fg: colors.foreground, hasShadow: false },
-    destructive: { bg: colors.destructive, fg: colors.destructiveForeground, hasShadow: true },
-  };
-  // Metrics are size-dependent tokens, so they are read at render time.
-  const sizes: Record<Size, { px: number; fontSize: number }> = {
-    sm: { px: spacing.md, fontSize: typography.sm },
-    md: { px: spacing.lg, fontSize: typography.md },
-    lg: { px: spacing.xl, fontSize: typography.lg },
-  };
-
-  const v = variants[variant];
-  const s = sizes[size];
+  const hasLabel = label != null && label !== '';
+  const look = buttonStyles(colors)({ variant, size });
   const height = controlHeight[size];
-  // Loading keeps the variant's colours, border and shadow (it is in flight, not
-  // unavailable); only presses are swallowed. Disabled goes muted + dashed so it is not colour-only.
-  const fg = disabled ? colors.mutedForeground : v.fg;
+
+  // onPressOut is not guaranteed once the button stops accepting presses mid-hold.
+  useEffect(() => {
+    if (disabled || loading) setHeld(false);
+  }, [disabled, loading]);
+
+  if (__DEV__ && !hasLabel && !accessibilityLabel && !warnedIconOnly) {
+    warnedIconOnly = true;
+    console.warn('Button: an icon-only button needs an accessibilityLabel.');
+  }
+
+  const fg = look.label.color as string;
+  const StatusIcon = variant in STATUS_ICONS ? STATUS_ICONS[variant as keyof typeof STATUS_ICONS] : null;
+  const custom = typeof icon === 'function' ? icon(fg) : icon;
+  const status = StatusIcon ? (
+    <View testID={`status-icon-${variant}`}>
+      <StatusIcon size={ICON_SIZE} color={fg} />
+    </View>
+  ) : null;
+
+  // Ghost has no shadow to sink into, so a fill is its only press feedback.
+  const ghostPressed = variant === 'ghost' && held && !disabled && !loading;
+  // A disabled ghost shows its dashed border like every other disabled control.
+  const inkBorder = { borderColor: colors.border };
+  const surfaceFill = ghostPressed ? { backgroundColor: colors.muted } : null;
+  const labelColor = ghostPressed ? colors.mutedForeground : fg;
 
   return (
     <BrutalSurface
+      testID={testID}
       style={[styles.root, style]}
-      surfaceStyle={{
-        backgroundColor: disabled ? colors.muted : v.bg,
-        borderColor: disabled ? colors.mutedForeground : colors.border,
-        borderStyle: disabled ? 'dashed' : 'solid',
-        minHeight: height,
-        paddingHorizontal: s.px,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-      elevation={v.hasShadow ? 'card' : 'flat'}
+      surfaceStyle={[look.surface, disabled && variant === 'ghost' && inkBorder, surfaceFill]}
+      elevation={look.depth.elevation}
+      borderWidth="control"
       disabled={disabled}
+      haptics={!loading}
       onPress={loading ? undefined : onPress}
+      onPressIn={() => setHeld(true)}
+      onPressOut={() => setHeld(false)}
       hitSlop={Math.max(0, Math.ceil((touchTarget - height) / 2))}
       accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel ?? (typeof label === 'string' || typeof label === 'number' ? String(label) : undefined)}
+      accessibilityLabel={accessibilityLabel ?? (typeof label === 'string' || typeof label === 'number' ? String(label) : title)}
       accessibilityHint={accessibilityHint}
-      accessibilityState={{ disabled: disabled || loading, busy: loading }}
-      aria-disabled={disabled || loading}
-      aria-busy={loading}
+      accessibilityState={{ disabled, busy: loading }}
     >
-      <View style={[styles.contentRow, loading && styles.hidden]}>
-        {icon && iconPosition === 'left' ? (
-          <View style={{ marginRight: spacing.sm }} importantForAccessibility="no-hide-descendants">
-            {icon}
-          </View>
+      {/* Stays laid out while loading so the blocks never change the button's width. */}
+      <View style={[styles.content, loading && styles.hidden]}>
+        {status ? <View style={styles.iconLeading} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>{status}</View> : null}
+        {custom != null && iconPosition === 'left' ? <View style={styles.iconLeading} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>{custom}</View> : null}
+        {hasLabel ? (
+          <Text variant="title" tone="inherit" accessibilityRole="none" numberOfLines={1} style={[look.label, { color: labelColor }]}>
+            {label}
+          </Text>
         ) : null}
-        <Text
-          style={cn(styles.label, { fontSize: s.fontSize, color: fg })}
-          numberOfLines={1}
-          maxFontSizeMultiplier={1.3}
-        >
-          {label}
-        </Text>
-        {icon && iconPosition === 'right' ? (
-          <View style={{ marginLeft: spacing.sm }} importantForAccessibility="no-hide-descendants">
-            {icon}
-          </View>
-        ) : null}
+        {custom != null && iconPosition === 'right' ? <View style={styles.iconTrailing} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>{custom}</View> : null}
       </View>
       {loading ? (
-        <View style={styles.spinner} pointerEvents="none">
-          <ActivityIndicator size="small" color={fg} />
+        <View style={styles.blocks} pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+          <LoadingBlocks color={fg} />
         </View>
       ) : null}
     </BrutalSurface>
@@ -143,34 +169,12 @@ export function Button({
 }
 
 const styles = StyleSheet.create({
-  root: {
-    alignSelf: 'flex-start',
-  },
-  contentRow: {
-    flexShrink: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  // Label stays laid out (width is preserved) but is invisible while loading.
-  hidden: {
-    opacity: 0,
-  },
-  spinner: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  label: {
-    flexShrink: 1,
-    fontWeight: '800',
-    letterSpacing: 0.4,
-    textTransform: 'uppercase',
-  },
+  root: { alignSelf: 'flex-start' },
+  content: { flexShrink: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
+  hidden: { opacity: 0 },
+  blocks: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' },
+  iconLeading: { marginRight: spacing.sm },
+  iconTrailing: { marginLeft: spacing.sm },
 });
 
 export default Button;

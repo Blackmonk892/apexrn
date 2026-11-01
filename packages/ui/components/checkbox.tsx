@@ -1,168 +1,135 @@
 import { useEffect, useState } from 'react';
-import {
-  PressableProps,
-  StyleProp,
-  StyleSheet,
-  View,
-  ViewStyle,
-} from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useReducedMotion,
-  useSharedValue,
-  withTiming,
-  Easing,
-  interpolateColor,
-} from 'react-native-reanimated';
-import Svg, { Path } from 'react-native-svg';
+import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
-import { touchTarget } from '../lib/colors';
+import { borderWidths, spacing, touchTarget, type ColorScheme } from '../lib/colors';
+import { CheckIcon } from '../lib/icons';
+import { useMotion } from '../lib/motion';
 import { useTheme } from '../lib/theme';
-import { cn } from '../lib/utils';
+import { variants } from '../lib/variants';
 import BrutalSurface from './brutal-surface';
+import Text from './text';
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-export interface CheckboxProps extends Omit<PressableProps, 'onPress' | 'onPressIn' | 'onPressOut' | 'style'> {
-  /**
-   * The controlled checked state. Omit for an uncontrolled checkbox.
-   */
-  checked?: boolean;
-  /**
-   * Initial state when uncontrolled.
-   * @default false
-   */
-  defaultChecked?: boolean;
-  /**
-   * Callback fired when the checkbox state changes.
-   */
+export type CheckedState = boolean | 'indeterminate';
+
+export interface CheckboxProps {
+  /** Controlled state. Omit for an uncontrolled checkbox. */
+  checked?: CheckedState;
+  /** @default false */
+  defaultChecked?: CheckedState;
+  /** Receives the next value. An indeterminate box moves to `true`. */
   onCheckedChange?: (checked: boolean) => void;
-  /**
-   * Disables the checkbox.
-   * @default false
-   */
   disabled?: boolean;
-  /**
-   * Container style override. Note: function styles are not supported here
-   * (the style targets the outer wrapper, not the Pressable directly).
-   */
+  /** Pressable text beside the box. Also the accessibility label unless one is given. */
+  label?: string;
+  /** Outer wrapper style. */
   style?: StyleProp<ViewStyle>;
-  /**
-   * Expands the touch target beyond the 24px visual box.
-   * @default enough to reach the platform touch target (44pt iOS / 48dp Android)
-   */
-  hitSlop?: PressableProps['hitSlop'];
+  accessibilityLabel?: string;
+  accessibilityHint?: string;
+  /** Lands on the box itself. */
+  testID?: string;
 }
 
-// ---------------------------------------------------------------------------
-// Design tokens
-// ---------------------------------------------------------------------------
-const CHECKBOX_SIZE = 24;
+const BOX = 24;
+const MARK = 16;
 
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
-const AnimatedView = Animated.createAnimatedComponent(View);
+// Selected is the inverted block (DESIGN §3): foreground fill, background mark.
+const checkboxStyles = (c: ColorScheme) =>
+  variants({
+    base: {
+      box: { width: BOX, height: BOX, alignItems: 'center', justifyContent: 'center' } as ViewStyle,
+    },
+    variants: {
+      state: {
+        off: { box: { backgroundColor: c.background } },
+        on: { box: { backgroundColor: c.foreground } },
+      },
+    },
+    defaultVariants: { state: 'off' },
+  });
 
 export function Checkbox({
   checked: checkedProp,
   defaultChecked = false,
   onCheckedChange,
   disabled = false,
+  label,
   style,
-  hitSlop = Math.ceil((touchTarget - CHECKBOX_SIZE) / 2),
-  ...props
+  accessibilityLabel,
+  accessibilityHint,
+  testID,
 }: CheckboxProps) {
   const { colors } = useTheme();
-  const reduceMotion = useReducedMotion();
-  const [internalChecked, setInternalChecked] = useState(defaultChecked);
-  const checked = checkedProp ?? internalChecked;
-  const isChecked = useSharedValue(checked ? 1 : 0);
+  const { reduceMotion, selection } = useMotion();
+  const [internal, setInternal] = useState<CheckedState>(defaultChecked);
+  const checked = checkedProp ?? internal;
+  const selected = checked !== false;
+  const progress = useSharedValue(selected ? 1 : 0);
 
   useEffect(() => {
-    const to = checked ? 1 : 0;
-    isChecked.value = reduceMotion
-      ? to
-      : withTiming(to, { duration: 150, easing: Easing.inOut(Easing.quad) });
-  }, [checked, reduceMotion, isChecked]);
+    progress.value = withTiming(selected ? 1 : 0, selection);
+  }, [selected, selection, progress]);
 
-  const handlePress = () => {
-    if (disabled) return;
-    if (checkedProp === undefined) setInternalChecked(!checked);
-    onCheckedChange?.(!checked);
-  };
-
-  const animatedFillStyle = useAnimatedStyle(() => ({
-    backgroundColor: interpolateColor(
-      isChecked.value,
-      [0, 1],
-      [colors.background, colors.foreground]
-    ),
+  const markStyle = useAnimatedStyle(() => ({
+    opacity: progress.value,
+    transform: [{ scale: reduceMotion ? 1 : 0.6 + 0.4 * progress.value }],
   }));
 
-  const animatedCheckStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ scale: isChecked.value }],
-      opacity: isChecked.value,
-    };
-  });
+  const toggle = () => {
+    if (disabled) return;
+    const next = checked !== true;
+    if (checkedProp === undefined) setInternal(next);
+    onCheckedChange?.(next);
+  };
+
+  const look = checkboxStyles(colors)({ state: selected ? 'on' : 'off' });
+  const slop = Math.max(0, Math.ceil((touchTarget - BOX) / 2));
 
   return (
-    <BrutalSurface
-      style={cn(styles.container, style)}
-      surfaceStyle={[
-        styles.surface, 
-        disabled && { backgroundColor: colors.muted, borderColor: colors.mutedForeground }, 
-        !disabled && animatedFillStyle
-      ]}
-      elevation="control"
-      borderWidth="container"
-      disabled={disabled}
-      hitSlop={hitSlop}
-      onPress={handlePress}
-      accessibilityRole="checkbox"
-      accessibilityState={{ checked, disabled }}
-      aria-checked={checked}
-      aria-disabled={disabled}
-      {...props}
-    >
-      <AnimatedView style={[styles.iconContainer, animatedCheckStyle]}>
-        <Svg
-          width={CHECKBOX_SIZE - 8}
-          height={CHECKBOX_SIZE - 8}
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke={disabled ? colors.mutedForeground : colors.background}
-          strokeWidth="4"
-          strokeLinecap="square"
-          strokeLinejoin="miter"
+    <View style={[styles.row, style]}>
+      <BrutalSurface
+        testID={testID}
+        surfaceStyle={look.box}
+        elevation="control"
+        borderWidth="control"
+        disabled={disabled}
+        onPress={toggle}
+        hitSlop={slop}
+        accessibilityRole="checkbox"
+        accessibilityLabel={accessibilityLabel ?? label}
+        accessibilityHint={accessibilityHint}
+        accessibilityState={{ checked: checked === 'indeterminate' ? 'mixed' : checked, disabled }}
+      >
+        <Animated.View style={markStyle}>
+          {checked === 'indeterminate' ? (
+            <View style={[styles.bar, { backgroundColor: colors.background }]} />
+          ) : (
+            <CheckIcon size={MARK} color={colors.background} />
+          )}
+        </Animated.View>
+      </BrutalSurface>
+      {label ? (
+        <Pressable
+          onPress={toggle}
+          disabled={disabled}
+          style={[styles.label, { paddingLeft: spacing.sm }]}
+          // The box announces the label; a second node would read it twice.
+          importantForAccessibility="no-hide-descendants"
+          accessibilityElementsHidden
         >
-          <Path d="M20 6L9 17l-5-5" />
-        </Svg>
-      </AnimatedView>
-    </BrutalSurface>
+          <Text tone={disabled ? 'muted' : 'default'}>
+            {label}
+          </Text>
+        </Pressable>
+      ) : null}
+    </View>
   );
 }
 
-// ---------------------------------------------------------------------------
-// Styles
-// ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
-  container: {
-    width: CHECKBOX_SIZE,
-    height: CHECKBOX_SIZE,
-  },
-  surface: {
-    width: CHECKBOX_SIZE,
-    height: CHECKBOX_SIZE,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  row: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start' },
+  bar: { width: MARK - 4, height: borderWidths.control },
+  label: { flexShrink: 1, minHeight: touchTarget, justifyContent: 'center' },
 });
 
 export default Checkbox;

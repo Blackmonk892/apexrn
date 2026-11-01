@@ -1,0 +1,14 @@
+appId: dev.apexrn.demo
+---
+- runFlow:
+    file: ../_open.yaml
+    env:
+      ID: checkbox
+- assertVisible:
+    id: "checkbox-terms"
+- tapOn:
+    id: "checkbox-terms"
+- assertVisible: "Last change: Checked: true"
+- assertNotVisible: "Render Error"
+- assertNotVisible: ".*TypeError.*"
+- takeScreenshot: checkbox

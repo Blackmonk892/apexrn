@@ -33,7 +33,6 @@ const CURATED: Record<string, CuratedEntry> = {
   badge: {
     controls: [
       { prop: "variant", type: "select" },
-      { prop: "withShadow", type: "boolean" },
     ],
     fixedProps: { label: "Badge" },
   },
@@ -60,15 +59,13 @@ const CURATED: Record<string, CuratedEntry> = {
     controls: [
       // 0 is a real but visually empty default; start the demo somewhere legible instead.
       { prop: "value", type: "range", range: { min: 0, max: 100, step: 5 }, demoDefault: 60 },
-      { prop: "withShadow", type: "boolean" },
     ],
   },
   avatar: {
     controls: [
       { prop: "size", type: "select" },
-      { prop: "withShadow", type: "boolean" },
     ],
-    fixedProps: { initials: "AR" },
+    fixedProps: { name: "Ada Rao" },
   },
   alert: {
     controls: [{ prop: "variant", type: "select" }],

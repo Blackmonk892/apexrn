@@ -197,7 +197,7 @@ export const typography: Record<'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl'
   get '4xl'() { return normalize(40); },
 };
 
-export type TextVariant = 'display' | 'title' | 'body' | 'label' | 'mono';
+export type TextVariant = 'display' | 'title' | 'strong' | 'body' | 'label' | 'mono';
 
 // Firefox ignores the bare ui-monospace keyword and would fall back to a serif, so web gets a stack.
 export const fontFamilies = {
@@ -208,6 +208,8 @@ export const fontFamilies = {
 export const textStyles: Record<TextVariant, TextStyle> = {
   display: { fontSize: 32, lineHeight: 36, fontWeight: '900', letterSpacing: -0.5 },
   title: { fontSize: 20, lineHeight: 24, fontWeight: '800' },
+  // Body size at title weight: action labels and row titles, where title's 20 is too loud.
+  strong: { fontSize: 16, lineHeight: 22, fontWeight: '800' },
   body: { fontSize: 16, lineHeight: 22, fontWeight: '400' },
   label: { fontSize: 12, lineHeight: 16, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', fontFamily: fontFamilies.mono },
   mono: { fontSize: 14, lineHeight: 20, fontWeight: '500', fontVariant: ['tabular-nums'], fontFamily: fontFamilies.mono },

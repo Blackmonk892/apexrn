@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { View } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   AppBarAction,
@@ -7,83 +8,108 @@ import {
   Button,
   Drawer,
   DrawerContent,
+  DrawerFooter,
   DrawerHeader,
   DrawerItem,
+  DrawerList,
+  DrawerSection,
   DrawerTrigger,
   HomeIcon,
   MenuIcon,
   SearchIcon,
+  Text,
   UserIcon,
-  useTheme,
 } from '@apexrn/ui';
 import Layout from '../components/Layout';
-import Section, { Caption } from '../components/Section';
+import Section from '../components/Section';
 
+const PUSH_DISTANCE = 260;
 const icon = (Icon: typeof HomeIcon) => (c: string) => <Icon size={20} color={c} />;
 
-function Items({ current, onPick }: { current: string; onPick: (v: string) => void }) {
-  const { colors } = useTheme();
+function Index({ current, onPick }: { current: string; onPick: (v: string) => void }) {
   return (
-    <ScrollView>
-      <DrawerItem label="Home" active={current === 'Home'} onPress={() => onPick('Home')} icon={icon(HomeIcon)} />
-      <DrawerItem label="Inbox" badge={12} active={current === 'Inbox'} onPress={() => onPick('Inbox')} icon={icon(BellIcon)} />
-      <DrawerItem label="Search" active={current === 'Search'} onPress={() => onPick('Search')} icon={icon(SearchIcon)} />
-      <DrawerItem label="Profile" active={current === 'Profile'} onPress={() => onPick('Profile')} icon={icon(UserIcon)} />
-      <DrawerItem label="Billing (locked)" disabled icon={icon(UserIcon)} />
-      <DrawerItem label="Stay open" closeOnPress={false} onPress={() => onPick('Stay open')} />
-      <Text style={{ color: colors.mutedForeground, padding: 16, fontSize: 12, fontWeight: '700' }}>
-        Swipe the panel towards its edge, tap the scrim, or use the Android back button to close.
-      </Text>
-    </ScrollView>
+    <>
+      <DrawerList>
+        <DrawerSection label="Workspace" />
+        <DrawerItem number={1} label="Home" icon={icon(HomeIcon)} active={current === 'Home'} onPress={() => onPick('Home')} testID="drawer-item-home" />
+        <DrawerItem number={2} label="Inbox" icon={icon(BellIcon)} badge={12} active={current === 'Inbox'} onPress={() => onPick('Inbox')} testID="drawer-item-inbox" />
+        <DrawerItem number={3} label="Search" icon={icon(SearchIcon)} active={current === 'Search'} onPress={() => onPick('Search')} />
+        <DrawerSection label="Account" />
+        <DrawerItem number={4} label="Profile" icon={icon(UserIcon)} active={current === 'Profile'} onPress={() => onPick('Profile')} />
+        <DrawerItem number={5} label="Billing, locked" icon={icon(UserIcon)} disabled />
+        <DrawerItem number={6} label="Pin menu open" closeOnPress={false} onPress={() => onPick('Pin menu open')} />
+      </DrawerList>
+      <DrawerFooter>
+        <Text variant="label" tone="muted">Version</Text>
+        <Text variant="mono">0.1.0</Text>
+      </DrawerFooter>
+    </>
   );
 }
 
 export default function DrawerScreen({ onBack }: { onBack: () => void }) {
   const insets = useSafeAreaInsets();
-  const { colors } = useTheme();
   const [current, setCurrent] = useState('Home');
-  const [open, setOpen] = useState(false);
   const [state, setState] = useState('closed');
+  const [rightOpen, setRightOpen] = useState(false);
+  const [pushOpen, setPushOpen] = useState(false);
+  const progress = useSharedValue(0);
+  const pushStyle = useAnimatedStyle(() => ({ flex: 1, transform: [{ translateX: progress.value * PUSH_DISTANCE }] }));
+
+  const pick = (v: string) => setCurrent(v);
 
   return (
-    <Layout title="DRAWER" onBack={onBack}>
-      <Section title="Left, uncontrolled" note="DrawerTrigger opens it. Items close it unless closeOnPress is false.">
-        <Drawer onOpenChange={(o) => setState(o ? 'opened' : 'closed')}>
-          <DrawerTrigger asChild>
-            <Button title="Open menu" icon={<MenuIcon size={18} color={colors.foreground} />} />
-          </DrawerTrigger>
-          <DrawerContent topInset={insets.top} bottomInset={insets.bottom}>
-            <DrawerHeader title="ApexRN" subtitle="Signed in as demo" />
-            <Items current={current} onPick={setCurrent} />
-          </DrawerContent>
-        </Drawer>
-        <Caption>{`Current: ${current} / drawer ${state}`}</Caption>
-      </Section>
+    <Drawer onOpenChange={(o) => setState(o ? 'opened' : 'closed')}>
+      <Animated.View style={pushStyle}>
+        <Layout
+          id="drawer"
+          title="DRAWER"
+          onBack={onBack}
+          overlay={
+            <>
+              <DrawerContent edgeWidth={24} topInset={insets.top} bottomInset={insets.bottom} testID="drawer-panel">
+                <DrawerHeader title="ApexRN" subtitle="Signed in as demo" />
+                <Index current={current} onPick={pick} />
+              </DrawerContent>
 
-      <Section title="Right, controlled" note="side='right' with open and onOpenChange, opened from an app bar action.">
-        <View style={{ flexDirection: 'row' }}>
-          <AppBarAction label="Open right drawer" icon={(c) => <MenuIcon size={20} color={c} />} onPress={() => setOpen(true)} />
-        </View>
-        <Drawer open={open} onOpenChange={setOpen}>
-          <DrawerContent side="right" width={260} topInset={insets.top} bottomInset={insets.bottom}>
-            <DrawerHeader title="Filters" />
-            <Items current={current} onPick={setCurrent} />
-          </DrawerContent>
-        </Drawer>
-        <Caption>{`Controlled open: ${open}`}</Caption>
-      </Section>
+              <Drawer open={rightOpen} onOpenChange={setRightOpen}>
+                <DrawerContent side="right" width={260} edgeWidth={0} topInset={insets.top} bottomInset={insets.bottom}>
+                  <DrawerHeader title="Filters" />
+                  <Index current={current} onPick={pick} />
+                </DrawerContent>
+              </Drawer>
 
-      <Section title="No swipe" note="swipeToClose={false} leaves the scrim, back button and items as the ways out.">
-        <Drawer>
-          <DrawerTrigger asChild>
-            <Button title="Open, no swipe" />
-          </DrawerTrigger>
-          <DrawerContent swipeToClose={false} topInset={insets.top} bottomInset={insets.bottom}>
-            <DrawerHeader title="Pinned" subtitle="Swipe disabled" />
-            <Items current={current} onPick={setCurrent} />
-          </DrawerContent>
-        </Drawer>
-      </Section>
-    </Layout>
+              <Drawer open={pushOpen} onOpenChange={setPushOpen} progress={progress}>
+                <DrawerContent variant="push" width={PUSH_DISTANCE} edgeWidth={0} topInset={insets.top} bottomInset={insets.bottom}>
+                  <DrawerHeader title="Pushed" subtitle="Screen follows" />
+                  <Index current={current} onPick={pick} />
+                </DrawerContent>
+              </Drawer>
+            </>
+          }
+        >
+          <Section title="Left overlay, uncontrolled" note="Swipe in from the left edge, or use the trigger. The inverted block slides to the current item.">
+            <DrawerTrigger asChild>
+              <Button title="Open menu" testID="drawer-open" icon={(color) => <MenuIcon size={18} color={color} />} />
+            </DrawerTrigger>
+          </Section>
+
+          <Section title="Right overlay, controlled" note="side right, with open and onOpenChange.">
+            <View style={{ flexDirection: 'row' }}>
+              <AppBarAction label="Open right drawer" icon={(c) => <MenuIcon size={20} color={c} />} onPress={() => setRightOpen(true)} />
+            </View>
+          </Section>
+
+          <Section title="Push" note="variant push leaves the screen undimmed. This screen translates with the progress shared value.">
+            <Button title="Open push drawer" variant="outline" onPress={() => setPushOpen(true)} />
+          </Section>
+
+          <Section title="Event log">
+            <Text variant="mono" testID="drawer-log">{`Selected: ${current}`}</Text>
+            <Text variant="mono" testID="drawer-state">{`Drawer: ${state}`}</Text>
+          </Section>
+        </Layout>
+      </Animated.View>
+    </Drawer>
   );
 }

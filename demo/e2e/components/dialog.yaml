@@ -1,0 +1,22 @@
+appId: dev.apexrn.demo
+---
+- runFlow:
+    file: ../_open.yaml
+    env:
+      ID: dialog
+- tapOn:
+    id: "dialog-open"
+- assertVisible:
+    id: "dialog-title"
+- assertVisible: "Welcome back"
+- tapOn:
+    id: "dialog-close"
+- assertNotVisible: "Welcome back"
+- tapOn:
+    id: "dialog-open"
+- assertVisible: "Welcome back"
+- back
+- assertNotVisible: "Welcome back"
+- assertNotVisible: "Render Error"
+- assertNotVisible: ".*TypeError.*"
+- takeScreenshot: dialog

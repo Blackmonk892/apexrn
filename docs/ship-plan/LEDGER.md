@@ -46,7 +46,7 @@ Parallel tasks and their files (recorded retroactively for A5/A6, which were dis
 - Parallel: none during the final-review fix wave (one agent: CLAUDE.md, both workflows, `demo/__tests__/{harness,theme-provider-warning,native-globals}.test.tsx`, `demo/jest.config.js`); the controller edits only this ledger.
 - CI flake (run 41203078985): website `next build` failed resolving `next/font/google` (Google Fonts fetch at build time); rerun of the failed job green, no code change. Ruling: the Phase D site uses system fonts only (matches ORCHESTRATOR §1.4), which removes the build's network dependency — cost if wrong: site loses Space Grotesk/Inter/JetBrains Mono (being rebuilt anyway).
 
-## Phase B0 — design system first (PR: https://github.com/Blackmonk892/apexrn/pull/2, awaiting owner sign-off) — serial, owner sign-off at end
+## Phase B0 — design system first (PR: https://github.com/Blackmonk892/apexrn/pull/2, owner go 2026-11-01, merged 46eaf4d) — serial, owner sign-off at end
 
 | # | Task | Status | Commit | Verified | Not verified |
 |---|---|---|---|---|---|
@@ -85,3 +85,67 @@ Parallel tasks and their files (recorded retroactively for A5/A6, which were dis
 - Carried to Phase B (owner, 2026-11-01): Button gets sentence-case text and `LoadingBlocks` instead of the spinner; Input's disabled state uses the dashed-border rule (BrutalSurface `disabled`), not a grey fill; all 10 "not wired" cells on the specimen board get wired; Chip's status variants join the status-signal test.
 - B0-11 review (Sonnet, icons 49c2428 + B0-8): approve-with-fixes. Fix round: HomeIcon wall top on grid (`V10`); InfoIcon gets serifs (`M12 4V5M10 10H12V20M9 20H15`) so it can't read as a flipped "!"; icons test gains a real geometry check (path/circle extents inside the 24 box, no fill) instead of only wrapper props; `accessibilityElementsHidden` for iOS. Kept: WarningIcon dot as a 2×3 block (zero-length subpaths render unreliably on iOS).
 - Carried to Phase B (B0-11 review): accordion, checkbox and select hand-roll their own `Svg` at stroke 3–4 and chip passes `strokeWidth={4}` — all move to `lib/icons` at the default 2px in their loops; status icons render at ≥ 20 inside Toast/Alert badges (check on device).
+
+## Phase B — components (plan: `docs/ship-plan/phase-b.md`)
+
+- Ruling: each `<Name>Screen.tsx` is that component's specimen; the 12-section Lab of `apexrn-modify.md` §4 is not built — ORCHESTRATOR §3 (final) asks for smoke tests, an emulator flow and the specimen, not the Lab — cost if wrong: Lab chrome added later, specimens move into it.
+- Ruling: tasks inside a wave run in parallel in the main checkout (not worktrees: harness worktrees branch from `main`, which lacks B0). Each task owns four paths and commits with `git commit -- <paths>`; shared files are controller-owned — cost if wrong: an index.lock retry or a typecheck error from a neighbour's in-flight file.
+- Ruling: one android-e2e run per wave push covers that wave's flows (~20 min per run) — cost if wrong: a flow failure is found per wave, not per component.
+
+| # | Task | Status | Commit | Verified | Not verified |
+|---|---|---|---|---|---|
+| B-1 | Harness: palette render helper, deep links, flow template, peers, tracker | DONE | f3f49c5, 534e897, 15fc9b8, 8dffb0a, 785e2f7 | 130 tests (renderInPalettes; deep links: known id, unknown id, none); typecheck; doctor; web export; registry build; `expo config` shows the scheme; Opus diff review | Maestro `config.yaml` globs + `_open.yaml` until the next android-e2e run; renderInPalettes test was written with its code (not seen RED) |
+- Ruling: the tracker has 37 rows (34 Home components + 3 new); ORCHESTRATOR's "36" counted Text and BrutalSurface, finished in B0 — cost if wrong: none.
+- Ruling: B-1 infra diff reviewed by the Opus controller only (harness code, no component) — cost if wrong: one less independent read; the emulator run is the real check.
+- Parallel batch W2a (2026-11-01), each task owns only these paths:
+  - B-2 Button: `packages/ui/components/button.tsx`, `demo/src/screens/ButtonScreen.tsx`, `demo/__tests__/button.test.tsx` (+ removes `demo/__tests__/button-loading.test.tsx` into it), `demo/e2e/components/button.yaml`
+  - B-3 Label: `packages/ui/components/label.tsx`, `demo/src/screens/LabelScreen.tsx`, `demo/__tests__/label.test.tsx`, `demo/e2e/components/label.yaml`
+  - B-4 Separator: `packages/ui/components/separator.tsx`, `demo/src/screens/SeparatorScreen.tsx`, `demo/__tests__/separator.test.tsx`, `demo/e2e/components/separator.yaml`
+  - B-5 Badge: `packages/ui/components/badge.tsx`, `demo/src/screens/BadgeScreen.tsx`, `demo/__tests__/badge.test.tsx`, `demo/e2e/components/badge.yaml`
+  - B-6 Avatar: `packages/ui/components/avatar.tsx`, `demo/src/screens/AvatarScreen.tsx`, `demo/__tests__/avatar.test.tsx`, `demo/e2e/components/avatar.yaml`
+  - B-8 Progress: `packages/ui/components/progress.tsx`, `demo/src/screens/ProgressScreen.tsx`, `demo/__tests__/progress.test.tsx`, `demo/e2e/components/progress.yaml`
+- Ruling: Progress's indeterminate state loops (`withRepeat`), like `LoadingBlocks`: a loading indicator, not decoration; static under reduced motion — DESIGN §4's loop ban targets decoration — cost if wrong: one static variant.
+- Ruling: static, non-compound components (Separator, Label, Avatar, Badge) skip the controlled/uncontrolled, disabled and compound-throw smoke tests — nothing to test — cost if wrong: none.
+- Ruling: an avatar's initials are a monogram, so they stay uppercase outside the `label` variant (one commented exception) — cost if wrong: one style line.
+- Fix (controller): `_open.yaml` waits for Home before `openLink` — run 41235050444 showed the VIEW intent reach the activity ~1s before JS booted, so the Linking event was lost (6db916f). Website playground config drops the removed `withShadow` controls (8ab64ea).
+- Parallel batch W2b (2026-11-01), each task owns only these paths:
+  - B-7 Skeleton: `packages/ui/components/skeleton.tsx`, `demo/src/screens/SkeletonScreen.tsx`, `demo/__tests__/skeleton.test.tsx`, `demo/e2e/components/skeleton.yaml`
+  - B-9 Alert: `packages/ui/components/alert.tsx`, `demo/src/screens/AlertScreen.tsx`, `demo/__tests__/alert.test.tsx`, `demo/e2e/components/alert.yaml` (keeps `status-signal.test.tsx` green, does not edit it)
+  - B-10 Card: `packages/ui/components/card.tsx`, `demo/src/screens/CardScreen.tsx`, `demo/__tests__/card.test.tsx`, `demo/e2e/components/card.yaml`
+  - B-11 ListItem: `packages/ui/components/list-item.tsx`, `demo/src/screens/ListItemScreen.tsx`, `demo/__tests__/list-item.test.tsx`, `demo/e2e/components/listitem.yaml`
+  - B-12 FAB: `packages/ui/components/floating-action-button.tsx`, `demo/src/screens/FABScreen.tsx`, `demo/__tests__/fab.test.tsx`, `demo/e2e/components/fab.yaml`
+  - Barrel: Card's new parts and removed `CardText` need `packages/ui/components/index.ts` — the Card task owns that one line.
+- Slowness fix (2026-11-01): parallel agents each ran the full Jest suite (one worker per core), so one test file took ~200s. Leftover full runs were killed; agents now run only their own file with `--maxWorkers=1`, and the controller runs the full suite once per batch.
+- Parallel batch W3a (2026-11-01), each task owns only these paths:
+  - B-13 Input: `packages/ui/components/input.tsx`, `demo/src/screens/InputScreen.tsx`, `demo/__tests__/input.test.tsx`, `demo/e2e/components/input.yaml`
+  - B-15 Checkbox: `packages/ui/components/checkbox.tsx`, `demo/src/screens/CheckboxScreen.tsx`, `demo/__tests__/checkbox.test.tsx`, `demo/e2e/components/checkbox.yaml`
+  - B-16 Switch: `packages/ui/components/switch.tsx`, `demo/src/screens/SwitchScreen.tsx`, `demo/__tests__/switch.test.tsx`, `demo/e2e/components/switch.yaml`
+  - B-17 RadioGroup: `packages/ui/components/radio-group.tsx`, `demo/src/screens/RadioGroupScreen.tsx`, `demo/__tests__/radio-group.test.tsx`, `demo/e2e/components/radiogroup.yaml`
+- Ruling (2026-11-01): this machine has 2 cores and 7 GB RAM (0.5 GB free under load), so at most **2 implementers run at once** from here on; the full Jest suite and typecheck of the whole branch run in GitHub CI (Linux runners) on each push, not locally — measured: one test file took 140s with five agents running — cost if wrong: less parallelism, but each agent finishes in minutes instead of ~40.
+
+### Owner rulings (2026-11-01, final)
+- B-20: specimen cells a component cannot be put in from outside are labelled `internal`; no display-only props on public components. Test asserts no cell reads "not wired".
+- DatePicker: single mode closes on tap — kept. Range mode does not exist yet → 0.2 list.
+- BottomNav: revert — labels on all tabs by default, optional `labelMode="selected"`; large-font-scale fallback stays.
+- InputOTP digits only: kept for 0.1.0, listed under CHANGELOG known gaps.
+- Drawer stays one file (567 lines): single-file components are intentional for the copy-paste model.
+
+### Operating rules (owner, 2026-11-01, effective now — speed first)
+1. No questions to the owner; every open choice is a ruling logged here. Only the Phase C device checklist, website landing screenshots (send, don't wait) and the final publish/Pages commands go to the owner.
+2. One Sonnet implementer + one combined Sonnet review per task; Opus review only for public component APIs, DESIGN.md tokens, the CLI, and the website landing/design system.
+3. Don't wait on CI between tasks; red CI is its own task. Only merges into ship/v0.1 and main need green CI.
+4. Phase B ends when B-40 and B-41 are done; only blocking issues they surface are fixed in 0.1.0, the rest goes to the 0.2 list.
+5. Phase D (website rebuild) runs now, in parallel, on its own agents.
+
+### B-40 / B-41 results
+- B-40 reference screens: DONE (9cf4ac6). Screenshots light + dark only — the demo has no preset switch (0.2 list).
+- B-41 fresh-app check: `scripts/fresh-app-check.mjs`. First run: registry, scaffold, peers, init, add --all, web export PASS; `tsc` FAIL in a fresh SDK 58 app (RN 0.88, @types/react 19.3): ref types for View/TextInput/ScrollView, `disabled: boolean | null`, `TextInputContentSizeChangeEventData` renamed. Ruling: **blocking** — a fresh install must typecheck — fixed in 0.1.0 by typing refs/events from the component types themselves (works on SDK 57 and 58). The script's peer install adds react-dom + react-native-web (needed for web export in a blank app).
+
+### 0.2 list
+- DatePicker range mode.
+- Demo preset (neo/raw) switch so reference screens can be shot in all four palettes.
+- ListItem: built-in switch/checkbox trailing control with one label and row-toggle; a grouped-list wrapper with automatic rules.
+- FAB passes its ink colour to a render-prop icon (as AppBarAction does).
+- A label/value summary row primitive (Checkout totals).
+- Reference screens: add Chips + BottomNav (Inbox), Drawer (Settings), Toast on Checkout submit per DESIGN §8.
+- InputOTP: alphanumeric `pattern`.

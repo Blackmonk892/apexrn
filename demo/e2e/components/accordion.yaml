@@ -1,0 +1,17 @@
+appId: dev.apexrn.demo
+---
+- runFlow:
+    file: ../_open.yaml
+    env:
+      ID: accordion
+- assertVisible:
+    id: "accordion-returns"
+- tapOn:
+    id: "accordion-returns"
+- assertVisible: "Return any unused item within 30 days for a full refund."
+- assertVisible:
+    id: "accordion-log"
+- assertVisible: "Open: returns"
+- assertNotVisible: "Render Error"
+- assertNotVisible: ".*TypeError.*"
+- takeScreenshot: accordion

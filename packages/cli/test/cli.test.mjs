@@ -190,7 +190,7 @@ describe('cli', () => {
     const dir = project();
     assert.equal(apexrn(dir, 'init', '--components-dir', 'ui/kit', '--lib-dir', 'ui/core').code, 0);
     apexrn(dir, 'add', 'label');
-    assert.match(readFileSync(join(dir, 'ui/kit/label.tsx'), 'utf8'), /from '\.\.\/core\/theme'/);
+    assert.match(readFileSync(join(dir, 'ui/kit/label.tsx'), 'utf8'), /from '\.\.\/core\/colors'/);
   });
 
   test('list works before init and marks installed items after', () => {

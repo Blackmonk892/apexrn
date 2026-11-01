@@ -31,5 +31,6 @@ All notable changes to ApexRN. Format follows [Keep a Changelog](https://keepach
 - All source files renamed to kebab-case (`brutal_surface` -> `brutal-surface`, `radiogroup` -> `radio-group`, `usePressPhysics` -> `use-press-physics`, and so on). The capitalised `Input.tsx` is now `input.tsx`, which fixes case-sensitive filesystems.
 
 ### Known gaps
-- Not yet verified on iOS or with screen readers; see `shipping.md` phase 1.
-- No component unit tests yet (CLI and registry are tested).
+- Android is verified on an emulator by automation; iOS, physical devices and screen readers are checked by hand with `docs/ship-plan/DEVICE-CHECKLIST.md`.
+- `InputOTP` accepts digits only; letter codes need a `pattern` option planned for 0.2.
+- `DatePicker` has no range mode yet.

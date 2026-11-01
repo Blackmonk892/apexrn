@@ -1,0 +1,18 @@
+appId: dev.apexrn.demo
+---
+- runFlow:
+    file: ../_open.yaml
+    env:
+      ID: tabs
+- assertVisible:
+    id: "tab-settings"
+- assertVisible: "Your profile details live here."
+- tapOn:
+    id: "tab-settings"
+- assertVisible: "Manage notifications and privacy."
+- assertVisible:
+    id: "tabs-log"
+- assertVisible: "Tab: settings"
+- assertNotVisible: "Render Error"
+- assertNotVisible: ".*TypeError.*"
+- takeScreenshot: tabs

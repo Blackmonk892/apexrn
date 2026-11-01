@@ -12,7 +12,7 @@ export default function FormsScreen({ onBack }: { onBack: () => void }) {
   const [sliderVal, setSliderVal] = useState(50);
 
   return (
-    <Layout title="FORMS & INPUTS" onBack={onBack}>
+    <Layout id="forms" title="FORMS & INPUTS" onBack={onBack}>
       <Text style={[styles.label, { color: textColor }]}>INPUT FIELD</Text>
       <Input placeholder="Enter your text here..." />
       <View style={{ height: 16 }} />
@@ -26,14 +26,8 @@ export default function FormsScreen({ onBack }: { onBack: () => void }) {
 
       <Text style={[styles.label, { color: textColor }]}>RADIO GROUP</Text>
       <RadioGroup value={radioValue} onValueChange={setRadioValue}>
-        <View style={styles.row}>
-          <RadioGroupItem value="1" />
-          <Text style={[styles.rowText, { color: textColor }]}>Option 1</Text>
-        </View>
-        <View style={styles.row}>
-          <RadioGroupItem value="2" />
-          <Text style={[styles.rowText, { color: textColor }]}>Option 2</Text>
-        </View>
+        <RadioGroupItem value="1" label="Option 1" />
+        <RadioGroupItem value="2" label="Option 2" />
       </RadioGroup>
 
       <Text style={[styles.label, { color: textColor }]}>SWITCH</Text>

@@ -1,0 +1,21 @@
+appId: dev.apexrn.demo
+---
+- runFlow:
+    file: ../_open.yaml
+    env:
+      ID: card
+- assertVisible:
+    id: "card-warning"
+- scrollUntilVisible:
+    element:
+      id: "card-press"
+    direction: DOWN
+- tapOn:
+    id: "card-press"
+- scrollUntilVisible:
+    element:
+      text: "Opened: Release notes"
+    direction: DOWN
+- assertNotVisible: "Render Error"
+- assertNotVisible: ".*TypeError.*"
+- takeScreenshot: card

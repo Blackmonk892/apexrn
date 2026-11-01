@@ -38,7 +38,7 @@ export default function ShowcaseScreen({ onBack }: { onBack: () => void }) {
   const [inputText, setInputText] = useState('ApexRN Mobile System');
 
   return (
-    <Layout title="SHOWCASE" onBack={onBack}>
+    <Layout id="showcase" title="SHOWCASE" onBack={onBack}>
       {/* Top Header Section */}
       <View style={styles.appHeader}>
         <AppBar title="APEXRN MOBILE" subtitle="Refined Brutalism v1.0" />

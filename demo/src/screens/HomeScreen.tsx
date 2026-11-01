@@ -26,6 +26,7 @@ const GROUPS: { title: string; items: { id: string; name: string }[] }[] = [
       { id: 'progress', name: 'Progress' },
       { id: 'alert', name: 'Alert' },
       { id: 'card', name: 'Card' },
+      { id: 'emptystate', name: 'Empty state' },
       { id: 'listitem', name: 'List item' },
       { id: 'fab', name: 'FAB' },
     ],
@@ -40,6 +41,7 @@ const GROUPS: { title: string; items: { id: string; name: string }[] }[] = [
       { id: 'radiogroup', name: 'Radio group' },
       { id: 'slider', name: 'Slider' },
       { id: 'input_otp', name: 'Input OTP' },
+      { id: 'segmentedcontrol', name: 'Segmented control' },
     ],
   },
   {
@@ -66,6 +68,15 @@ const GROUPS: { title: string; items: { id: string; name: string }[] }[] = [
       { id: 'dropdown', name: 'Dropdown menu' },
       { id: 'select', name: 'Select' },
       { id: 'datepicker', name: 'Date picker' },
+      { id: 'numberinput', name: 'Number input' },
+    ],
+  },
+  {
+    title: 'Reference',
+    items: [
+      { id: 'ref-settings', name: 'Settings' },
+      { id: 'ref-checkout', name: 'Checkout' },
+      { id: 'ref-inbox', name: 'Inbox' },
     ],
   },
   {
@@ -80,11 +91,13 @@ const GROUPS: { title: string; items: { id: string; name: string }[] }[] = [
   },
 ];
 
+export const SCREEN_IDS = GROUPS.flatMap((group) => group.items.map((item) => item.id));
+
 export default function HomeScreen({ onNavigate }: HomeScreenProps) {
   const { colors } = useTheme();
 
   return (
-    <Layout title="APEXRN">
+    <Layout id="home" title="APEXRN">
       <View testID="home-screen">
         <Text style={[styles.lede, { color: colors.foreground }]}>
           Every screen renders the real component from the library barrel, with its variants and states.

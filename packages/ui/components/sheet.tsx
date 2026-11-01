@@ -1,293 +1,343 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
+  cloneElement,
+  createContext,
+  isValidElement,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactElement,
+  type ReactNode,
+} from 'react';
+import {
+  type GestureResponderEvent,
   KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
+  type PressableProps,
   StyleSheet,
   useWindowDimensions,
   View,
   type ViewProps,
 } from 'react-native';
-import Animated, {
-  Easing,
-  runOnJS,
-  useAnimatedStyle,
-  useReducedMotion,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
+import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import { borderWidths, spacing } from '../lib/colors';
+import { borderWidths, spacing, touchTarget } from '../lib/colors';
+import { useMotion } from '../lib/motion';
 import { useTheme } from '../lib/theme';
-
-// ---------------------------------------------------------------------------
-// Types & Context
-// ---------------------------------------------------------------------------
-interface SheetContextState {
-  open: boolean;
-  close: () => void;
-  onDismissAnimationFinished: () => void;
-}
-
-const SheetContext = createContext<SheetContextState | undefined>(undefined);
-
-function useSheetContext() {
-  const context = useContext(SheetContext);
-  if (!context) {
-    throw new Error('Sheet sub-components must be used within a <Sheet /> wrapper');
-  }
-  return context;
-}
+import { cn } from '../lib/utils';
+import BrutalSurface from './brutal-surface';
+import Text, { type TextProps } from './text';
 
 export interface SheetProps {
-  /**
-   * Controls the open/closed state of the bottom sheet. Controlled on purpose:
-   * the Modal owns Sheet's children, so there is nowhere to put a trigger.
-   * Keep `const [open, setOpen] = useState(false)` next to your own button.
-   */
-  open: boolean;
-  /**
-   * Callback fired when the sheet closes (e.g., swiped down or backdrop pressed).
-   */
-  onOpenChange: (open: boolean) => void;
+  /** Controlled open state. Omit for an uncontrolled sheet. */
+  open?: boolean;
+  /** Initial open state when uncontrolled. @default false */
+  defaultOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  /** A render function receives the open state and a `handleDismiss` that closes the sheet. */
   children: ReactNode | ((props: { open: boolean; handleDismiss: () => void }) => ReactNode);
 }
 
 export interface SheetContentProps extends ViewProps {
   /**
-   * The height the sheet snaps to when pulled up. Capped at 90% of the
-   * window height so it never covers the whole screen.
+   * Panel height, capped at 90% of the window.
    * @default 400
    */
   sheetHeight?: number;
+  /** Scrim opacity, 0 to 1. @default 0.5 */
+  scrimOpacity?: number;
+  /** Home-indicator inset. Pass `useSafeAreaInsets().bottom`. @default 0 */
+  bottomInset?: number;
+  /** Drag the handle down to close. @default true */
+  swipeToClose?: boolean;
+  /** Accessibility label of the scrim's close action. @default 'Close sheet' */
+  dismissLabel?: string;
   children?: ReactNode;
+}
+
+export interface SheetHeaderProps extends ViewProps {
+  children?: ReactNode;
+}
+
+export interface SheetTitleProps extends Omit<TextProps, 'variant'> {
+  children?: ReactNode;
+}
+
+export interface SheetFooterProps extends ViewProps {
+  children?: ReactNode;
+}
+
+export interface SheetTriggerProps extends PressableProps {
+  asChild?: boolean;
+}
+
+export interface SheetCloseProps extends PressableProps {
+  asChild?: boolean;
+}
+
+interface SheetContextValue {
+  open: boolean;
+  setOpen: (open: boolean) => void;
+}
+
+const SheetContext = createContext<SheetContextValue | null>(null);
+
+function useSheet(part: string) {
+  const context = useContext(SheetContext);
+  if (!context) throw new Error(`${part} must be used within Sheet`);
+  return context;
+}
+
+const MAX_HEIGHT_RATIO = 0.9;
+const CLOSE_VELOCITY = 500;
+
+export function Sheet({ open: openProp, defaultOpen = false, onOpenChange, children }: SheetProps) {
+  const [internalOpen, setInternalOpen] = useState(defaultOpen);
+  const controlled = openProp !== undefined;
+  const open = controlled ? openProp : internalOpen;
+
+  const setOpen = useCallback(
+    (next: boolean) => {
+      if (!controlled) setInternalOpen(next);
+      onOpenChange?.(next);
+    },
+    [controlled, onOpenChange],
+  );
+
+  const context = useMemo(() => ({ open, setOpen }), [open, setOpen]);
+  const content =
+    typeof children === 'function' ? children({ open, handleDismiss: () => setOpen(false) }) : children;
+
+  return <SheetContext.Provider value={context}>{content}</SheetContext.Provider>;
+}
+
+function asChildAction(
+  part: string,
+  children: ReactNode,
+  action: (e: GestureResponderEvent) => void,
+): ReactElement | null {
+  if (!isValidElement(children)) {
+    throw new Error(`${part} with asChild needs a single element child`);
+  }
+  const child = children as ReactElement<{ onPress?: (e: GestureResponderEvent) => void }>;
+  return cloneElement(child, {
+    onPress: (e: GestureResponderEvent) => {
+      child.props.onPress?.(e);
+      action(e);
+    },
+  });
+}
+
+export function SheetTrigger({ children, onPress, asChild, ...props }: SheetTriggerProps) {
+  const { setOpen } = useSheet('SheetTrigger');
+  const handlePress = (e: GestureResponderEvent) => {
+    setOpen(true);
+    onPress?.(e);
+  };
+
+  if (asChild) return asChildAction('SheetTrigger', children as ReactNode, handlePress);
+
+  return (
+    <Pressable accessibilityRole="button" onPress={handlePress} {...props}>
+      {children}
+    </Pressable>
+  );
+}
+
+export function SheetClose({ children, onPress, asChild, ...props }: SheetCloseProps) {
+  const { setOpen } = useSheet('SheetClose');
+  const handlePress = (e: GestureResponderEvent) => {
+    onPress?.(e);
+    setOpen(false);
+  };
+
+  if (asChild) return asChildAction('SheetClose', children as ReactNode, handlePress);
+
+  return (
+    <Pressable accessibilityRole="button" hitSlop={8} onPress={handlePress} {...props}>
+      {children}
+    </Pressable>
+  );
 }
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-const SCRIM_OPACITY = 0.5;
-const MAX_HEIGHT_RATIO = 0.9;
-
-export function Sheet({ open, onOpenChange, children }: SheetProps) {
-  const [isModalVisible, setIsModalVisible] = useState(open);
-
-  useEffect(() => {
-    if (open) {
-      setIsModalVisible(true);
-    }
-  }, [open]);
-
-  const close = useCallback(() => {
-    onOpenChange(false);
-  }, [onOpenChange]);
-
-  const onDismissAnimationFinished = useCallback(() => {
-    // Unmount even if the parent ignored `onOpenChange(false)`: otherwise an
-    // invisible overlay keeps intercepting touches. If `open` is still true
-    // the effect above remounts and re-runs the open animation.
-    setIsModalVisible(false);
-  }, []);
-
-  const context = useMemo(
-    () => ({ open, close, onDismissAnimationFinished }),
-    [open, close, onDismissAnimationFinished],
-  );
-
-  const childrenRender = typeof children === 'function'
-    ? children({ open, handleDismiss: close })
-    : children;
-
-  return (
-    <SheetContext.Provider value={context}>
-      <Modal
-        visible={isModalVisible}
-        transparent
-        animationType="none"
-        onRequestClose={close}
-        accessibilityViewIsModal
-      >
-        {/* Android renders a Modal in its own window, outside the app's root
-            GestureHandlerRootView, so the drag-to-dismiss needs its own. */}
-        <GestureHandlerRootView style={styles.root}>{childrenRender}</GestureHandlerRootView>
-      </Modal>
-    </SheetContext.Provider>
-  );
-}
-
 export function SheetContent({
-  sheetHeight,
+  sheetHeight = 400,
+  scrimOpacity = 0.5,
+  bottomInset = 0,
+  swipeToClose = true,
+  dismissLabel = 'Close sheet',
   children,
   style,
   ...props
 }: SheetContentProps) {
-  const { open, close, onDismissAnimationFinished } = useSheetContext();
-  const { colors } = useTheme();
-  const reduceMotion = useReducedMotion();
+  const { open, setOpen } = useSheet('SheetContent');
+  const { colors, elevation } = useTheme();
+  const { enter, exit, reduceMotion } = useMotion();
   const { height: windowHeight } = useWindowDimensions();
-  const resolvedHeight = Math.min(sheetHeight ?? 400, windowHeight * MAX_HEIGHT_RATIO);
-  const ms = (duration: number) => (reduceMotion ? 0 : duration);
 
-  // TranslateY: 0 is open/docked, resolvedHeight is fully closed/hidden
-  const translateY = useSharedValue(resolvedHeight);
-  const backdropOpacity = useSharedValue(0);
-  const contextY = useSharedValue(0);
+  const bw = borderWidths.container;
+  const height = Math.min(sheetHeight, windowHeight * MAX_HEIGHT_RATIO);
+  // The Modal stays mounted until the exit animation finishes.
+  const [visible, setVisible] = useState(open);
+  // 0 closed, 1 open. One value drives panel, scrim and drag, so they cannot disagree.
+  const p = useSharedValue(open ? 1 : 0);
+  const dragStart = useSharedValue(0);
+  const openRef = useRef(open);
+  openRef.current = open;
 
-  const isClosingRef = useRef(false);
-
-  // Animate in/out when `open` state changes
   useEffect(() => {
     if (open) {
-      isClosingRef.current = false;
-      translateY.value = withTiming(0, { duration: ms(250), easing: Easing.out(Easing.quad) });
-      backdropOpacity.value = withTiming(SCRIM_OPACITY, { duration: ms(250) });
+      setVisible(true);
+      p.value = withTiming(1, enter);
     } else {
-      if (isClosingRef.current) return;
-      isClosingRef.current = true;
-      translateY.value = withTiming(resolvedHeight, {
-        duration: ms(200),
-        easing: Easing.in(Easing.quad),
-      }, (finished) => {
-        if (finished) {
-          runOnJS(onDismissAnimationFinished)();
-        }
+      p.value = withTiming(0, exit, (finished) => {
+        if (finished) runOnJS(setVisible)(false);
       });
-      backdropOpacity.value = withTiming(0, { duration: ms(200) });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- ms only reads reduceMotion
-  }, [open, resolvedHeight, reduceMotion, translateY, backdropOpacity, onDismissAnimationFinished]);
+  }, [open, enter, exit, p]);
 
-  const triggerClose = () => {
-    if (isClosingRef.current) return;
-    isClosingRef.current = true;
-    translateY.value = withTiming(resolvedHeight, {
-      duration: ms(200),
-      easing: Easing.in(Easing.quad),
-    }, (finished) => {
-      if (finished) {
-        runOnJS(close)();
-        runOnJS(onDismissAnimationFinished)();
-      }
-    });
-    backdropOpacity.value = withTiming(0, { duration: ms(200) });
-  };
+  const close = useCallback(() => setOpen(false), [setOpen]);
 
+  // A controlled parent may refuse the close; the panel then springs back instead of staying half-dragged.
+  const dismissFromDrag = useCallback(() => {
+    setOpen(false);
+    setTimeout(() => {
+      if (openRef.current) p.value = withTiming(1, enter);
+    }, 0);
+  }, [setOpen, p, enter]);
+
+  // The pan lives on the handle strip only: over the whole panel it would fight a ScrollView inside.
   const pan = Gesture.Pan()
-    // Vertical-only dismiss: horizontal swipes / TextInput touches inside
-    // the sheet don't compete with the dismiss gesture.
+    .enabled(swipeToClose)
     .activeOffsetY([-10, 10])
     .failOffsetX([-10, 10])
     .onStart(() => {
-      contextY.value = translateY.value;
+      dragStart.value = p.value;
     })
     .onUpdate((event) => {
-      const nextY = Math.max(-20, contextY.value + event.translationY);
-      translateY.value = Math.min(nextY, resolvedHeight);
+      const shut = Math.min(1, Math.max(0, event.translationY / height));
+      if (!reduceMotion) p.value = dragStart.value - shut;
     })
     .onEnd((event) => {
-      if (translateY.value > resolvedHeight / 3 || event.velocityY > 500) {
-        runOnJS(triggerClose)();
-      } else {
-        translateY.value = withTiming(0, { duration: ms(150), easing: Easing.out(Easing.quad) });
+      const shut = Math.min(1, Math.max(0, event.translationY / height));
+      if (shut > 0.33 || event.velocityY > CLOSE_VELOCITY) {
+        runOnJS(dismissFromDrag)();
+      } else if (!reduceMotion) {
+        p.value = withTiming(1, enter);
       }
     });
 
-  const animatedBackdropStyle = useAnimatedStyle(() => ({
-    opacity: backdropOpacity.value,
-  }));
-
-  const animatedSheetStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }],
-  }));
+  const panelStyle = useAnimatedStyle(() =>
+    reduceMotion
+      ? { opacity: p.value }
+      : { transform: [{ translateY: (1 - p.value) * (height + elevation.overlay) }] },
+  );
+  const scrimStyle = useAnimatedStyle(() => ({ opacity: p.value * scrimOpacity }));
 
   return (
-    // Keeps tall sheets with inputs usable when the keyboard opens.
-    <KeyboardAvoidingView
-      style={styles.wrapper}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    <Modal
+      visible={visible}
+      transparent
+      statusBarTranslucent
+      animationType="none"
+      onRequestClose={close}
+      accessibilityViewIsModal
     >
-      {/* Backdrop */}
-      <AnimatedPressable
-        style={[styles.backdrop, { backgroundColor: colors.scrim }, animatedBackdropStyle]}
-        onPress={triggerClose}
-        accessibilityRole="button"
-        accessibilityLabel="Dismiss Sheet"
-      />
+      {/* Android renders a Modal in its own window, outside the app's root GestureHandlerRootView. */}
+      <GestureHandlerRootView style={styles.root} accessibilityViewIsModal>
+        <AnimatedPressable
+          testID="sheet-scrim"
+          style={[StyleSheet.absoluteFill, { backgroundColor: colors.scrim }, scrimStyle]}
+          onPress={close}
+          accessibilityRole="button"
+          accessibilityLabel={dismissLabel}
+        />
 
-      <Animated.View
-        style={[
-          styles.sheet,
-          {
-            height: resolvedHeight,
-            backgroundColor: colors.background,
-            borderColor: colors.border,
-          },
-          style,
-          animatedSheetStyle,
-        ]}
-        {...props}
-      >
-        {/* The drag-to-dismiss gesture lives on the handle strip only. A pan
-            over the whole sheet would fight any ScrollView inside it (Select,
-            DatePicker) for vertical drags. Backdrop, back button and Escape
-            remain as gesture-free ways to close. */}
-        <GestureDetector gesture={pan}>
-          <View
-            style={[styles.handleContainer, { paddingVertical: spacing.md }]}
-            accessible={false}
-            importantForAccessibility="no-hide-descendants"
-          >
-            <View style={[styles.handleBar, { backgroundColor: colors.foreground }]} />
-          </View>
-        </GestureDetector>
-
-        <View style={[styles.content, { paddingHorizontal: spacing.md, paddingBottom: spacing.md }]}>
-          {children}
-        </View>
-      </Animated.View>
-    </KeyboardAvoidingView>
+        <KeyboardAvoidingView
+          pointerEvents="box-none"
+          style={styles.dock}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          <Animated.View style={[{ height }, panelStyle]}>
+            <BrutalSurface
+              pressable={false}
+              elevation="overlay"
+              borderWidth="container"
+              // Side and bottom borders sit off screen; only the top edge shows.
+              style={{ flex: 1, marginLeft: -bw, marginRight: -bw, marginBottom: -bw }}
+              surfaceStyle={cn({ flex: 1, overflow: 'hidden', paddingBottom: bottomInset + bw }, style)}
+              {...props}
+            >
+              <GestureDetector gesture={pan}>
+                <View
+                  testID="sheet-handle"
+                  accessible={false}
+                  importantForAccessibility="no-hide-descendants"
+                  style={styles.handle}
+                >
+                  <View style={[styles.bar, { backgroundColor: colors.foreground }]} />
+                </View>
+              </GestureDetector>
+              <View style={{ flex: 1, paddingHorizontal: spacing.md, paddingBottom: spacing.md }}>{children}</View>
+            </BrutalSurface>
+          </Animated.View>
+        </KeyboardAvoidingView>
+      </GestureHandlerRootView>
+    </Modal>
   );
 }
 
-// ---------------------------------------------------------------------------
-// Styles
-// ---------------------------------------------------------------------------
+export function SheetHeader({ style, children, ...props }: SheetHeaderProps) {
+  useSheet('SheetHeader');
+  return (
+    <View style={cn({ gap: spacing.xs, paddingBottom: spacing.md }, style)} {...props}>
+      {children}
+    </View>
+  );
+}
+
+export function SheetTitle({ children, ...props }: SheetTitleProps) {
+  useSheet('SheetTitle');
+  return (
+    <Text variant="title" accessibilityRole="header" {...props}>
+      {children}
+    </Text>
+  );
+}
+
+export function SheetFooter({ style, children, ...props }: SheetFooterProps) {
+  const { colors } = useTheme();
+  useSheet('SheetFooter');
+  return (
+    <View
+      style={cn(
+        {
+          gap: spacing.sm,
+          paddingTop: spacing.md,
+          borderTopColor: colors.border,
+          borderTopWidth: borderWidths.control,
+        },
+        style,
+      )}
+      {...props}
+    >
+      {children}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-  },
-  wrapper: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  backdrop: {
-    ...StyleSheet.absoluteFill,
-    zIndex: 0,
-  },
-  sheet: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    zIndex: 1,
-    borderTopWidth: borderWidths.container,
-    borderLeftWidth: borderWidths.container,
-    borderRightWidth: borderWidths.container,
-    borderRadius: 0,
-    flexDirection: 'column',
-  },
-  handleContainer: {
-    alignSelf: 'stretch',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  handleBar: {
-    width: 40,
-    height: 4,
-    borderRadius: 0,
-  },
-  content: {
-    flex: 1,
-  },
+  root: { flex: 1 },
+  dock: { flex: 1, justifyContent: 'flex-end' },
+  handle: { alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center', minHeight: touchTarget },
+  bar: { width: 48, height: 6 },
 });
+
+export default Sheet;

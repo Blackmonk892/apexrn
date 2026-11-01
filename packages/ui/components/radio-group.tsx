@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
+  Pressable,
   type PressableProps,
   type StyleProp,
   StyleSheet,
@@ -7,83 +8,49 @@ import {
   type ViewProps,
   type ViewStyle,
 } from 'react-native';
-import Animated, {
-  Easing,
-  useAnimatedStyle,
-  useReducedMotion,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import { spacing, touchTarget } from '../lib/colors';
+import { useMotion } from '../lib/motion';
 import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
 import BrutalSurface from './brutal-surface';
+import Text from './text';
 
-// ---------------------------------------------------------------------------
-// Types & Context
-// ---------------------------------------------------------------------------
 export interface RadioGroupProps extends ViewProps {
-  /**
-   * The controlled value. Omit for an uncontrolled group.
-   */
+  /** The controlled value. Omit for an uncontrolled group. */
   value?: string;
-  /**
-   * Initial value when uncontrolled.
-   */
+  /** Initial value when uncontrolled. Without one nothing is selected. */
   defaultValue?: string;
-  /**
-   * Callback fired when a radio item is selected.
-   */
   onValueChange?: (value: string) => void;
-  /**
-   * Disables the entire radio group.
-   * @default false
-   */
+  /** Disables every item. @default false */
   disabled?: boolean;
   children?: ReactNode;
 }
 
-export interface RadioGroupItemProps extends Omit<PressableProps, 'onPress' | 'style'> {
-  /**
-   * The value of this specific radio item.
-   */
+export interface RadioGroupItemProps extends Omit<PressableProps, 'onPress' | 'style' | 'children'> {
   value: string;
-  /**
-   * Disables this specific radio item.
-   * @default false
-   */
+  /** Rendered beside the indicator and used as the accessible name. */
+  label: string;
+  /** Disables this item only. @default false */
   disabled?: boolean;
-  /**
-   * Outer wrapper style.
-   */
+  /** Style for the pressable row. */
   style?: StyleProp<ViewStyle>;
-  /**
-   * Expands the touch target beyond the 24px visual box.
-   * @default enough to reach the platform touch target (44pt iOS / 48dp Android)
-   */
-  hitSlop?: PressableProps['hitSlop'];
 }
 
 interface RadioContextValue {
   value?: string;
-  onValueChange: (value: string) => void;
   disabled: boolean;
+  select: (value: string) => void;
 }
 
 const RadioContext = createContext<RadioContextValue | null>(null);
 
-// ---------------------------------------------------------------------------
-// Design tokens
-// ---------------------------------------------------------------------------
-const RADIO_SIZE = 24;
-const DOT_SIZE = 12;
-// Only the inner dot is round; the surface follows the zero-radius rule.
-const RADIO_RADIUS = 999;
+const BOX = 24;
+const MARK_INSET = 4;
+// Border is 2, so the mark sits MARK_INSET inside the border edge.
+const MARK = BOX - 2 * 2 - 2 * MARK_INSET;
 
-// ---------------------------------------------------------------------------
-// Components
-// ---------------------------------------------------------------------------
 const AnimatedView = Animated.createAnimatedComponent(View);
 
 export function RadioGroup({
@@ -96,14 +63,14 @@ export function RadioGroup({
   ...props
 }: RadioGroupProps) {
   const [internalValue, setInternalValue] = useState(defaultValue);
-  const value = valueProp ?? internalValue;
   const controlled = valueProp !== undefined;
+  const value = controlled ? valueProp : internalValue;
 
   const context = useMemo<RadioContextValue>(
     () => ({
       value,
       disabled,
-      onValueChange: (next) => {
+      select: (next) => {
         if (!controlled) setInternalValue(next);
         onValueChange?.(next);
       },
@@ -114,8 +81,8 @@ export function RadioGroup({
   return (
     <RadioContext.Provider value={context}>
       <View
-        style={cn({ flexDirection: 'column', gap: spacing.sm }, style)}
         accessibilityRole="radiogroup"
+        style={cn({ gap: spacing.xs }, style)}
         {...props}
       >
         {children}
@@ -126,76 +93,86 @@ export function RadioGroup({
 
 export function RadioGroupItem({
   value,
-  disabled = false,
-  hitSlop = Math.ceil((touchTarget - RADIO_SIZE) / 2),
+  label,
+  disabled: disabledProp = false,
   style,
+  testID,
+  accessibilityLabel,
   ...props
 }: RadioGroupItemProps) {
   const context = useContext(RadioContext);
-  if (!context) {
-    throw new Error('RadioGroupItem must be used within a RadioGroup');
-  }
+  if (!context) throw new Error('RadioGroupItem must be used within RadioGroup');
 
   const { colors } = useTheme();
-  const reduceMotion = useReducedMotion();
-  const isSelected = context.value === value;
-  const isDisabled = context.disabled || disabled;
-  const dot = useSharedValue(isSelected ? 1 : 0);
+  const { selection, reduceMotion } = useMotion();
+  const selected = context.value === value;
+  const disabled = context.disabled || disabledProp;
 
+  const progress = useSharedValue(selected ? 1 : 0);
   useEffect(() => {
-    const to = isSelected ? 1 : 0;
-    dot.value = reduceMotion ? to : withTiming(to, { duration: 150, easing: Easing.out(Easing.quad) });
-  }, [isSelected, reduceMotion, dot]);
+    progress.value = withTiming(selected ? 1 : 0, selection);
+  }, [selected, selection, progress]);
 
-  const animatedDotStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: dot.value }],
-    opacity: dot.value,
+  // Reduced motion swaps the scale for a fade only.
+  const markStyle = useAnimatedStyle(() => ({
+    opacity: progress.value,
+    transform: [{ scale: reduceMotion ? 1 : 0.4 + 0.6 * progress.value }],
   }));
 
   return (
-    <BrutalSurface
-      style={style}
-      surfaceStyle={styles.surface}
-      elevation="control"
-      borderWidth="container"
-      backgroundColor={isDisabled ? colors.muted : colors.background}
-      borderColor={isDisabled ? colors.mutedForeground : colors.border}
-      disabled={isDisabled}
-      hitSlop={hitSlop}
-      onPress={() => context.onValueChange(value)}
+    <Pressable
       accessibilityRole="radio"
-      accessibilityState={{ checked: isSelected, disabled: isDisabled }}
-      aria-checked={isSelected}
-      aria-disabled={isDisabled}
-      accessibilityLabel={props.accessibilityLabel ?? `Option ${value}`}
+      accessibilityState={{ checked: selected, disabled }}
+      accessibilityLabel={accessibilityLabel ?? label}
+      disabled={disabled}
+      onPress={() => context.select(value)}
+      testID={testID}
+      style={({ pressed }) => [styles.row, { gap: spacing.md }, style as ViewStyle, !disabled && pressed && { backgroundColor: colors.muted }]}
       {...props}
     >
-      <AnimatedView
-        style={[
-          styles.dot,
-          { backgroundColor: isDisabled ? colors.mutedForeground : colors.foreground },
-          animatedDotStyle,
-        ]}
-      />
-    </BrutalSurface>
+      <BrutalSurface
+        pressable={false}
+        elevation="flat"
+        borderWidth="control"
+        disabled={disabled}
+        testID={testID ? `${testID}-indicator` : undefined}
+        surfaceStyle={styles.box}
+        accessible={false}
+        importantForAccessibility="no-hide-descendants"
+      >
+        {selected ? (
+          <AnimatedView
+            testID={testID ? `${testID}-mark` : undefined}
+            style={[styles.mark, { backgroundColor: colors.foreground }, markStyle]}
+          />
+        ) : null}
+      </BrutalSurface>
+      <Text
+        importantForAccessibility="no-hide-descendants"
+        accessibilityElementsHidden
+        style={styles.label}
+        tone={disabled ? 'muted' : 'default'}
+      >
+        {label}
+      </Text>
+    </Pressable>
   );
 }
 
-// ---------------------------------------------------------------------------
-// Styles
-// ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
-  surface: {
-    width: RADIO_SIZE,
-    height: RADIO_SIZE,
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: touchTarget,
+  },
+  box: {
+    width: BOX,
+    height: BOX,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  dot: {
-    width: DOT_SIZE,
-    height: DOT_SIZE,
-    borderRadius: RADIO_RADIUS,
-  },
+  mark: { width: MARK, height: MARK },
+  label: { flexShrink: 1 },
 });
 
 export default RadioGroup;

@@ -28,6 +28,7 @@ import { StateMatrix } from './StateMatrix';
 const TYPE: { variant: TextVariant; sample: string }[] = [
   { variant: 'display', sample: 'Ship the parts' },
   { variant: 'title', sample: 'Delete account?' },
+  { variant: 'strong', sample: 'Save changes' },
   { variant: 'body', sample: 'Changes save when you leave this screen.' },
   { variant: 'label', sample: 'Shipping address' },
   { variant: 'mono', sample: 'AX-014  12.50  2026-10-31' },

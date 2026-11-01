@@ -1,188 +1,154 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, ViewProps, LayoutChangeEvent } from 'react-native';
+import { Pressable, StyleSheet, View, type LayoutChangeEvent, type PressableProps } from 'react-native';
 import Animated, {
   cancelAnimation,
+  Easing,
   useAnimatedStyle,
-  useReducedMotion,
   useSharedValue,
-  withTiming,
   withRepeat,
-  Easing
+  withSequence,
+  withTiming,
 } from 'react-native-reanimated';
 
-import { borderWidths, spacing, typography } from '../lib/colors';
+import { borderWidths, spacing } from '../lib/colors';
+import { useMotion } from '../lib/motion';
 import { useTheme } from '../lib/theme';
-import { cn } from '../lib/utils';
+import { Text } from './text';
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-export interface MarqueeProps extends ViewProps {
-  /**
-   * The text to scroll infinitely.
-   */
+export interface MarqueeProps extends Omit<PressableProps, 'children' | 'style'> {
+  /** The message to scroll. Announced once, in full. */
   text: string;
-  /**
-   * Speed in pixels per second.
-   * @default 60
-   */
+  /** Speed in pixels per second. @default 60 */
   speed?: number;
-  /**
-   * Divider string to place between repetitions.
-   * @default "   •   "
-   */
+  /** String placed after each repetition. @default "   •   " */
   divider?: string;
-  /**
-   * Visually mutes the marquee text and borders, and stops the scroll.
-   * @default false
-   */
+  /** Mutes the colours and stops the scroll. @default false */
   disabled?: boolean;
+  /** Style for the outer node. */
+  style?: PressableProps['style'];
 }
 
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
+// Enough copies to span the container plus one spare keeps the seam off-screen; the cap bounds work for tiny text.
+const MAX_COPIES = 8;
+
 export function Marquee({
   text,
   speed = 60,
   divider = '   •   ',
   disabled = false,
   style,
+  onPressIn,
+  onPressOut,
+  accessibilityLabel,
   ...props
 }: MarqueeProps) {
   const { colors } = useTheme();
-  // Reduced motion: constant scrolling is non-essential, so show the text static.
-  const reduceMotion = useReducedMotion();
-  const [textWidth, setTextWidth] = useState(0);
+  const { reduceMotion } = useMotion();
+  const [unitWidth, setUnitWidth] = useState(0);
   const [containerWidth, setContainerWidth] = useState(0);
-  const translateX = useSharedValue(0);
-
-  const content = `${text}${divider}`;
-  // Enough copies to cover the container with no gap, clamped to avoid
-  // over-rendering very long strings on small screens.
-  const repetitions =
-    textWidth > 0 && containerWidth > 0
-      ? Math.max(2, Math.min(Math.ceil(containerWidth / textWidth) + 1, 8))
-      : 5;
+  const [pressed, setPressed] = useState(false);
+  const progress = useSharedValue(0);
 
   const validSpeed = Number.isFinite(speed) && speed > 0 ? speed : 0;
+  const running = !disabled && !reduceMotion && validSpeed > 0 && text.length > 0 && unitWidth > 0;
+  const copies =
+    unitWidth > 0 && containerWidth > 0 ? Math.min(Math.ceil(containerWidth / unitWidth) + 1, MAX_COPIES) : 2;
 
   useEffect(() => {
-    cancelAnimation(translateX);
-    if (textWidth > 0 && !disabled && !reduceMotion && validSpeed > 0 && text.length > 0) {
-      const duration = (textWidth / validSpeed) * 1000;
-      translateX.value = 0;
-
-      translateX.value = withRepeat(
-        withTiming(-textWidth, {
-          duration,
-          easing: Easing.linear,
-        }),
+    if (!running || pressed) return;
+    const duration = (unitWidth / validSpeed) * 1000;
+    // Resume from where a press stopped it: finish the current lap, then loop whole laps.
+    const remaining = (1 - progress.value) * duration;
+    progress.value = withSequence(
+      withTiming(1, { duration: remaining, easing: Easing.linear }),
+      withRepeat(
+        withSequence(withTiming(0, { duration: 0 }), withTiming(1, { duration, easing: Easing.linear })),
         -1,
-        false
-      );
-    } else {
-      translateX.value = 0;
-    }
-  }, [textWidth, containerWidth, validSpeed, disabled, reduceMotion, content, text, translateX]);
+        false,
+      ),
+    );
+    return () => cancelAnimation(progress);
+  }, [running, pressed, unitWidth, validSpeed, progress]);
 
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateX: translateX.value }],
-    };
-  });
+  useEffect(() => {
+    if (!running) progress.value = 0;
+  }, [running, progress]);
 
-  const handleTextLayout = (event: LayoutChangeEvent) => {
-    const width = event.nativeEvent.layout.width;
-    if (width > 0 && width !== textWidth) {
-      setTextWidth(width);
-    }
+  const trackStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: -progress.value * unitWidth }],
+  }));
+
+  const onContainerLayout = (e: LayoutChangeEvent) => setContainerWidth(e.nativeEvent.layout.width);
+  const onUnitLayout = (e: LayoutChangeEvent) => {
+    const w = e.nativeEvent.layout.width;
+    if (w > 0 && w !== unitWidth) setUnitWidth(w);
   };
 
-  const handleContainerLayout = (event: LayoutChangeEvent) => {
-    const width = event.nativeEvent.layout.width;
-    if (width > 0 && width !== containerWidth) {
-      setContainerWidth(width);
-    }
-  };
+  const color = disabled ? colors.mutedForeground : colors.foreground;
+  const content = `${text}${divider}`;
 
   return (
-    <View
-      style={cn(
-        styles.container,
-        { paddingVertical: spacing.sm, backgroundColor: colors.background, borderColor: colors.border },
-        disabled && { backgroundColor: colors.muted, borderColor: colors.mutedForeground },
-        style
-      )}
-      onLayout={handleContainerLayout}
-      accessibilityRole="text"
-      accessibilityLabel={text}
+    <Pressable
       {...props}
+      accessible
+      accessibilityRole="text"
+      accessibilityLabel={accessibilityLabel ?? text}
+      onLayout={onContainerLayout}
+      onPressIn={(e) => {
+        setPressed(true);
+        onPressIn?.(e);
+      }}
+      onPressOut={(e) => {
+        setPressed(false);
+        onPressOut?.(e);
+      }}
+      style={(state) => [
+        styles.container,
+        {
+          backgroundColor: disabled ? colors.muted : colors.background,
+          borderColor: disabled ? colors.mutedForeground : colors.border,
+        },
+        typeof style === 'function' ? style(state) : style,
+      ]}
     >
-      {/* The repeated track is decorative: the outer label carries the
-          announcement so screen readers don't read the text 5×. */}
-      <Animated.View
-        style={[styles.track, animatedStyle]}
-        accessible={false}
-        importantForAccessibility="no-hide-descendants"
-      >
-        <View onLayout={handleTextLayout} style={styles.textWrapper}>
-          <Text
-            style={cn(
-              styles.text,
-              { fontSize: typography['3xl'], color: colors.foreground },
-              disabled && { color: colors.mutedForeground }
-            )}
-            numberOfLines={1}
-            maxFontSizeMultiplier={1.3}
-          >
-            {content}
-          </Text>
-        </View>
-
-        {textWidth > 0 && !reduceMotion &&
-          Array.from({ length: repetitions - 1 }, (_, i) => (
-            <View key={i} style={styles.textWrapper}>
-              <Text
-                style={cn(
-                  styles.text,
-                  { fontSize: typography['3xl'], color: colors.foreground },
-                  disabled && { color: colors.mutedForeground }
-                )}
-                numberOfLines={1}
-                maxFontSizeMultiplier={1.3}
+      {reduceMotion ? (
+        <Text variant="title" numberOfLines={1} style={[styles.text, { color }]}>
+          {text}
+        </Text>
+      ) : (
+        <View style={styles.clip} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+          <Animated.View style={[styles.track, trackStyle]}>
+            {Array.from({ length: copies }, (_, i) => (
+              <View
+                key={i}
+                testID={i === 0 ? 'marquee-copy' : 'marquee-duplicate'}
+                onLayout={i === 0 ? onUnitLayout : undefined}
+                style={styles.unit}
               >
-                {content}
-              </Text>
-            </View>
-          ))}
-      </Animated.View>
-    </View>
+                <Text variant="title" numberOfLines={1} style={[styles.text, { color }]}>
+                  {content}
+                </Text>
+              </View>
+            ))}
+          </Animated.View>
+        </View>
+      )}
+    </Pressable>
   );
 }
 
-// ---------------------------------------------------------------------------
-// Styles
-// ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
   container: {
     alignSelf: 'stretch',
     overflow: 'hidden',
     borderTopWidth: borderWidths.container,
     borderBottomWidth: borderWidths.container,
+    paddingVertical: spacing.sm,
   },
-  track: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  textWrapper: {
-    flexDirection: 'row',
-  },
-  text: {
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
-  },
+  clip: { overflow: 'hidden' },
+  track: { flexDirection: 'row', alignItems: 'center' },
+  unit: { flexDirection: 'row', flexShrink: 0 },
+  text: { textTransform: 'uppercase' },
 });
 
 export default Marquee;

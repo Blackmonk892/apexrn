@@ -6,39 +6,41 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
+  type ComponentRef,
   type ReactElement,
   type ReactNode,
 } from 'react';
 import {
+  AccessibilityInfo,
+  findNodeHandle,
   type GestureResponderEvent,
   Modal,
+  Platform,
   Pressable,
   type PressableProps,
   StyleSheet,
-  Text,
-  type TextProps,
+  type Text as RNText,
   View,
   type ViewProps,
 } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, {
-  Easing,
   interpolate,
   runOnJS,
   useAnimatedStyle,
-  useReducedMotion,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
 
-import { spacing, typography } from '../lib/colors';
+import { spacing } from '../lib/colors';
+import { useMotion } from '../lib/motion';
 import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
 import BrutalSurface from './brutal-surface';
+import Text, { type TextProps } from './text';
 
-// ---------------------------------------------------------------------------
-// Types & Context
-// ---------------------------------------------------------------------------
 interface DialogContextState {
   open: boolean;
   setOpen: (open: boolean) => void;
@@ -46,92 +48,79 @@ interface DialogContextState {
 
 const DialogContext = createContext<DialogContextState | undefined>(undefined);
 
-function useDialogContext() {
+function useDialogContext(part: string) {
   const context = useContext(DialogContext);
   if (!context) {
-    throw new Error('Dialog components must be used within a <Dialog />');
+    throw new Error(`${part} must be used within Dialog`);
   }
   return context;
 }
 
 export interface DialogProps {
-  /**
-   * The controlled open state of the dialog. Omit for an uncontrolled dialog.
-   */
+  /** Controlled open state. Omit for an uncontrolled dialog. */
   open?: boolean;
-  /**
-   * Initial open state when uncontrolled.
-   * @default false
-   */
+  /** Initial open state when uncontrolled. @default false */
   defaultOpen?: boolean;
-  /**
-   * Callback fired when the open state changes.
-   */
   onOpenChange?: (open: boolean) => void;
   children: ReactNode;
 }
 
 export interface DialogContentProps extends ViewProps {
-  /**
-   * Callback fired when the backdrop is pressed. Replaces the default
-   * behaviour of closing the dialog.
-   */
+  /** Runs on a scrim tap instead of closing. The scrim then leaves the screen-reader tree; back still closes. */
   onInteractOutside?: () => void;
   children?: ReactNode;
 }
 
-// ---------------------------------------------------------------------------
-// Design tokens
-// ---------------------------------------------------------------------------
-const DIALOG_SHADOW_OFFSET = 8;
-const SCRIM_OPACITY = 0.5;
+export interface DialogTriggerProps extends Omit<PressableProps, 'children'> {
+  /** Clone the single child and inject `onPress` instead of rendering a Pressable. */
+  asChild?: boolean;
+  children?: ReactNode;
+}
 
-// ---------------------------------------------------------------------------
-// Components
-// ---------------------------------------------------------------------------
+export type DialogCloseProps = DialogTriggerProps;
+
+const MAX_WIDTH = 400;
+const ENTER_SCALE = 0.96;
 
 export function Dialog({ open: controlledOpen, defaultOpen = false, onOpenChange, children }: DialogProps) {
   const [uncontrolledOpen, setUncontrolledOpen] = useState(defaultOpen);
   const isControlled = controlledOpen !== undefined;
-
   const open = isControlled ? controlledOpen : uncontrolledOpen;
 
-  const setOpen = useCallback((newState: boolean) => {
-    if (!isControlled) {
-      setUncontrolledOpen(newState);
-    }
-    onOpenChange?.(newState);
-  }, [isControlled, onOpenChange]);
+  const setOpen = useCallback(
+    (next: boolean) => {
+      if (!isControlled) setUncontrolledOpen(next);
+      onOpenChange?.(next);
+    },
+    [isControlled, onOpenChange],
+  );
 
   const context = useMemo(() => ({ open, setOpen }), [open, setOpen]);
 
-  return (
-    <DialogContext.Provider value={context}>
-      {children}
-    </DialogContext.Provider>
-  );
+  return <DialogContext.Provider value={context}>{children}</DialogContext.Provider>;
 }
 
-export function DialogTrigger({
+// Trigger and Close differ only in the state they set, so they share one press wrapper.
+function PressPart({
+  part,
+  next,
+  asChild,
   children,
   onPress,
-  asChild,
   ...props
-}: PressableProps & { asChild?: boolean }) {
-  const { setOpen } = useDialogContext();
+}: DialogTriggerProps & { part: string; next: boolean }) {
+  const { setOpen } = useDialogContext(part);
 
   const handlePress = (e: GestureResponderEvent) => {
-    setOpen(true);
     onPress?.(e);
+    setOpen(next);
   };
 
-  if (asChild && isValidElement(children)) {
-    // Chain the child's own onPress instead of dropping it, and only
-    // inject press handling (never blindly spread PressableProps into an
-    // arbitrary child whose props may not accept them).
-    const child = children as ReactElement<{
-      onPress?: (e: GestureResponderEvent) => void;
-    }>;
+  if (asChild) {
+    if (!isValidElement(children)) {
+      throw new Error(`${part} with asChild needs a single React element child`);
+    }
+    const child = children as ReactElement<{ onPress?: (e: GestureResponderEvent) => void }>;
     return cloneElement(child, {
       onPress: (e: GestureResponderEvent) => {
         child.props.onPress?.(e);
@@ -140,170 +129,124 @@ export function DialogTrigger({
     });
   }
 
-  // `onPress` is destructured above, so spreading `props` here cannot
-  // clobber the open handler.
   return (
-    <Pressable accessibilityRole="button" onPress={handlePress} {...props}>
+    <Pressable accessibilityRole="button" hitSlop={8} onPress={handlePress} {...props}>
       {children}
     </Pressable>
   );
 }
 
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+export function DialogTrigger(props: DialogTriggerProps) {
+  return <PressPart part="DialogTrigger" next {...props} />;
+}
 
-export function DialogContent({
-  children,
-  onInteractOutside,
-  style,
-  ...props
-}: DialogContentProps) {
-  const { open, setOpen } = useDialogContext();
-  const { colors } = useTheme();
-  const reduceMotion = useReducedMotion();
+export function DialogClose(props: DialogCloseProps) {
+  return <PressPart part="DialogClose" next={false} {...props} />;
+}
+
+export function DialogContent({ children, onInteractOutside, style, ...props }: DialogContentProps) {
+  const { open, setOpen } = useDialogContext('DialogContent');
+  const { colors, scrimOpacity } = useTheme();
+  const { reduceMotion, enter, exit } = useMotion();
   // The Modal stays mounted until the exit animation finishes.
-  const [isVisible, setIsVisible] = useState(open);
-
+  const [mounted, setMounted] = useState(open);
   const progress = useSharedValue(0);
 
   useEffect(() => {
     if (open) {
-      setIsVisible(true);
-      progress.value = withTiming(1, { duration: reduceMotion ? 0 : 150, easing: Easing.out(Easing.quad) });
+      setMounted(true);
+      progress.value = withTiming(1, enter);
     } else {
-      // Also runs on first mount while closed: 0 -> 0 finishes immediately
-      // and unmounting an already-hidden Modal is a no-op.
-      progress.value = withTiming(0, { duration: reduceMotion ? 0 : 100, easing: Easing.in(Easing.quad) }, (finished) => {
-        if (finished) {
-          runOnJS(setIsVisible)(false);
-        }
+      // On a first closed render 0 -> 0 completes at once and unmounting a hidden Modal is a no-op.
+      progress.value = withTiming(0, exit, (finished) => {
+        if (finished) runOnJS(setMounted)(false);
       });
     }
-  }, [open, reduceMotion, progress]);
+    // enter/exit change identity only when reduced motion flips, which is already a dependency.
+  }, [open, reduceMotion]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleBackdropPress = () => {
-    if (onInteractOutside) {
-      onInteractOutside();
-    } else {
-      setOpen(false);
-    }
-  };
-
-  const backdropAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: progress.value * SCRIM_OPACITY,
-  }));
-
-  const contentAnimatedStyle = useAnimatedStyle(() => ({
+  const scrimStyle = useAnimatedStyle(() => ({ opacity: progress.value * scrimOpacity }));
+  const panelStyle = useAnimatedStyle(() => ({
     opacity: progress.value,
-    transform: [
-      { scale: interpolate(progress.value, [0, 1], [0.9, 1.0]) }
-    ],
+    transform: reduceMotion ? [] : [{ scale: interpolate(progress.value, [0, 1], [ENTER_SCALE, 1]) }],
   }));
 
   return (
     <Modal
       transparent
-      visible={isVisible}
+      statusBarTranslucent
+      visible={mounted}
       animationType="none"
       onRequestClose={() => setOpen(false)}
-      accessibilityViewIsModal
     >
-      <View style={[styles.modalContainer, { padding: spacing.lg }]}>
-        <AnimatedPressable
-          style={[styles.backdrop, { backgroundColor: colors.scrim }, backdropAnimatedStyle]}
-          onPress={handleBackdropPress}
-          accessibilityRole="button"
-          accessibilityLabel="Close Dialog"
-        />
-
-        {/* paddingRight makes room for the hard shadow's margin so the
-            surface + shadow together are centred, not the surface alone. */}
-        <Animated.View
-          style={[styles.contentPositioner, { paddingRight: DIALOG_SHADOW_OFFSET }, style, contentAnimatedStyle]}
-          {...props}
-        >
-          <BrutalSurface
-            style={styles.dialogWrapper}
-            surfaceStyle={[styles.surface, { padding: spacing.xl, gap: spacing.md, backgroundColor: colors.background }]}
-            elevation="overlay"
-            borderWidth="container"
-            pressable={false}
-          >
-            {children}
-          </BrutalSurface>
-        </Animated.View>
-      </View>
+      {/* Android renders a Modal in its own window, so gestures inside the panel need their own root. */}
+      <GestureHandlerRootView style={styles.fill}>
+        <View accessibilityViewIsModal style={[styles.fill, styles.center, { padding: spacing.lg }]}>
+          <Animated.View
+            pointerEvents="none"
+            style={[StyleSheet.absoluteFill, { backgroundColor: colors.scrim }, scrimStyle]}
+          />
+          <Pressable
+            style={StyleSheet.absoluteFill}
+            onPress={onInteractOutside ?? (() => setOpen(false))}
+            accessible={!onInteractOutside}
+            accessibilityRole="button"
+            accessibilityLabel="Close dialog"
+          />
+          <Animated.View style={[styles.positioner, panelStyle]} pointerEvents="box-none">
+            <BrutalSurface
+              style={styles.panel}
+              surfaceStyle={{ padding: spacing.xl }}
+              elevation="overlay"
+              pressable={false}
+            >
+              <View style={cn({ gap: spacing.md }, style)} {...props}>
+                {children}
+              </View>
+            </BrutalSurface>
+          </Animated.View>
+        </View>
+      </GestureHandlerRootView>
     </Modal>
   );
 }
 
 export function DialogHeader({ style, ...props }: ViewProps) {
-  return (
-    <View style={cn(styles.header, { gap: spacing.xs }, style)} {...props} />
-  );
+  return <View style={cn({ gap: spacing.xs }, style)} {...props} />;
 }
 
 export function DialogFooter({ style, ...props }: ViewProps) {
-  return (
-    <View style={cn(styles.footer, { gap: spacing.sm, marginTop: spacing.md }, style)} {...props} />
-  );
+  return <View style={cn(styles.footer, { gap: spacing.sm }, style)} {...props} />;
 }
 
-export function DialogTitle({ style, ...props }: TextProps) {
-  const { colors } = useTheme();
-  return (
-    <Text
-      style={cn(styles.title, { fontSize: typography.xl, color: colors.foreground }, style)}
-      accessibilityRole="header"
-      maxFontSizeMultiplier={1.3}
-      {...props}
-    />
-  );
+export function DialogTitle(props: TextProps) {
+  useDialogContext('DialogTitle');
+  const ref = useRef<ComponentRef<typeof RNText>>(null);
+
+  // The title mounts with the Modal content, so mount time is open time.
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+    // The Modal window must be presented and laid out before native focus can move into it.
+    const timer = setTimeout(() => {
+      const node = ref.current ? findNodeHandle(ref.current) : null;
+      if (node) AccessibilityInfo.setAccessibilityFocus(node);
+    }, 150);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // React 19 passes `ref` through as a prop and Text spreads its props onto the native node.
+  return <Text variant="title" accessibilityRole="header" {...props} {...({ ref } as object)} />;
 }
 
-export function DialogDescription({ style, ...props }: TextProps) {
-  const { colors } = useTheme();
-  return (
-    <Text
-      style={cn({ fontSize: typography.md, color: colors.mutedForeground }, style)}
-      maxFontSizeMultiplier={1.3}
-      {...props}
-    />
-  );
+export function DialogDescription(props: TextProps) {
+  useDialogContext('DialogDescription');
+  return <Text tone="muted" {...props} />;
 }
 
-// ---------------------------------------------------------------------------
-// Styles
-// ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  backdrop: {
-    ...StyleSheet.absoluteFill,
-    zIndex: 0,
-  },
-  contentPositioner: {
-    alignSelf: 'stretch',
-    alignItems: 'center',
-    zIndex: 1,
-  },
-  dialogWrapper: {
-    width: '100%',
-    maxWidth: 400,
-  },
-  surface: {},
-  header: {
-    flexDirection: 'column',
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-  },
-  title: {
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
-  },
+  fill: { flex: 1 },
+  center: { justifyContent: 'center', alignItems: 'center' },
+  positioner: { alignSelf: 'stretch', alignItems: 'center' },
+  panel: { width: '100%', maxWidth: MAX_WIDTH },
+  footer: { flexDirection: 'row', justifyContent: 'flex-end', flexWrap: 'wrap' },
 });

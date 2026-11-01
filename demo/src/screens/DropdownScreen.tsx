@@ -8,26 +8,29 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  PlusIcon,
+  useTheme,
 } from '@apexrn/ui';
 import Layout from '../components/Layout';
 import Section, { Caption } from '../components/Section';
 
 export default function DropdownScreen({ onBack }: { onBack: () => void }) {
+  const { colors } = useTheme();
   const [open, setOpen] = useState(false);
   const [picked, setPicked] = useState('none');
 
   return (
-    <Layout title="DROPDOWN MENU" onBack={onBack}>
-      <Section title="Uncontrolled" note="Anchored under the trigger. Close with an item, the backdrop, Android back or Escape.">
+    <Layout id="dropdown" title="DROPDOWN MENU" onBack={onBack}>
+      <Section title="Uncontrolled" note="Anchored under the trigger. Close with an item, the outside layer or Android back.">
         <View style={styles.row}>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button title="Actions" />
+              <Button title="Actions" testID="dropdown-open" />
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-              <DropdownMenuItem label="Edit profile" onPress={() => setPicked('edit')} />
-              <DropdownMenuItem label="Account settings" onPress={() => setPicked('settings')} />
-              <DropdownMenuItem label="Log out" onPress={() => setPicked('logout')} />
+              <DropdownMenuItem label="Edit profile" leading={<PlusIcon size={20} color={colors.foreground} />} onSelect={() => setPicked('edit')} />
+              <DropdownMenuItem label="Account settings" onSelect={() => setPicked('settings')} />
+              <DropdownMenuItem label="Delete account" destructive onSelect={() => setPicked('delete')} />
             </DropdownMenuContent>
           </DropdownMenu>
         </View>
@@ -39,7 +42,7 @@ export default function DropdownScreen({ onBack }: { onBack: () => void }) {
           <DropdownMenu open={open} onOpenChange={setOpen}>
             <DropdownMenuTrigger asChild>
               <Pressable accessibilityRole="button" accessibilityLabel="Open profile menu">
-                <Avatar initials="JD" size="lg" withShadow />
+                <Avatar initials="JD" size="lg" />
               </Pressable>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
