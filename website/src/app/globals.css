@@ -1,0 +1,530 @@
+@import "tailwindcss";
+@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/preset.css";
+
+/* Tokens. Values are the locked ones in rework/DESIGN.md section 1.2; the four blocks are
+   neo light, neo dark, raw light and raw dark. The preset is data-preset on <html>. */
+:root {
+  --ax-bg: #ffffff;
+  --ax-surface: #ffffff;
+  --ax-fg: #000000;
+  --ax-muted: #f5f5f5;
+  --ax-muted-fg: #6b6b6b;
+  --ax-border: #000000;
+  --ax-ring: #3d5afe;
+  --ax-shadow: #000000;
+  --ax-scrim: rgb(0 0 0 / 0.5);
+  --ax-error: #d32f2f;
+  --ax-paper-light: #ffffff;
+  --ax-paper-dark: #1a1a1a;
+  color-scheme: light;
+}
+.dark {
+  --ax-bg: #1a1a1a;
+  --ax-surface: #222222;
+  --ax-fg: #ffffff;
+  --ax-muted: #2a2a2a;
+  --ax-muted-fg: #9e9e9e;
+  --ax-border: #ffffff;
+  --ax-ring: #8c9eff;
+  --ax-shadow: #5a5a5a;
+  --ax-scrim: rgb(0 0 0 / 0.7);
+  --ax-error: #ef5350;
+  color-scheme: dark;
+}
+:root[data-preset="raw"] {
+  --ax-paper-light: #f2f0eb;
+  --ax-paper-dark: #111111;
+}
+:root[data-preset="raw"]:not(.dark) {
+  --ax-bg: #f2f0eb;
+  --ax-surface: #f2f0eb;
+  --ax-fg: #111111;
+  --ax-muted: #dedad2;
+  --ax-muted-fg: #5a5750;
+  --ax-border: #111111;
+  --ax-ring: #111111;
+  --ax-shadow: #111111;
+  --ax-error: #c8102e;
+}
+:root[data-preset="raw"].dark {
+  --ax-bg: #111111;
+  --ax-surface: #111111;
+  --ax-fg: #f2f0eb;
+  --ax-muted: #2b2925;
+  --ax-muted-fg: #a8a399;
+  --ax-border: #f2f0eb;
+  --ax-ring: #f2f0eb;
+  --ax-shadow: #6e6a62;
+  --ax-error: #ff5a5f;
+}
+
+/* Fumadocs variables, mapped. Declared unlayered so they win over the preset. */
+:root,
+.dark {
+  --color-fd-background: var(--ax-bg);
+  --color-fd-foreground: var(--ax-fg);
+  --color-fd-muted: var(--ax-muted);
+  --color-fd-muted-foreground: var(--ax-muted-fg);
+  --color-fd-popover: var(--ax-surface);
+  --color-fd-popover-foreground: var(--ax-fg);
+  --color-fd-card: var(--ax-surface);
+  --color-fd-card-foreground: var(--ax-fg);
+  --color-fd-border: var(--ax-border);
+  --color-fd-primary: var(--ax-fg);
+  --color-fd-primary-foreground: var(--ax-bg);
+  --color-fd-secondary: var(--ax-muted);
+  --color-fd-secondary-foreground: var(--ax-fg);
+  --color-fd-accent: var(--ax-muted);
+  --color-fd-accent-foreground: var(--ax-fg);
+  --color-fd-ring: var(--ax-ring);
+  --color-fd-overlay: var(--ax-scrim);
+  --color-fd-error: var(--ax-error);
+  --fd-layout-width: 1400px;
+}
+.dark #nd-sidebar {
+  --color-fd-muted: var(--ax-muted);
+  --color-fd-secondary: var(--ax-muted);
+  --color-fd-muted-foreground: var(--ax-muted-fg);
+}
+
+html {
+  scroll-padding-top: 5rem;
+  -webkit-tap-highlight-color: transparent;
+}
+body {
+  background: var(--ax-bg);
+  color: var(--ax-fg);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  overflow-x: clip;
+  touch-action: manipulation;
+}
+@media (pointer: fine) {
+  html {
+    overscroll-behavior: none;
+  }
+}
+
+/* Square, flat, no blur. Fumadocs ships rounded corners, soft shadows and translucent bars. */
+*,
+*::before,
+*::after {
+  border-radius: 0 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+[class*="shadow-"] {
+  box-shadow: none;
+}
+#nd-subnav {
+  background: var(--ax-bg) !important;
+}
+#nd-subnav [data-header-body] {
+  border-bottom: 2px solid var(--ax-border);
+}
+#nd-sidebar {
+  border-inline-end: 2px solid var(--ax-border);
+  background: var(--ax-bg);
+}
+
+/* Type */
+h1,
+h2,
+h3,
+h4 {
+  font-weight: 900 !important;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+p,
+li,
+dd {
+  text-wrap: pretty;
+}
+.prose :where(h2) {
+  letter-spacing: -0.025em;
+}
+.prose :where(h3) {
+  letter-spacing: -0.02em;
+}
+.ax-label,
+.ax-tabs button,
+.ax-segment button,
+.ax-mini,
+.ax-part-number,
+.prose :where(th),
+#nd-sidebar [data-fd-separator],
+#nd-sidebar p:where(.ax-group),
+.ax-wordmark {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+  line-height: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+}
+.ax-wordmark {
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  font-weight: 900;
+}
+.ax-part-label {
+  margin-bottom: 8px;
+}
+.ax-part-number {
+  display: inline-block;
+  min-width: 3.9em;
+  margin-inline-end: 8px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--ax-muted-fg);
+}
+#nd-sidebar a[data-active="true"] .ax-part-number {
+  color: inherit;
+}
+
+/* Sidebar group titles and items */
+#nd-sidebar [role="separator"],
+#nd-sidebar p {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  color: var(--ax-muted-fg);
+}
+a[data-active="true"]:where(#nd-sidebar *, [role="dialog"] *) {
+  background: var(--ax-fg) !important;
+  color: var(--ax-bg) !important;
+}
+#nd-sidebar a:hover,
+[role="dialog"] a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+#nd-sidebar a[data-active="true"]::before {
+  display: none !important;
+}
+
+/* Focus, skip link */
+:focus-visible {
+  outline: 2px solid var(--ax-ring) !important;
+  outline-offset: 2px !important;
+  box-shadow: none !important;
+}
+.ax-skip {
+  position: fixed;
+  left: 8px;
+  top: -64px;
+  z-index: 100;
+  padding: 8px 12px;
+  background: var(--ax-fg);
+  color: var(--ax-bg);
+  font-weight: 700;
+}
+.ax-skip:focus {
+  top: 8px;
+}
+[id] {
+  scroll-margin-top: 5rem;
+}
+
+/* Page */
+#nd-page {
+  min-width: 0;
+}
+#nd-page article {
+  max-width: 760px;
+  min-width: 0;
+  margin-inline: auto;
+}
+.prose {
+  --tw-prose-body: var(--ax-fg);
+  color: var(--ax-fg);
+}
+.prose :where(a:not([data-card])) {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 2px;
+  font-weight: 700;
+}
+.prose :where(code):not(pre code) {
+  border: 2px solid var(--ax-border);
+  background: var(--ax-muted);
+  padding: 0 4px;
+}
+.ax-page-actions {
+  margin-block: 16px 24px;
+}
+.ax-page-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 2px solid var(--ax-border);
+  background: var(--ax-bg);
+  color: var(--ax-fg);
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+}
+.ax-page-actions button:hover {
+  background: var(--ax-fg);
+  color: var(--ax-bg);
+}
+.ax-page-actions button svg {
+  color: inherit !important;
+}
+
+/* Code blocks, tables */
+figure.shiki {
+  border: 2px solid var(--ax-border) !important;
+  background: var(--ax-surface) !important;
+  box-shadow: none;
+}
+figure.shiki figcaption {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.prose :where(table) {
+  border-collapse: collapse;
+  border: 2px solid var(--ax-border);
+  width: 100%;
+}
+.prose :where(thead th) {
+  border-bottom: 2px solid var(--ax-border);
+  text-align: start;
+  padding: 8px 12px;
+  white-space: nowrap;
+}
+.prose :where(tbody td, tbody th) {
+  border-top: 1px solid var(--ax-border);
+  padding: 8px 12px;
+  vertical-align: top;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  font-family: inherit;
+  font-size: inherit;
+}
+.prose :where(tbody td:first-child) {
+  white-space: nowrap;
+}
+.ax-table-scroll {
+  overflow-x: auto;
+  margin-block: 24px;
+}
+.ax-swatch {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--ax-border);
+  vertical-align: -2px;
+}
+
+/* Tabs (fumadocs Tabs: Installation CLI / Manual) */
+[role="tablist"]:not(.ax-tabs) button {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Theme controls */
+.ax-theme-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.ax-segment {
+  display: inline-flex;
+  border: 2px solid var(--ax-border);
+}
+.ax-segment button {
+  min-height: 32px;
+  min-width: 44px;
+  padding: 0 8px;
+  background: var(--ax-bg);
+  color: var(--ax-fg);
+  cursor: pointer;
+}
+.ax-segment button + button {
+  border-inline-start: 2px solid var(--ax-border);
+}
+.ax-segment button[aria-pressed="true"] {
+  background: var(--ax-fg);
+  color: var(--ax-bg);
+}
+.ax-segment button:hover:not([aria-pressed="true"]) {
+  background: var(--ax-muted);
+}
+.ax-sidebar-theme {
+  display: block;
+}
+@media (min-width: 768px) {
+  .ax-sidebar-theme {
+    display: none;
+  }
+}
+
+/* Header search box */
+#nd-subnav button[data-search-full],
+#nd-subnav button:where([class*="max-w-"]) {
+  border: 2px solid var(--ax-border);
+  background: var(--ax-bg);
+}
+
+/* ComponentPreview */
+.ax-preview {
+  margin-block: 24px;
+  border: 2px solid var(--ax-border);
+  background: var(--ax-surface);
+  box-shadow: 4px 4px 0 var(--ax-shadow);
+  min-width: 0;
+}
+.ax-preview-bar {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 8px;
+  border-bottom: 2px solid var(--ax-border);
+  min-width: 0;
+}
+.ax-tabs {
+  display: flex;
+}
+.ax-tabs button {
+  min-height: 40px;
+  padding: 0 16px;
+  background: var(--ax-bg);
+  color: var(--ax-fg);
+  cursor: pointer;
+}
+.ax-tabs button + button {
+  border-inline-start: 2px solid var(--ax-border);
+}
+.ax-tabs button[aria-selected="true"] {
+  background: var(--ax-fg);
+  color: var(--ax-bg);
+}
+.ax-preview-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-inline: 8px;
+}
+.ax-mini {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 8px;
+  border: 2px solid var(--ax-border);
+  background: var(--ax-bg);
+  color: var(--ax-fg);
+  cursor: pointer;
+  text-decoration: none !important;
+}
+.ax-mini:hover,
+.ax-mini[aria-pressed="true"] {
+  background: var(--ax-fg);
+  color: var(--ax-bg);
+}
+.ax-preview-stage {
+  position: relative;
+  overflow: hidden;
+}
+.ax-preview-stage[data-box="light"] {
+  background: var(--ax-paper-light);
+}
+.ax-preview-stage[data-box="dark"] {
+  background: var(--ax-paper-dark);
+}
+.ax-shot {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  opacity: 1;
+  transition: opacity 120ms linear;
+}
+.ax-frame {
+  position: relative;
+  display: block;
+  width: 100%;
+  border: 0;
+  opacity: 0;
+  transition: opacity 120ms linear;
+}
+.ax-preview-stage[data-ready] .ax-shot {
+  opacity: 0;
+}
+.ax-preview-stage[data-ready] .ax-frame {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ax-shot,
+  .ax-frame {
+    transition: none;
+  }
+}
+.ax-preview-error {
+  position: absolute;
+  inset-inline: 8px;
+  bottom: 8px;
+  margin: 0;
+  padding: 8px;
+  border: 2px solid var(--ax-error);
+  background: var(--ax-bg);
+  font-size: 14px;
+}
+.ax-preview-code {
+  min-width: 0;
+}
+.ax-preview-code figure.shiki {
+  margin: 0;
+  border: 0 !important;
+}
+
+/* Search dialog */
+[role="dialog"]:has(input[type="text"], input:not([type])) {
+  border: 3px solid var(--ax-border) !important;
+  box-shadow: 6px 6px 0 var(--ax-shadow) !important;
+  background: var(--ax-surface);
+}
+[role="listbox"] [role="option"] {
+  border-bottom: 1px solid var(--ax-border);
+}
+[role="listbox"] [role="option"][aria-selected="true"] {
+  background: var(--ax-fg) !important;
+  color: var(--ax-bg) !important;
+}
+[role="listbox"] [role="option"][aria-selected="true"] * {
+  color: inherit !important;
+}
+
+/* Placeholder pages (landing, 404) */
+.ax-placeholder {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 64px 16px;
+}
+.ax-placeholder h1 {
+  font-size: clamp(2rem, 6vw, 3.5rem);
+  line-height: 1.05;
+  margin-block: 8px 16px;
+}
+.ax-placeholder p {
+  margin-block: 12px;
+}
+.ax-placeholder a {
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}

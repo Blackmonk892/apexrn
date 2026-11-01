@@ -37,23 +37,31 @@ function knownGaps() {
 }
 const gaps = knownGaps();
 
+// Overlays open a Modal sized to the iframe viewport, so their examples need a taller box.
+const OVERLAY_SLUGS = new Set(["dialog", "alert-dialog", "sheet", "drawer", "select", "date-picker", "dropdown-menu"]);
+const OVERLAY_MIN_HEIGHT = 480;
+// docs/components.md snippets with known errors; the demo example is the usage for these.
+const BROKEN_USAGE = new Set(["drawer", "dropdown-menu", "empty-state", "checkbox", "toast", "toaster"]);
+
 const fence = (code, lang, meta = "") => {
   const longest = Math.max(2, ...[...code.matchAll(/`+/g)].map((m) => m[0].length));
   const ticks = "`".repeat(longest + 1);
   return `${ticks}${lang}${meta ? ` ${meta}` : ""}\n${code.replace(/\n$/, "")}\n${ticks}`;
 };
+// Prose from JSDoc: pipes always break a table cell; < and { break MDX outside inline code.
 const cell = (s) =>
   String(s ?? "")
-    .replaceAll("|", "\|")
     .replaceAll("\n", " ")
-    .replaceAll("<", "&lt;")
-    .replaceAll("{", "\{");
-const code = (s) => `\`${String(s).replaceAll("\n", " ").replaceAll("|", "\|")}\``;
+    .split(/(`[^`]*`)/)
+    .map((part, i) => (i % 2 ? part : part.replaceAll("<", "\\<").replaceAll("{", "\\{")))
+    .join("")
+    .replaceAll("|", "\\|");
+const code = (s) => `\`${String(s).replaceAll("\n", " ").replaceAll("|", "\\|")}\``;
 const yaml = (s) => JSON.stringify(s);
 
 function propsTable(props) {
   const rows = props.map(
-    (p) => `| ${code(p.name)} | ${code(p.type)} | ${p.default ? code(p.default) : p.optional ? "none" : "required"} | ${cell(p.description) || "none"} |`,
+    (p) => `| ${code(p.name)} | ${code(p.type)} | ${p.default ? code(p.default) : p.optional ? "—" : "required"} | ${cell(p.description) || "—"} |`,
   );
   return ["| Prop | Type | Default | Description |", "| --- | --- | --- | --- |", ...rows].join("\n");
 }
@@ -63,7 +71,8 @@ function readExample(slug, id) {
   return existsSync(file) ? readFileSync(file, "utf8").replaceAll("\r", "") : null;
 }
 
-function preview(slug, ex, source, extra = "") {
+function preview(slug, ex, source) {
+  const extra = OVERLAY_SLUGS.has(slug) ? ` minHeight={${OVERLAY_MIN_HEIGHT}}` : "";
   return `<ComponentPreview slug="${slug}" id="${ex.id}" title=${yaml(ex.title)}${extra}>\n\n${fence(source, "tsx")}\n\n</ComponentPreview>`;
 }
 
@@ -80,7 +89,7 @@ function page(item, index) {
   if (demo) out.push(preview(slug, demo.ex, demo.source), "");
 
   out.push("## Installation", "");
-  out.push(`<Tabs items={["CLI", "Manual"]}>`, `<Tab value="CLI">`, "", fence(`npx apexrn add ${slug}`, "bash"), "", `</Tab>`, `<Tab value="Manual">`, "");
+  out.push(`<Tabs items={["CLI", "Manual"]}>`, `<Tab>`, "", fence(`npx apexrn add ${slug}`, "bash"), "", `</Tab>`, `<Tab>`, "");
   out.push("Copy the source below into your app. The shared files it imports come from `npx apexrn init` and the items listed under Ships with.", "");
   for (const f of regFile.files) out.push(fence(f.content.replaceAll("\r", ""), "tsx", `title=${yaml(`components/apexrn/${f.path.split("/").pop()}`)}`), "");
   const ships = (item.registryDependencies ?? []).map((d) => (componentSlugs.has(d) ? `[${code(d)}](/docs/components/${d})` : code(d)));
@@ -89,8 +98,10 @@ function page(item, index) {
   out.push(item.dependencies?.length ? fence(`npx expo install ${item.dependencies.join(" ")}`, "bash") : "None.", "", `</Tab>`, `</Tabs>`, "");
 
   out.push("## Usage", "");
-  if (!c.usage) out.push(fence(`import { ${[c.name, ...c.subComponents].join(", ")} } from "@/components/apexrn";`, "tsx"), "");
-  if (c.usage) {
+  if (!c.usage && !(BROKEN_USAGE.has(slug) && demo)) out.push(fence(`import { ${[c.name, ...c.subComponents].join(", ")} } from "@/components/apexrn";`, "tsx"), "");
+  if (BROKEN_USAGE.has(slug) && demo) {
+    out.push(fence(demo.source, "tsx"), "");
+  } else if (c.usage) {
     out.push(fence(c.usage.code, "tsx"), "");
     if (c.usage.note) out.push(c.usage.note.replace(/<code>([^<]*)<\/code>/g, "`$1`").replace(/<strong>([^<]*)<\/strong>/g, "**$1**"), "");
   }

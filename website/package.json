@@ -3,18 +3,19 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "predev": "node scripts/generate-docs.mjs && node scripts/generate-theme-docs.mjs && node scripts/capture-cli.mjs && node scripts/capture-cli-docs.mjs",
+    "predev": "node scripts/generate-docs.mjs && node scripts/generate-theme-docs.mjs && node scripts/capture-cli.mjs && node scripts/capture-cli-docs.mjs && node scripts/generate-component-mdx.mjs",
     "dev": "next dev",
-    "prebuild": "node scripts/generate-docs.mjs && node scripts/generate-theme-docs.mjs && node scripts/capture-cli.mjs && node scripts/capture-cli-docs.mjs && node scripts/build-preview.mjs",
+    "prebuild": "node scripts/generate-docs.mjs && node scripts/generate-theme-docs.mjs && node scripts/capture-cli.mjs && node scripts/capture-cli-docs.mjs && node scripts/generate-component-mdx.mjs && node scripts/build-preview.mjs && node scripts/capture-previews.mjs",
     "build": "next build",
-    "postbuild": "node scripts/build-search-index.mjs",
     "start": "next start",
     "lint": "eslint",
-    "pretypecheck": "node scripts/generate-docs.mjs && node scripts/generate-theme-docs.mjs && node scripts/capture-cli.mjs && node scripts/capture-cli-docs.mjs",
+    "pretypecheck": "node scripts/generate-docs.mjs && node scripts/generate-theme-docs.mjs && node scripts/capture-cli.mjs && node scripts/capture-cli-docs.mjs && node scripts/generate-component-mdx.mjs",
     "typecheck": "tsc --noEmit",
     "check:no-rn": "node scripts/check-no-rn.mjs",
+    "check:output": "node scripts/check-output.mjs",
     "test:scripts": "node --test \"scripts/*.test.mjs\"",
-    "build:preview": "node scripts/build-preview.mjs"
+    "build:preview": "node scripts/build-preview.mjs",
+    "capture:previews": "node scripts/capture-previews.mjs"
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.3.3",
