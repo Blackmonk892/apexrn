@@ -96,7 +96,7 @@ export function ComponentPreview({ slug, id, title, minHeight = MIN_HEIGHT, chil
           ))}
         </div>
         <div className="ax-preview-actions">
-          <button type="button" className="ax-mini" aria-pressed={mode === "dark"} onClick={() => setOverride(mode === "dark" ? "light" : "dark")}>
+          <button type="button" className="ax-mini" aria-label={`${title} preview in dark mode`} aria-pressed={mode === "dark"} onClick={() => setOverride(mode === "dark" ? "light" : "dark")}>
             {mode === "dark" ? "Dark" : "Light"}
           </button>
           <a className="ax-mini" href={openUrl} target="_blank" rel="noopener noreferrer">

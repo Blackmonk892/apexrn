@@ -2,6 +2,7 @@ import { ServerCodeBlock } from "fumadocs-ui/components/codeblock.rsc";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 import defaultMdxComponents from "fumadocs-ui/mdx";
 import type { MDXComponents } from "mdx/types";
+import type { ComponentProps } from "react";
 import docsData from "@/generated/docs-data.json";
 import dataParts from "@/generated/parts.json";
 import { getCliStep } from "@/lib/cli-docs";
@@ -12,14 +13,20 @@ function CliStep({ id }: { id: string }) {
   const step = getCliStep(id);
   return (
     <>
-      <ServerCodeBlock code={step.command} lang="bash" />
-      <ServerCodeBlock code={step.stdout} lang="text" codeblock={{ title: "Output" }} />
+      <div translate="no">
+        <ServerCodeBlock code={step.command} lang="bash" />
+        <ServerCodeBlock code={step.stdout} lang="text" codeblock={{ title: "Output" }} />
+      </div>
     </>
   );
 }
 
 function SetupCode() {
-  return <ServerCodeBlock code={docsData.setup.code ?? ""} lang="tsx" />;
+  return (
+    <div translate="no">
+      <ServerCodeBlock code={docsData.setup.code ?? ""} lang="tsx" />
+    </div>
+  );
 }
 
 function PartCount() {
@@ -106,6 +113,13 @@ function ElevationTable() {
 export function getMDXComponents(components?: MDXComponents) {
   return {
     ...defaultMdxComponents,
+    // Code and identifiers must survive browser auto-translation.
+    code: (props: ComponentProps<"code">) => <code translate="no" {...props} />,
+    pre: (props: ComponentProps<"pre">) => (
+      <div translate="no">
+        <defaultMdxComponents.pre {...props} />
+      </div>
+    ),
     Tab,
     Tabs,
     ComponentPreview,

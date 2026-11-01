@@ -5,7 +5,7 @@ import { GITHUB_URL } from "@/lib/site";
 /** The top bar for every page. The landing page reuses it. */
 export function baseOptions(): BaseLayoutProps {
   return {
-    nav: { title: <span className="ax-wordmark">ApexRN</span>, url: "/" },
+    nav: { title: <span className="ax-wordmark" translate="no">ApexRN</span>, url: "/" },
     githubUrl: GITHUB_URL,
     links: [
       { text: "Docs", url: "/docs", active: "nested-url" },

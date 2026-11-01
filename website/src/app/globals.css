@@ -92,6 +92,15 @@ html {
   scroll-padding-top: 5rem;
   -webkit-tap-highlight-color: transparent;
 }
+a,
+button,
+summary,
+[role="tab"],
+[role="option"],
+input,
+label {
+  touch-action: manipulation;
+}
 body {
   background: var(--ax-bg);
   color: var(--ax-fg);
@@ -341,6 +350,9 @@ figure.shiki figcaption {
   font-family: inherit;
   font-size: inherit;
 }
+.prose :where(td, th) {
+  font-variant-numeric: tabular-nums;
+}
 .prose :where(tbody td:first-child) {
   white-space: nowrap;
 }
@@ -438,6 +450,9 @@ figure.shiki figcaption {
 .ax-tabs button + button {
   border-inline-start: 2px solid var(--ax-border);
 }
+.ax-tabs button[aria-selected="false"]:hover {
+  background: var(--ax-muted);
+}
 .ax-tabs button[aria-selected="true"] {
   background: var(--ax-fg);
   color: var(--ax-bg);
@@ -522,6 +537,15 @@ figure.shiki figcaption {
   border: 0 !important;
 }
 
+/* Search dialog, mobile drawer: scrolling inside must not chain to the page. */
+[role="dialog"],
+[role="dialog"] [role="listbox"],
+#nd-sidebar,
+#nd-sidebar [data-radix-scroll-area-viewport],
+[data-radix-scroll-area-viewport] {
+  overscroll-behavior: contain;
+}
+
 /* Search dialog */
 [role="dialog"]:has(input[type="text"], input:not([type])) {
   border: 3px solid var(--ax-border) !important;
@@ -573,13 +597,20 @@ figure.shiki figcaption {
 [class*="backdrop-blur"] {
   --tw-backdrop-blur: blur(0px);
 }
-.fixed.inset-0.z-50[class*="bg-fd-overlay"] {
-  background: rgba(0, 0, 0, 0.5) !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
+/* Search dialog scrim: solid colour, no blur. Matched by role: the fumadocs overlay is the fixed full-screen
+   element carrying bg-fd-overlay, and its own utility class is overridden here with the scrim token. */
+[class*="bg-fd-overlay"] {
+  background-color: var(--ax-scrim) !important;
 }
-.dark .fixed.inset-0.z-50[class*="bg-fd-overlay"] {
-  background: rgba(0, 0, 0, 0.7) !important;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 #nd-sidebar a[data-active] {
   padding-inline: 8px;
