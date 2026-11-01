@@ -67,8 +67,13 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: website/package-lock.json
+          cache-dependency-path: |
+            website/package-lock.json
+            preview/package-lock.json
       - run: node registry/build.mjs
+      # The site's prebuild exports preview/ into public/preview for the embedded previews.
+      - run: npm ci
+        working-directory: preview
       - run: npm ci
         working-directory: website
       - run: npm run check:no-rn

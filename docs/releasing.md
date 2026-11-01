@@ -63,8 +63,8 @@ On a physical Android device and a physical iOS device, run `cd demo && npx expo
 
 ### 5. Publish (only when you decide to)
 
-1. **Registry:** enable GitHub Pages (Settings, Pages, Source: GitHub Actions), then run the `publish-registry` workflow manually. Confirm `https://<your-user>.github.io/apexrn/index.json` loads. If you host elsewhere, change `DEFAULT_REGISTRY` in `packages/cli/src/registry.mjs`.
-2. **CLI:** in `packages/cli/package.json` remove `"private": true`, check the name `apexrn` is free on npm, then `npm publish` from that folder. Check `npm pack --dry-run` first: only `bin/`, `src/`, `package.json` should ship.
+1. **Site + registry:** enable GitHub Pages (Settings, Pages, Source: GitHub Actions), then run the `deploy-site` workflow manually; it publishes the website and the registry together. Confirm `https://<your-user>.github.io/apexrn/index.json` and the site load. Set the repository variable `PAGES_ENABLED=true` to redeploy on every push to `main`. If you host elsewhere, change `DEFAULT_REGISTRY` in `packages/cli/src/registry.mjs`.
+2. **CLI:** check `npm pack --dry-run` in `packages/cli` (only `bin/`, `src/`, `package.json`, `LICENSE` ship), then `npm publish --access public` from that folder.
 3. **Tag:** move the changelog's Unreleased entry to `0.1.0` and `git tag v0.1.0`.
 4. **Smoke test from a clean machine or empty folder:** `npx apexrn init && npx apexrn add button`.
 
