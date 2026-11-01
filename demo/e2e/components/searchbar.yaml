@@ -1,0 +1,16 @@
+appId: dev.apexrn.demo
+---
+- runFlow:
+    file: ../_open.yaml
+    env:
+      ID: searchbar
+- assertVisible:
+    id: "searchbar-field"
+- tapOn:
+    id: "searchbar-field"
+- inputText: "button"
+- pressKey: Enter
+- assertVisible: "Search: button"
+- assertNotVisible: "Render Error"
+- assertNotVisible: ".*TypeError.*"
+- takeScreenshot: searchbar
