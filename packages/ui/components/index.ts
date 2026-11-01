@@ -26,7 +26,22 @@ export { default as Textarea, type TextareaProps } from './textarea';
 export { default as Carousel, type CarouselProps } from './carousel';
 export { default as Marquee, type MarqueeProps } from './marquee';
 export { Dialog, DialogTrigger, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, type DialogProps, type DialogContentProps, type DialogTriggerProps, type DialogCloseProps } from './dialog';
-export { Sheet, SheetContent, type SheetProps, type SheetContentProps } from './sheet';
+export {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+  type SheetCloseProps,
+  type SheetContentProps,
+  type SheetFooterProps,
+  type SheetHeaderProps,
+  type SheetProps,
+  type SheetTitleProps,
+  type SheetTriggerProps,
+} from './sheet';
 export { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, type DropdownMenuProps, type DropdownMenuItemProps } from './dropdown-menu';
 export { Select, SelectTrigger, SelectContent, SelectItem, type SelectProps, type SelectTriggerProps, type SelectContentProps, type SelectItemProps } from './select';
 export { DatePicker, DatePickerTrigger, DatePickerContent, formatLocalDate, type DatePickerProps, type DatePickerTriggerProps } from './date-picker';

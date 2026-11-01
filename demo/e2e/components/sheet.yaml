@@ -1,0 +1,23 @@
+appId: dev.apexrn.demo
+---
+- runFlow:
+    file: ../_open.yaml
+    env:
+      ID: sheet
+- assertVisible:
+    id: "sheet-open"
+- tapOn:
+    id: "sheet-open"
+- assertVisible: "Order 4821"
+- tapOn:
+    id: "sheet-done"
+- assertNotVisible: "Order 4821"
+- assertVisible: "Last: Order sheet closed"
+- tapOn:
+    id: "sheet-open"
+- assertVisible: "Order 4821"
+- back
+- assertNotVisible: "Order 4821"
+- assertNotVisible: "Render Error"
+- assertNotVisible: ".*TypeError.*"
+- takeScreenshot: sheet

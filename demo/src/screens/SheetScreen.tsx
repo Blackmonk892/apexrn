@@ -1,86 +1,97 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { Button, Input, Sheet, SheetContent, useTheme } from '@apexrn/ui';
+import { View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import {
+  Button,
+  Input,
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+  Text,
+} from '@apexrn/ui';
 import Layout from '../components/Layout';
-import Section, { Caption } from '../components/Section';
+import Section from '../components/Section';
 
 export default function SheetScreen({ onBack }: { onBack: () => void }) {
-  const { colors } = useTheme();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [formOpen, setFormOpen] = useState(false);
-  const [tallOpen, setTallOpen] = useState(false);
-  const [changes, setChanges] = useState<string[]>([]);
-  const log = (name: string) => (open: boolean) => setChanges((c) => [`${name}: ${open ? 'open' : 'closed'}`, ...c].slice(0, 4));
-  const heading = [styles.heading, { color: colors.foreground }];
-  const body = [styles.body, { color: colors.foreground }];
+  const insets = useSafeAreaInsets();
+  const [shareOpen, setShareOpen] = useState(false);
+  const [lastEvent, setLastEvent] = useState('none');
+  const note = (name: string) => (open: boolean) => setLastEvent(`${name} ${open ? 'opened' : 'closed'}`);
 
   return (
     <Layout id="sheet" title="SHEET" onBack={onBack}>
       <Section
-        title="Standard"
-        note="Slides up from the bottom. Close with the button, the backdrop, a downward drag, the Android back button or Escape."
+        title="Uncontrolled"
+        note="Drag the handle down, tap the scrim, press back, or use a close button."
       >
-        <View style={styles.row}>
-          <Button title="Open sheet" onPress={() => setMenuOpen(true)} />
+        <Sheet onOpenChange={note('Order sheet')}>
+          <SheetTrigger asChild>
+            <Button title="Open order" testID="sheet-open" />
+          </SheetTrigger>
+          <SheetContent sheetHeight={320} bottomInset={insets.bottom} testID="sheet-panel">
+            <SheetHeader>
+              <SheetTitle>Order 4821</SheetTitle>
+              <Text tone="muted">Packed at 09:40, leaves the depot at 11:15.</Text>
+            </SheetHeader>
+            <SheetFooter>
+              <SheetClose asChild>
+                <Button title="Done" testID="sheet-done" />
+              </SheetClose>
+            </SheetFooter>
+          </SheetContent>
+        </Sheet>
+      </Section>
+
+      <Section title="Controlled" note="The parent owns open and onOpenChange.">
+        <View style={{ flexDirection: 'row' }}>
+          <Button title="Share link" variant="outline" onPress={() => setShareOpen(true)} />
         </View>
         <Sheet
-          open={menuOpen}
+          open={shareOpen}
           onOpenChange={(o) => {
-            setMenuOpen(o);
-            log('menu')(o);
+            setShareOpen(o);
+            note('Share sheet')(o);
           }}
         >
-          {({ handleDismiss }) => (
-            <SheetContent sheetHeight={300}>
-              <Text style={heading}>Menu</Text>
-              <Text style={body}>Drag the handle down, tap outside, or press the button.</Text>
-              <Button title="Close sheet" onPress={handleDismiss} style={styles.gap} />
-            </SheetContent>
-          )}
-        </Sheet>
-        <Caption>{changes.length ? changes.join('  |  ') : 'No changes yet'}</Caption>
-      </Section>
-
-      <Section title="With inputs" note="The sheet lifts above the keyboard.">
-        <View style={styles.row}>
-          <Button title="Edit profile" variant="outline" onPress={() => setFormOpen(true)} />
-        </View>
-        <Sheet open={formOpen} onOpenChange={setFormOpen}>
-          {({ handleDismiss }) => (
-            <SheetContent sheetHeight={460}>
-              <Text style={heading}>Edit profile</Text>
-              <View style={styles.form}>
-                <Input placeholder="Username" />
-                <Input placeholder="Email address" keyboardType="email-address" autoCapitalize="none" />
-              </View>
-              <Button title="Save changes" variant="primary" onPress={handleDismiss} style={styles.gap} />
-            </SheetContent>
-          )}
+          <SheetContent sheetHeight={300} bottomInset={insets.bottom} scrimOpacity={0.7}>
+            <SheetHeader>
+              <SheetTitle>Share this report</SheetTitle>
+            </SheetHeader>
+            <Input placeholder="Recipient email" keyboardType="email-address" autoCapitalize="none" />
+            <SheetFooter style={{ marginTop: 16 }}>
+              <SheetClose asChild>
+                <Button title="Send" />
+              </SheetClose>
+            </SheetFooter>
+          </SheetContent>
         </Sheet>
       </Section>
 
-      <Section title="Edge cases" note="A sheetHeight taller than the screen is capped at 90% of the window height.">
-        <View style={styles.row}>
-          <Button title="Oversized sheet" variant="destructive" onPress={() => setTallOpen(true)} />
-        </View>
-        <Sheet open={tallOpen} onOpenChange={setTallOpen}>
-          {({ handleDismiss }) => (
-            <SheetContent sheetHeight={5000}>
-              <Text style={heading}>Capped</Text>
-              <Text style={body}>Requested 5000pt; rendered at most 90% of the window.</Text>
-              <Button title="Close" onPress={handleDismiss} style={styles.gap} />
-            </SheetContent>
-          )}
+      <Section title="Edge cases" note="A 5000pt request is capped at 90% of the window.">
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button title="Oversized sheet" variant="destructive" />
+          </SheetTrigger>
+          <SheetContent sheetHeight={5000} bottomInset={insets.bottom}>
+            <SheetHeader>
+              <SheetTitle>Delivery window for the northern route including weekend overrides</SheetTitle>
+            </SheetHeader>
+            <SheetFooter>
+              <SheetClose asChild>
+                <Button title="Close" />
+              </SheetClose>
+            </SheetFooter>
+          </SheetContent>
         </Sheet>
+      </Section>
+
+      <Section title="Event log">
+        <Text variant="mono" testID="sheet-log">{`Last: ${lastEvent}`}</Text>
       </Section>
     </Layout>
   );
 }
-
-const styles = StyleSheet.create({
-  row: { flexDirection: 'row', gap: 14 },
-  heading: { fontSize: 22, fontWeight: '900', textTransform: 'uppercase' },
-  body: { fontSize: 15, lineHeight: 21, marginTop: 8, fontWeight: '500' },
-  form: { gap: 16, marginTop: 20 },
-  gap: { marginTop: 24 },
-});
