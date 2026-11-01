@@ -72,6 +72,14 @@ const GROUPS: { title: string; items: { id: string; name: string }[] }[] = [
     ],
   },
   {
+    title: 'Reference',
+    items: [
+      { id: 'ref-settings', name: 'Settings' },
+      { id: 'ref-checkout', name: 'Checkout' },
+      { id: 'ref-inbox', name: 'Inbox' },
+    ],
+  },
+  {
     title: 'Older combined screens',
     items: [
       { id: 'forms', name: 'Forms and inputs' },

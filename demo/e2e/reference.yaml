@@ -1,0 +1,30 @@
+appId: dev.apexrn.demo
+---
+- runFlow:
+    file: _open.yaml
+    env:
+      ID: ref-settings
+- assertVisible: "Notifications"
+- takeScreenshot: ref-settings-light
+- tapOn: "DARK"
+- takeScreenshot: ref-settings-dark
+- assertNotVisible: "Render Error"
+- runFlow:
+    file: _open.yaml
+    env:
+      ID: ref-checkout
+- assertVisible: "Contact"
+- takeScreenshot: ref-checkout-light
+- tapOn: "DARK"
+- takeScreenshot: ref-checkout-dark
+- assertNotVisible: "Render Error"
+- runFlow:
+    file: _open.yaml
+    env:
+      ID: ref-inbox
+- assertVisible:
+    id: "ref-compose"
+- takeScreenshot: ref-inbox-light
+- tapOn: "DARK"
+- takeScreenshot: ref-inbox-dark
+- assertNotVisible: "Render Error"
