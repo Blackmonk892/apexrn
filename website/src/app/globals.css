@@ -562,6 +562,13 @@ figure.shiki figcaption {
 [role="listbox"] [role="option"][aria-selected="true"] * {
   color: inherit !important;
 }
+/* Fumadocs paints matched text with the CSS Custom Highlight API in the primary
+   (ink) colour, which `color: inherit` above does not reach: ink on the ink
+   selected row hid the whole label. Keep the paper colour and rely on underline. */
+[role="listbox"] [role="option"][aria-selected="true"] ::highlight(fd-search) {
+  color: var(--ax-bg);
+  text-decoration: underline;
+}
 
 /* Placeholder pages (landing, 404) */
 .ax-placeholder {
