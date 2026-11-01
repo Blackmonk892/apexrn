@@ -30,3 +30,15 @@ Ruled out up front: "Title Case" (we use sentence case); mono uppercase labels, 
 - Safe areas: no full-bleed fixed footers; sticky top bar only. Not applicable.
 - Brand name in prose paragraphs: not wrapped (would need an MDX transform); wordmark and code are.
 - Landing page: out of scope (other owner).
+
+## Landing
+Audited `website/src/components/landing/**` and `website/src/app/(home)/**` against the Vercel guidelines (sentence case kept; brutalist spec wins).
+
+Fixed:
+1. install-block.tsx:130 - "Copied" status relied on `role=status` alone -> explicit `aria-live="polite" aria-atomic="true"`.
+2. (home)/page.tsx:41 - "31 parts" and version meta could wrap mid-phrase -> non-breaking spaces.
+3. own-the-code.tsx:267 - "lines 36 to 62" could break after "lines" -> non-breaking spaces.
+4. landing.css:.lp-hero-meta - version/part counts not tabular -> `font-variant-numeric: tabular-nums`.
+5. landing.css:.lp a/.lp button - no tap-delay control -> `touch-action: manipulation`.
+
+Already compliant: img width/height/alt everywhere (still frames `alt=""` + `aria-hidden`); no `transition: all` (explicit property lists only); catalogue row links keep a visible ring via `tr:has(a:focus-visible)` outline plus global `.lp :focus-visible`; `translate="no"` on commands, code, tree, part names; 120ms cross-fade and all transitions disabled under `prefers-reduced-motion`; iframe has `title`; no `...` (no ellipsis strings at all); `.lp-num` and `.lp-table-num` are `tabular-nums`; headings use `text-wrap: balance`; icon-less buttons have visible text, copy button has `aria-label`.

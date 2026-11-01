@@ -27,7 +27,7 @@ export function InstallBlock({ command }: { command: string }) {
       <button type="button" className="lp-install-copy" onClick={copy} aria-label={`Copy ${command}`}>
         <span aria-hidden="true">{copied ? "Copied" : "Copy"}</span>
       </button>
-      <span className="lp-sr" role="status">
+      <span className="lp-sr" role="status" aria-live="polite" aria-atomic="true">
         {copied ? "Copied" : ""}
       </span>
     </div>

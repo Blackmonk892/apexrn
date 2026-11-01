@@ -38,7 +38,7 @@ export default function Home() {
           </div>
           <p className="lp-cell lp-hero-copy">Copy components into your app with one command. You own every line.</p>
           <p className="lp-cell lp-hero-meta">
-            v{version} · {parts.length} parts · MIT
+            v{version} · {parts.length} parts · MIT
           </p>
         </div>
       </section>

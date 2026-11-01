@@ -72,7 +72,7 @@ export async function OwnTheCode() {
         </figure>
         <figure className="lp-source">
           <figcaption className="lp-label">
-            {FILE}, lines {EXCERPT_FROM} to {EXCERPT_TO}
+            {FILE}, lines {EXCERPT_FROM} to {EXCERPT_TO}
           </figcaption>
           <div className="lp-source-code" style={{ counterReset: `line ${EXCERPT_FROM - 1}` }} translate="no">
             {code}

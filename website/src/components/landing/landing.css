@@ -18,6 +18,10 @@
 .lp a {
   color: inherit;
 }
+.lp a,
+.lp button {
+  touch-action: manipulation;
+}
 .lp :focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
@@ -111,6 +115,7 @@
   padding-block: 28px;
 }
 .lp-hero-meta {
+  font-variant-numeric: tabular-nums;
   font-family: var(--mono);
   font-size: 12px;
   line-height: 16px;
