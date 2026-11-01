@@ -511,17 +511,22 @@
   background: var(--paper);
   font-family: var(--mono);
   font-size: 13px;
-  line-height: 1.7;
+  line-height: 1.6;
+  white-space: pre;
 }
 .lp-source-code code {
   display: block;
+  /* the newline text nodes between block .line spans would render as blank lines */
+  white-space: normal;
   width: max-content;
   min-width: 100%;
 }
 .lp-source-code .line {
   display: block;
   padding-inline: 16px;
-  min-height: 1.7em;
+  margin: 0;
+  white-space: pre;
+  min-height: 1.6em;
 }
 .lp-source-code .line::before {
   counter-increment: line;
