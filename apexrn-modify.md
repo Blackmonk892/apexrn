@@ -297,22 +297,22 @@ Rules of engagement:
 
 | Item | Status | Commit | Verified | Not verified |
 |---|---|---|---|---|
-| Button | TODO | | | |
-| Label | TODO | | | |
-| Separator | TODO | | | |
-| Badge | TODO | | | |
-| Avatar | TODO | | | |
-| Skeleton | TODO | | | |
-| Progress | TODO | | | |
-| Alert | TODO | | | |
-| Card | TODO | | | |
-| ListItem | TODO | | | |
-| FAB | TODO | | | |
-| Input | TODO | | | |
+| Button | DONE | 105a099, dfc0a5c | jest file; typecheck; review fixes applied; Maestro flow green on API 34 emulator (run 41246109825) | Physical Android, iOS, screen reader |
+| Label | DONE | 5a54d53, 52dbf09 | jest file; typecheck; review fixes applied; Maestro flow green on API 34 emulator (run 41246109825) | Physical Android, iOS, screen reader |
+| Separator | DONE | 11f80f0, 9aa0e09 | jest file; typecheck; review fixes applied; Maestro flow green on API 34 emulator (run 41246109825) | Physical Android, iOS, screen reader |
+| Badge | DONE | 667b738, 000b4f9 | jest file; typecheck; review fixes applied; Maestro flow green on API 34 emulator (run 41246109825) | Physical Android, iOS, screen reader |
+| Avatar | DONE | b937450, 9087dc2 | jest file; typecheck; review fixes applied; Maestro flow green on API 34 emulator (run 41246109825) | Physical Android, iOS, screen reader |
+| Skeleton | DONE | ac3bfd4, 3854877 | jest file; typecheck; review fixes applied; Maestro flow green on API 34 emulator (run 41246109825) | Physical Android, iOS, screen reader |
+| Progress | DONE | 3296d24, 8b0fa49 | jest file; typecheck; review fixes applied; Maestro flow green on API 34 emulator (run 41246109825) | Physical Android, iOS, screen reader |
+| Alert | DONE | 55b545a, ac99074 | jest file; typecheck; review fixes applied; Maestro flow green on API 34 emulator (run 41246109825) | Physical Android, iOS, screen reader |
+| Card | DONE | 0941135, e193337 | jest file; typecheck; review fixes applied; Maestro flow green on API 34 emulator (run 41246109825) | Physical Android, iOS, screen reader |
+| ListItem | DONE | fabc0eb, c0ccd0f, bee8f9a | jest file; typecheck; review fixes applied; Maestro flow green on API 34 emulator (run 41246109825) | Physical Android, iOS, screen reader |
+| FAB | DONE | 6edb036, bee8f9a | jest file; typecheck; review fixes applied; Maestro flow green on API 34 emulator (run 41246109825) | Physical Android, iOS, screen reader |
+| Input | DONE | 2a2d342, 5579958 | jest file; typecheck; review fixes applied; Maestro flow green on API 34 emulator (run 41246109825) | Physical Android, iOS, screen reader |
 | Textarea | TODO | | | |
-| Checkbox | TODO | | | |
-| Switch | TODO | | | |
-| RadioGroup | TODO | | | |
+| Checkbox | DONE | 43c1f14 | jest file; typecheck; review fixes applied; Maestro flow green on API 34 emulator (run 41246109825) | Physical Android, iOS, screen reader |
+| Switch | DONE | 1bb53c2 | jest file; typecheck; review fixes applied; Maestro flow green on API 34 emulator (run 41246109825) | Physical Android, iOS, screen reader |
+| RadioGroup | DONE | 4142461 | jest file; typecheck; review fixes applied; Maestro flow green on API 34 emulator (run 41246109825) | Physical Android, iOS, screen reader |
 | Slider | TODO | | | |
 | InputOTP | TODO | | | |
 | Marquee | TODO | | | |
