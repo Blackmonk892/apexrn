@@ -100,25 +100,27 @@ export function Filters() {
 ### Card
 
 ```tsx
-import { Button, Card, CardFooter, CardHeader, CardText } from '@/components/apexrn';
+import { Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/apexrn';
 
 export function PlanCard() {
   return (
-    <Card variant="accent">
+    <Card>
       <CardHeader>
-        <CardText tone="title">Pro plan</CardText>
+        <CardTitle>Pro plan</CardTitle>
+        <CardDescription>$9 a month, billed yearly.</CardDescription>
       </CardHeader>
-      <CardText tone="title">$9 / month</CardText>
-      <CardText tone="muted">Unlimited projects.</CardText>
+      <CardContent>
+        <CardDescription>Unlimited projects and team seats.</CardDescription>
+      </CardContent>
       <CardFooter>
-        <Button variant="primary">Upgrade</Button>
+        <Button>Upgrade</Button>
       </CardFooter>
     </Card>
   );
 }
 ```
 
-Use `CardText` instead of `Text` inside a card: React Native text does not inherit colour, so `CardText` picks up the card variant's foreground. Give `Card` an `onPress` and it becomes a button.
+`variant="destructive" | "success" | "warning"` adds a top rule, an icon and a label. Give `Card` an `onPress` and it becomes a button that sinks when pressed. The parts throw outside a `Card`.
 
 ### EmptyState
 
