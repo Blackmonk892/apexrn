@@ -1,0 +1,10 @@
+{
+  "button": [
+    { "id": "demo", "title": "Button" },
+    { "id": "variants", "title": "Variants" },
+    { "id": "sizes", "title": "Sizes" },
+    { "id": "with-icon", "title": "With icon" },
+    { "id": "loading", "title": "Loading" },
+    { "id": "disabled", "title": "Disabled" }
+  ]
+}
