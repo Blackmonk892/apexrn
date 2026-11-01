@@ -1,17 +1,13 @@
-import type { ReactNode } from 'react';
-import {
-  type GestureResponderEvent,
-  StyleSheet,
-  Text,
-  View,
-  type ViewProps,
-} from 'react-native';
+import { Children, Fragment, isValidElement, useEffect, type ReactNode } from 'react';
+import { type GestureResponderEvent, StyleSheet, View, type ViewProps } from 'react-native';
+import Animated, { Extrapolation, interpolate, useAnimatedStyle, useSharedValue, type SharedValue } from 'react-native-reanimated';
 
-import { borderWidths, spacing, touchTarget, typography } from '../lib/colors';
+import { borderWidths, spacing, touchTarget } from '../lib/colors';
 import { BackIcon } from '../lib/icons';
 import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
 import BrutalSurface from './brutal-surface';
+import { Text } from './text';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -29,7 +25,7 @@ export interface AppBarProps extends ViewProps {
   backLabel?: string;
   /** Replaces the leading slot, e.g. a menu `AppBarAction` that opens a Drawer. */
   leading?: ReactNode;
-  /** Trailing slot: put `AppBarAction`s here. */
+  /** Trailing slot: put up to two `AppBarAction`s here. More than two warns in development; they crowd the title. */
   trailing?: ReactNode;
   /** Fill of the bar. Actions always stay on the base surface so they keep contrast. @default 'default' */
   variant?: Variant;
@@ -45,6 +41,13 @@ export interface AppBarProps extends ViewProps {
    * @default 0
    */
   topInset?: number;
+  /**
+   * Scroll offset of the screen's list, as a Reanimated shared value. With `size="large"` the large
+   * title fades and slides up over `collapseDistance` while the compact title fades in.
+   */
+  scrollY?: SharedValue<number>;
+  /** Scroll distance in px over which the large title collapses. @default 56 */
+  collapseDistance?: number;
 }
 
 export interface AppBarActionProps {
@@ -64,6 +67,13 @@ export interface AppBarActionProps {
 // ---------------------------------------------------------------------------
 // Components
 // ---------------------------------------------------------------------------
+function countActions(node: ReactNode): number {
+  return Children.toArray(node).reduce<number>(
+    (n, child) => n + (isValidElement<{ children?: ReactNode }>(child) && child.type === Fragment ? countActions(child.props.children) : 1),
+    0,
+  );
+}
+
 export function AppBar({
   title,
   subtitle,
@@ -74,10 +84,31 @@ export function AppBar({
   variant = 'default',
   size = 'compact',
   topInset = 0,
+  scrollY,
+  collapseDistance = 56,
   style,
   ...props
 }: AppBarProps) {
   const { colors } = useTheme();
+  const isLarge = size === 'large';
+  const idle = useSharedValue(0);
+  const y = scrollY ?? idle;
+
+  const actionCount = countActions(trailing);
+  useEffect(() => {
+    if (__DEV__ && actionCount > 2) {
+      console.warn(`AppBar: ${actionCount} trailing actions; use at most 2.`);
+    }
+  }, [actionCount]);
+
+  // Opacity and translate only, so the bar keeps its height and nothing relayouts while scrolling.
+  const largeStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(y.value, [0, collapseDistance * 0.8], [1, 0], Extrapolation.CLAMP),
+    transform: [{ translateY: interpolate(y.value, [0, collapseDistance], [0, -collapseDistance / 2], Extrapolation.CLAMP) }],
+  }));
+  const compactStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(y.value, [collapseDistance * 0.5, collapseDistance], [0, 1], Extrapolation.CLAMP),
+  }));
 
   // Variants as data, resolved per render so theme changes apply.
   const variants: Record<Variant, { bg: string; fg: string }> = {
@@ -87,7 +118,6 @@ export function AppBar({
     inverse: { bg: colors.foreground, fg: colors.background },
   };
   const v = variants[variant];
-  const isLarge = size === 'large';
 
   const lead =
     leading ??
@@ -99,35 +129,23 @@ export function AppBar({
       />
     ) : null);
 
-  const titleBlock = title || subtitle ? (
-    <View style={isLarge ? styles.largeTitle : styles.compactTitle}>
-      {title ? (
-        <Text
-          accessibilityRole="header"
-          numberOfLines={isLarge ? 2 : 1}
-          maxFontSizeMultiplier={1.3}
-          style={[
-            styles.title,
-            {
-              color: v.fg,
-              fontSize: isLarge ? typography['3xl'] : typography.xl,
-            },
-          ]}
-        >
-          {title}
-        </Text>
-      ) : null}
-      {subtitle ? (
-        <Text
-          numberOfLines={1}
-          maxFontSizeMultiplier={1.3}
-          style={[styles.subtitle, { color: v.fg, fontSize: typography.xs }]}
-        >
-          {subtitle}
-        </Text>
-      ) : null}
-    </View>
+  const subtitleNode = subtitle ? (
+    <Text variant="label" numberOfLines={1} tone="inherit" style={{ color: v.fg }}>
+      {subtitle}
+    </Text>
   ) : null;
+
+  const compactBlock =
+    title || subtitle ? (
+      <View style={styles.compactTitle}>
+        {title ? (
+          <Text variant="title" numberOfLines={1} tone="inherit" style={{ color: v.fg }}>
+            {title}
+          </Text>
+        ) : null}
+        {subtitleNode}
+      </View>
+    ) : null;
 
   return (
     <View
@@ -146,10 +164,35 @@ export function AppBar({
     >
       <View style={[styles.row, { gap: spacing.md, minHeight: touchTarget }]}>
         {lead}
-        {isLarge ? <View style={styles.spacer} /> : titleBlock}
+        {isLarge ? (
+          // The large title below is the header for assistive tech; this copy only appears once it has scrolled away.
+          <Animated.View
+            style={[styles.compactTitle, compactStyle]}
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+            pointerEvents="none"
+          >
+            {title ? (
+              <Text variant="title" numberOfLines={1} tone="inherit" accessibilityRole="none" style={{ color: v.fg }}>
+                {title}
+              </Text>
+            ) : null}
+          </Animated.View>
+        ) : (
+          compactBlock
+        )}
         {trailing ? <View style={[styles.trailing, { gap: spacing.sm }]}>{trailing}</View> : null}
       </View>
-      {isLarge ? <View style={{ paddingTop: spacing.sm }}>{titleBlock}</View> : null}
+      {isLarge && (title || subtitle) ? (
+        <Animated.View style={[{ paddingTop: spacing.sm }, largeStyle]}>
+          {title ? (
+            <Text variant="display" numberOfLines={2} tone="inherit" style={{ color: v.fg }}>
+              {title}
+            </Text>
+          ) : null}
+          {subtitleNode}
+        </Animated.View>
+      ) : null}
     </View>
   );
 }
@@ -164,8 +207,8 @@ export function AppBarAction({ icon, label, onPress, active = false, disabled = 
       borderWidth="control"
       disabled={disabled}
       onPress={onPress}
-      backgroundColor={disabled ? colors.muted : active ? colors.foreground : colors.background}
-      borderColor={disabled ? colors.mutedForeground : colors.border}
+      backgroundColor={active && !disabled ? colors.foreground : colors.background}
+      borderColor={colors.border}
       surfaceStyle={[styles.action, { width: touchTarget - 4, height: touchTarget - 4 }]}
       hitSlop={4}
       accessibilityRole="button"
@@ -196,25 +239,9 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
   },
-  largeTitle: {
-    alignSelf: 'stretch',
-  },
-  spacer: {
-    flex: 1,
-  },
   trailing: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  title: {
-    fontWeight: '900',
-    textTransform: 'uppercase',
-    letterSpacing: -0.5,
-  },
-  subtitle: {
-    fontWeight: '700',
-    letterSpacing: 0.4,
-    textTransform: 'uppercase',
   },
   action: {
     alignItems: 'center',
