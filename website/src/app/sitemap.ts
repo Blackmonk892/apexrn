@@ -15,7 +15,7 @@ if (!process.env.NEXT_PUBLIC_SITE_URL) {
   );
 }
 
-const STATIC_ROUTES = ["/", "/docs", "/docs/introduction", "/docs/installation", "/docs/theming", "/docs/components", "/playground"];
+const STATIC_ROUTES = ["/", "/docs", "/docs/introduction", "/docs/installation", "/docs/theming", "/docs/components"];
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const components = getAllComponents();
@@ -26,10 +26,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: route === "/" ? 1 : 0.7,
   }));
 
-  const componentEntries: MetadataRoute.Sitemap = components.flatMap((c) => [
-    { url: `${SITE_URL}/docs/components/${c.slug}`, changeFrequency: "monthly" as const, priority: 0.6 },
-    { url: `${SITE_URL}/playground/${c.slug}`, changeFrequency: "monthly" as const, priority: 0.5 },
-  ]);
+  const componentEntries: MetadataRoute.Sitemap = components.map((c) => ({
+    url: `${SITE_URL}/docs/components/${c.slug}`,
+    changeFrequency: "monthly" as const,
+    priority: 0.6,
+  }));
 
   return [...staticEntries, ...componentEntries];
 }
