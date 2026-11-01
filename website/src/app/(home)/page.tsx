@@ -16,12 +16,12 @@ export const metadata: Metadata = {
 };
 
 const ON_SCREEN: Omit<Leader, "number" | "name">[] = [
-  { slug: "app-bar", side: "left", top: 6, reach: 40 },
-  { slug: "search-bar", side: "left", top: 20, reach: 60 },
-  { slug: "list-item", side: "left", top: 46, reach: 60 },
-  { slug: "segmented-control", side: "right", top: 28, reach: 60 },
-  { slug: "floating-action-button", side: "right", top: 80, reach: 50 },
-  { slug: "bottom-nav", side: "right", top: 95, reach: 60 },
+  { slug: "app-bar", side: "left", top: 4, reach: 40 },
+  { slug: "search-bar", side: "left", top: 13, reach: 60 },
+  { slug: "list-item", side: "left", top: 31, reach: 60 },
+  { slug: "segmented-control", side: "right", top: 20, reach: 60 },
+  { slug: "floating-action-button", side: "right", top: 87, reach: 50 },
+  { slug: "bottom-nav", side: "right", top: 96, reach: 60 },
 ];
 
 export default function Home() {

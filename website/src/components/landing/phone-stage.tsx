@@ -18,6 +18,7 @@ export interface Leader {
 }
 
 const FRAME_SRC = `${BASE_PATH}/preview/index.html?theme=light&preset=neo#/showcase`;
+const STILL = `${BASE_PATH}/landing/showcase`;
 
 export function PhoneStage({ leaders }: { leaders: Leader[] }) {
   const { resolvedTheme } = useTheme();
@@ -25,6 +26,9 @@ export function PhoneStage({ leaders }: { leaders: Leader[] }) {
   const mode = resolvedTheme === "dark" ? "dark" : "light";
   const frame = useRef<HTMLIFrameElement>(null);
   const [ready, setReady] = useState(false);
+  // The preview posts `apexrn:ready` once on mount. The iframe is in the static HTML, so it can
+  // finish booting before React hydrates and attaches the listener; set src only after the
+  // listener exists or the message is lost and the phone stays on the still forever.
   const latest = useRef({ mode, preset });
 
   useEffect(() => {
@@ -43,6 +47,7 @@ export function PhoneStage({ leaders }: { leaders: Leader[] }) {
       send({ type: "apexrn:preset", preset: latest.current.preset });
     }
     window.addEventListener("message", onMessage);
+    if (frame.current) frame.current.src = FRAME_SRC;
     return () => window.removeEventListener("message", onMessage);
   }, []);
 
@@ -62,10 +67,10 @@ export function PhoneStage({ leaders }: { leaders: Leader[] }) {
         <div className="lp-stage-inner">
           <div className="lp-phone" data-ready={ready || undefined}>
             {/* eslint-disable @next/next/no-img-element -- static export, fixed dimensions */}
-            <img className="lp-shot lp-shot-light" src={`${BASE_PATH}/built-with/ref-inbox-light.png`} width={320} height={640} alt="" aria-hidden="true" />
-            <img className="lp-shot lp-shot-dark" src={`${BASE_PATH}/built-with/ref-inbox-dark.png`} width={320} height={640} alt="" aria-hidden="true" />
+            <img className="lp-shot lp-shot-light" src={`${STILL}-light.png`} width={390} height={844} alt="" aria-hidden="true" />
+            <img className="lp-shot lp-shot-dark" src={`${STILL}-dark.png`} width={390} height={844} alt="" aria-hidden="true" />
             {/* eslint-enable @next/next/no-img-element */}
-            <iframe ref={frame} className="lp-frame" title="ApexRN Inbox screen, running live" src={FRAME_SRC} />
+            <iframe ref={frame} className="lp-frame" title="ApexRN Inbox screen, running live" />
           </div>
           <ul className="lp-leaders">
             {leaders.map((l) => (
