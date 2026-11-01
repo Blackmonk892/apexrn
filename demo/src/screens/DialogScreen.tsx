@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import {
   Button,
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -19,17 +20,22 @@ export default function DialogScreen({ onBack }: { onBack: () => void }) {
 
   return (
     <Layout id="dialog" title="DIALOG" onBack={onBack}>
-      <Section title="Uncontrolled" note="DialogTrigger asChild wraps your own button. Close with the backdrop, Android back or Escape.">
+      <Section title="Uncontrolled" note="DialogTrigger asChild wraps your own button. Close with the button, the scrim or Android back.">
         <View style={styles.row}>
           <Dialog>
             <DialogTrigger asChild>
-              <Button title="Open dialog" />
+              <Button title="Open dialog" testID="dialog-open" />
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Welcome back</DialogTitle>
+                <DialogTitle testID="dialog-title">Welcome back</DialogTitle>
                 <DialogDescription>Nothing else needs your attention right now.</DialogDescription>
               </DialogHeader>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button title="Got it" size="sm" testID="dialog-close" />
+                </DialogClose>
+              </DialogFooter>
             </DialogContent>
           </Dialog>
         </View>
@@ -68,9 +74,9 @@ export default function DialogScreen({ onBack }: { onBack: () => void }) {
                 <DialogDescription>Tapping outside does not close this one.</DialogDescription>
               </DialogHeader>
               <DialogFooter>
-                <DialogTrigger asChild>
+                <DialogClose asChild>
                   <Button title="Stay" size="sm" variant="outline" />
-                </DialogTrigger>
+                </DialogClose>
               </DialogFooter>
             </DialogContent>
           </Dialog>

@@ -1,0 +1,28 @@
+appId: dev.apexrn.demo
+---
+- runFlow:
+    file: ../_open.yaml
+    env:
+      ID: drawer
+- assertVisible:
+    id: "drawer-open"
+- swipe:
+    start: 1%, 50%
+    end: 70%, 50%
+    duration: 300
+- assertVisible:
+    id: "drawer-item-home"
+- tapOn:
+    id: "drawer-item-inbox"
+- assertVisible: "Selected: Inbox"
+- tapOn:
+    id: "drawer-open"
+- assertVisible:
+    id: "drawer-item-home"
+- back
+- assertNotVisible:
+    id: "drawer-item-home"
+- assertVisible: "Drawer: closed"
+- assertNotVisible: "Render Error"
+- assertNotVisible: ".*TypeError.*"
+- takeScreenshot: drawer

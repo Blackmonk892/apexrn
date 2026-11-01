@@ -25,7 +25,7 @@ export { default as Switch, type SwitchProps } from './switch';
 export { default as Textarea, type TextareaProps } from './textarea';
 export { default as Carousel, type CarouselProps } from './carousel';
 export { default as Marquee, type MarqueeProps } from './marquee';
-export { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, type DialogProps, type DialogContentProps } from './dialog';
+export { Dialog, DialogTrigger, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, type DialogProps, type DialogContentProps, type DialogTriggerProps, type DialogCloseProps } from './dialog';
 export { Sheet, SheetContent, type SheetProps, type SheetContentProps } from './sheet';
 export { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, type DropdownMenuProps, type DropdownMenuItemProps } from './dropdown-menu';
 export { Select, SelectTrigger, SelectContent, SelectItem, type SelectProps, type SelectTriggerProps, type SelectContentProps, type SelectItemProps } from './select';
@@ -33,7 +33,7 @@ export { DatePicker, DatePickerTrigger, DatePickerContent, formatLocalDate, type
 export { Accordion, AccordionItem, AccordionTrigger, AccordionContent, type AccordionProps, type AccordionItemProps, type AccordionTriggerProps } from './accordion';
 export { Tabs, TabsList, TabsTrigger, TabsContent, type TabsProps, type TabsTriggerProps, type TabsContentProps } from './tabs';
 export { AppBar, AppBarAction, type AppBarProps, type AppBarActionProps } from './app-bar';
-export { Drawer, DrawerTrigger, DrawerContent, DrawerHeader, DrawerItem, type DrawerProps, type DrawerContentProps, type DrawerHeaderProps, type DrawerItemProps } from './drawer';
+export { Drawer, DrawerTrigger, DrawerContent, DrawerHeader, DrawerList, DrawerSection, DrawerFooter, DrawerItem, type DrawerProps, type DrawerContentProps, type DrawerHeaderProps, type DrawerListProps, type DrawerSectionProps, type DrawerFooterProps, type DrawerItemProps } from './drawer';
 export { BottomNav, BottomNavItem, type BottomNavProps, type BottomNavItemProps } from './bottom-nav';
 export { default as SearchBar, type SearchBarProps } from './search-bar';
 export { default as Chip, type ChipProps } from './chip';
