@@ -3,7 +3,7 @@
 // public/previews/<slug>/<id>-<mode>.png. The site shows these until the live iframe
 // reports ready. Needs public/preview (build-preview.mjs) and a Chrome:
 // channel "chrome" first, bundled chromium as the fallback. Skip with SKIP_PREVIEW_SHOTS=1.
-import { createReadStream, existsSync, mkdirSync, readFileSync, rmSync, statSync } from "node:fs";
+import { createReadStream, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
 import { dirname, extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -19,6 +19,9 @@ const outRoot = join(publicDir, "previews");
 const manifestPath = join(site, "..", "preview", "src", "examples", "manifest.json");
 const base = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const WIDTH = 720;
+// Device scale factor of every context below; the sizes written to shots.json are CSS px (png px / DSF).
+const DSF = 1;
+const shotsPath = join(site, "src", "generated", "preview-shots.json");
 const MIN_HEIGHT = 320;
 const PAGE_BG = { light: "#FFFFFF", dark: "#1A1A1A" };
 const TYPES = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".png": "image/png", ".ttf": "font/ttf", ".svg": "image/svg+xml", ".ico": "image/x-icon" };
@@ -59,9 +62,10 @@ try {
 if (!only) rmSync(outRoot, { recursive: true, force: true });
 let shot = 0;
 const failures = [];
+const shots = existsSync(shotsPath) && only ? JSON.parse(readFileSync(shotsPath, "utf8")) : {};
 try {
   for (const mode of ["light", "dark"]) {
-    const context = await browser.newContext({ viewport: { width: WIDTH, height: 900 }, reducedMotion: "reduce", colorScheme: mode });
+    const context = await browser.newContext({ viewport: { width: WIDTH, height: 900 }, reducedMotion: "reduce", colorScheme: mode, deviceScaleFactor: DSF });
     const page = await context.newPage();
     for (const { slug, id } of jobs) {
       const src = `${origin}${base}/preview/index.html?theme=${mode}&preset=neo#/example/${slug}/${id}`;
@@ -79,6 +83,7 @@ try {
         const dir = join(outRoot, slug);
         mkdirSync(dir, { recursive: true });
         await page.locator("#f").screenshot({ path: join(dir, `${id}-${mode}.png`), animations: "disabled" });
+        (shots[slug] ??= {})[`${id}-${mode}`] = { w: WIDTH, h: height };
         shot++;
       } catch (e) {
         failures.push(`${slug}/${id} ${mode}: ${e.message.split("\n")[0]}`);
@@ -90,6 +95,8 @@ try {
   await browser.close();
   server.close();
 }
+mkdirSync(dirname(shotsPath), { recursive: true });
+writeFileSync(shotsPath, `${JSON.stringify(shots)}\n`);
 console.log(`[capture-previews] wrote ${shot} screenshots`);
 if (failures.length) {
   console.error(`[capture-previews] ${failures.length} failed:\n  ${failures.join("\n  ")}`);

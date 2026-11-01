@@ -148,5 +148,8 @@ const index = [
 ].join("\n");
 writeFileSync(join(outDir, "index.mdx"), index);
 writeFileSync(join(outDir, "meta.json"), JSON.stringify({ title: "Components", pages: [...parts.map((p) => p.slug)] }, null, 2));
+// ComponentPreview imports this; capture-previews.mjs fills it. Keep an empty one so typecheck and dev work without a capture.
+const shotsFile = join(site, "src", "generated", "preview-shots.json");
+if (!existsSync(shotsFile)) writeFileSync(shotsFile, "{}\n");
 writeFileSync(join(site, "src", "generated", "parts.json"), JSON.stringify(parts, null, 2));
 console.log(`[generate-component-mdx] wrote ${parts.length} pages, ${Object.keys(manifest).length} slugs with examples`);

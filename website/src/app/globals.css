@@ -490,12 +490,13 @@ figure.shiki figcaption {
   background: var(--ax-paper-dark);
 }
 .ax-shot {
+  /* True CSS size, top-aligned like the live frame; max-width only guards viewports narrower than the capture. */
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  object-position: center;
+  top: 0;
+  left: 50%;
+  translate: -50% 0;
+  max-width: 100%;
+  height: auto;
   opacity: 1;
   transition: opacity 120ms linear;
 }

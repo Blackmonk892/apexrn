@@ -3,10 +3,13 @@
 import { useTheme } from "next-themes";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { BASE_PATH } from "@/lib/base-path";
+import shotSizes from "@/generated/preview-shots.json";
 import { usePreset } from "@/lib/preset";
 
 type Mode = "light" | "dark";
 const MIN_HEIGHT = 320;
+// CSS px size of each static screenshot (written by scripts/capture-previews.mjs).
+const SHOTS = shotSizes as Record<string, Record<string, { w: number; h: number }>>;
 
 function exampleUrl(slug: string, id: string, mode: Mode, preset: string) {
   return `${BASE_PATH}/preview/index.html?theme=${mode}&preset=${preset}#/example/${slug}/${id}`;
@@ -20,7 +23,8 @@ export function ComponentPreview({ slug, id, title, minHeight = MIN_HEIGHT, chil
   const [override, setOverride] = useState<Mode | null>(null);
   const [src, setSrc] = useState<string | undefined>();
   const [ready, setReady] = useState(false);
-  const [height, setHeight] = useState(minHeight);
+  const [liveHeight, setLiveHeight] = useState<number | null>(null);
+  const [loadedSize, setLoadedSize] = useState<{ w: number; h: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [shotFailed, setShotFailed] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);
@@ -61,7 +65,7 @@ export function ComponentPreview({ slug, id, title, minHeight = MIN_HEIGHT, chil
         send({ type: "apexrn:theme", mode: latest.current.mode });
         send({ type: "apexrn:preset", preset: latest.current.preset });
       } else if (d?.type === "apexrn:resize" && typeof d.height === "number") {
-        setHeight(Math.max(minHeight, Math.ceil(d.height)));
+        setLiveHeight(Math.max(minHeight, Math.ceil(d.height)));
       } else if (d?.type === "apexrn:error") {
         setError(d.message ?? "The example failed to render.");
       }
@@ -82,6 +86,10 @@ export function ComponentPreview({ slug, id, title, minHeight = MIN_HEIGHT, chil
   useEffect(() => {
     if (ready) send({ type: "apexrn:preset", preset });
   }, [ready, preset, send]);
+
+  // Until the iframe reports its height the box is as tall as the screenshot, so the cross-fade never jumps.
+  const shot = SHOTS[slug]?.[`${id}-${mode}`] ?? loadedSize;
+  const height = liveHeight ?? Math.max(minHeight, shot?.h ?? 0);
 
   const openUrl = exampleUrl(slug, id, mode, preset);
 
@@ -104,10 +112,10 @@ export function ComponentPreview({ slug, id, title, minHeight = MIN_HEIGHT, chil
           </a>
         </div>
       </div>
-      <div role="tabpanel" id={`${slug}-${id}-panel-preview`} aria-labelledby={`${slug}-${id}-tab-preview`} hidden={tab !== "preview"} className="ax-preview-stage" data-box={mode} data-ready={ready || undefined} style={{ minHeight }}>
+      <div role="tabpanel" id={`${slug}-${id}-panel-preview`} aria-labelledby={`${slug}-${id}-tab-preview`} hidden={tab !== "preview"} className="ax-preview-stage" data-box={mode} data-ready={ready || undefined} style={{ minHeight: height }}>
         {!shotFailed && (
           // eslint-disable-next-line @next/next/no-img-element -- static export, fixed dimensions
-          <img className="ax-shot" src={`${BASE_PATH}/previews/${slug}/${id}-${mode}.png`} width={720} height={minHeight} alt="" aria-hidden="true" onError={() => setShotFailed(true)} />
+          <img className="ax-shot" src={`${BASE_PATH}/previews/${slug}/${id}-${mode}.png`} width={shot?.w} height={shot?.h} alt="" aria-hidden="true" onLoad={(e) => setLoadedSize({ w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight })} onError={() => setShotFailed(true)} />
         )}
         {src && <iframe ref={frameRef} className="ax-frame" title={`${title} example`} src={src} loading="lazy" style={{ height }} />}
         {error && <p className="ax-preview-error" role="alert">{error}</p>}
