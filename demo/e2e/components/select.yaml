@@ -1,0 +1,24 @@
+appId: dev.apexrn.demo
+---
+- runFlow:
+    file: ../_open.yaml
+    env:
+      ID: select
+- assertVisible:
+    id: "select-framework"
+- tapOn:
+    id: "select-framework"
+- assertVisible: "Jetpack Compose"
+- tapOn: "Flutter"
+- assertNotVisible: "Jetpack Compose"
+- assertVisible: "Last change: framework flutter"
+- tapOn:
+    id: "select-country"
+- tapOn: "Search"
+- inputText: "nor"
+- assertNotVisible: "Brazil"
+- tapOn: "Norway"
+- assertVisible: "Last change: country norway"
+- assertNotVisible: "Render Error"
+- assertNotVisible: ".*TypeError.*"
+- takeScreenshot: select
