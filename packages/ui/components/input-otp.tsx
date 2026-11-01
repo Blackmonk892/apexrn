@@ -96,32 +96,8 @@ export const InputOTP = forwardRef<TextInput, InputOTPProps>(function InputOTP(
 
   return (
     <View style={[styles.root, style]}>
-      <TextInput
-        ref={inputRef}
-        value={value}
-        onChangeText={handleChangeText}
-        maxLength={safeLength}
-        keyboardType="number-pad"
-        textContentType="oneTimeCode"
-        autoComplete="sms-otp"
-        caretHidden
-        style={styles.hiddenInput}
-        editable={!isDisabled}
-        onFocus={(e) => {
-          setFocused(true);
-          onFocus?.(e);
-        }}
-        onBlur={(e) => {
-          setFocused(false);
-          onBlur?.(e);
-        }}
-        aria-invalid={invalid || undefined}
-        accessibilityState={{ disabled: isDisabled }}
-        accessibilityLabel={accessibilityLabel ?? `One-time code, ${value.length} of ${safeLength} digits entered`}
-        {...props}
-      />
 
-      {/* The input above carries the semantics, so screen readers don't hear each cell as its own key. */}
+      {/* The input below carries the semantics, so screen readers don't hear each cell as its own key. */}
       <Pressable
         onPress={() => inputRef.current?.focus()}
         disabled={isDisabled}
@@ -154,13 +130,40 @@ export const InputOTP = forwardRef<TextInput, InputOTPProps>(function InputOTP(
           </BrutalSurface>
         ))}
       </Pressable>
+
+      {/* Stretched transparent over the cells so taps, screen-reader focus and test drivers land on a
+          real-sized target; a 1px input is unreachable for all three. */}
+      <TextInput
+        ref={inputRef}
+        value={value}
+        onChangeText={handleChangeText}
+        maxLength={safeLength}
+        keyboardType="number-pad"
+        textContentType="oneTimeCode"
+        autoComplete="sms-otp"
+        caretHidden
+        style={styles.hiddenInput}
+        editable={!isDisabled}
+        onFocus={(e) => {
+          setFocused(true);
+          onFocus?.(e);
+        }}
+        onBlur={(e) => {
+          setFocused(false);
+          onBlur?.(e);
+        }}
+        aria-invalid={invalid || undefined}
+        accessibilityState={{ disabled: isDisabled }}
+        accessibilityLabel={accessibilityLabel ?? `One-time code, ${value.length} of ${safeLength} digits entered`}
+        {...props}
+      />
     </View>
   );
 });
 
 const styles = StyleSheet.create({
   root: { alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center' },
-  hiddenInput: { position: 'absolute', width: 1, height: 1, opacity: 0 },
+  hiddenInput: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, opacity: 0 },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
   cell: { alignItems: 'center', justifyContent: 'center' },
 });
