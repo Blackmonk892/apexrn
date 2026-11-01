@@ -1,0 +1,15 @@
+appId: dev.apexrn.demo
+---
+- runFlow:
+    file: ../_open.yaml
+    env:
+      ID: bottomnav
+- assertVisible: "Tab: home"
+- tapOn:
+    id: "bottomnav-search"
+- assertVisible: "Tab: search"
+- assertVisible:
+    id: "bottomnav-log"
+- assertNotVisible: "Render Error"
+- assertNotVisible: ".*TypeError.*"
+- takeScreenshot: bottomnav

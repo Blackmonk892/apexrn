@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View } from 'react-native';
-import { BellIcon, BottomNav, BottomNavItem, HomeIcon, SearchIcon, UserIcon, useTheme } from '@apexrn/ui';
+import { BellIcon, BottomNav, BottomNavItem, HomeIcon, SearchIcon, Text as UIText, UserIcon, useTheme } from '@apexrn/ui';
 import Layout from '../components/Layout';
 import Section, { Caption } from '../components/Section';
 
@@ -14,7 +14,7 @@ export default function BottomNavScreen({ onBack }: { onBack: () => void }) {
 
   return (
     <Layout id="bottomnav" title="BOTTOM NAV" onBack={onBack}>
-      <Section title="Controlled, four items" note="The selected block slides (transform only). Labels are always visible.">
+      <Section title="Controlled, four items" note="The selected block slides (transform only) and carries the label; other items are icon-only.">
         <View style={frame}>
           <BottomNav
             value={tab}
@@ -24,12 +24,13 @@ export default function BottomNavScreen({ onBack }: { onBack: () => void }) {
             }}
           >
             <BottomNavItem value="home" label="Home" icon={icon(HomeIcon)} />
-            <BottomNavItem value="search" label="Search" icon={icon(SearchIcon)} />
+            <BottomNavItem value="search" label="Search" testID="bottomnav-search" icon={icon(SearchIcon)} />
             <BottomNavItem value="alerts" label="Alerts" badge={unread} icon={icon(BellIcon)} />
             <BottomNavItem value="me" label="Me" icon={icon(UserIcon)} />
           </BottomNav>
         </View>
-        <Caption>{`Selected: ${tab}. The badge clears when Alerts opens.`}</Caption>
+        <UIText variant="mono" testID="bottomnav-log">{`Tab: ${tab}`}</UIText>
+        <Caption>The badge clears when Alerts opens.</Caption>
       </Section>
 
       <Section title="Uncontrolled, three items" note="defaultValue keeps its own state. String badges work too.">

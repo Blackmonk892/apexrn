@@ -6,26 +6,27 @@ import {
   type PressableProps,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
   type ViewProps,
 } from 'react-native';
-import Animated, {
-  Easing,
-  useAnimatedStyle,
-  useReducedMotion,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import { borderWidths, spacing, touchTarget, typography } from '../lib/colors';
+import { useMotion } from '../lib/motion';
 import { useTheme } from '../lib/theme';
 import { cn } from '../lib/utils';
+import BrutalSurface from './brutal-surface';
+
+// Above this the label would not fit its slot, so the bar falls back to icons.
+const MAX_LABEL_FONT_SCALE = 1.3;
 
 // ---------------------------------------------------------------------------
 // Types & Context
 // ---------------------------------------------------------------------------
 interface BottomNavContextState {
   value: string;
+  showLabel: boolean;
   onValueChange: (value: string) => void;
   registerLayout: (value: string, layout: LayoutRectangle) => void;
 }
@@ -57,7 +58,7 @@ export interface BottomNavProps extends ViewProps {
 export interface BottomNavItemProps extends Omit<PressableProps, 'onPress' | 'style' | 'children'> {
   /** Destination id reported through `onValueChange`. */
   value: string;
-  /** Always visible: icon-only bars are ambiguous, so the label is required. */
+  /** Shown on the selected item only (hidden above 1.3x font scale); always the accessibility label. */
   label: string;
   /** Icon element, or a function receiving the contrast colour for the current state. */
   icon?: ReactNode | ((color: string) => ReactNode);
@@ -79,15 +80,16 @@ export function BottomNav({
   ...props
 }: BottomNavProps) {
   const { colors } = useTheme();
-  const reduceMotion = useReducedMotion();
+  const { selection, reduceMotion } = useMotion();
+  const { fontScale } = useWindowDimensions();
   const [internalValue, setInternalValue] = useState(defaultValue);
-  const value = valueProp ?? internalValue;
   const controlled = valueProp !== undefined;
+  const value = controlled ? valueProp : internalValue;
   const [layouts, setLayouts] = useState<Record<string, LayoutRectangle>>({});
 
   const translateX = useSharedValue(0);
-  // Plain ref: StrictMode-safe, no worklet involvement.
-  const isFirstRender = useRef(true);
+  const opacity = useSharedValue(0);
+  const placed = useRef(false);
 
   const registerLayout = useCallback((itemValue: string, layout: LayoutRectangle) => {
     setLayouts((prev) => {
@@ -100,59 +102,57 @@ export function BottomNav({
   const context = useMemo<BottomNavContextState>(
     () => ({
       value,
+      showLabel: fontScale <= MAX_LABEL_FONT_SCALE,
       registerLayout,
       onValueChange: (next) => {
         if (!controlled) setInternalValue(next);
         onValueChange?.(next);
       },
     }),
-    [value, controlled, onValueChange, registerLayout],
+    [value, fontScale, controlled, onValueChange, registerLayout],
   );
 
   const active = layouts[value];
 
   useEffect(() => {
-    if (!active) return;
-    if (isFirstRender.current || reduceMotion) {
-      translateX.value = active.x;
-      isFirstRender.current = false;
-    } else {
-      translateX.value = withTiming(active.x, { duration: 160, easing: Easing.out(Easing.cubic) });
+    if (!active) {
+      opacity.value = 0;
+      return;
     }
-  }, [active, reduceMotion, translateX]);
+    opacity.value = 1;
+    if (!placed.current || reduceMotion) {
+      translateX.value = active.x;
+      placed.current = true;
+    } else {
+      translateX.value = withTiming(active.x, selection);
+    }
+  }, [active, reduceMotion, selection, translateX, opacity]);
 
-  // Only translateX animates. Items are flex: 1 so they share one width, which
-  // makes the block's width a plain, non-animated style.
-  const animatedBlockStyle = useAnimatedStyle(() => ({
+  // Items share one width, so the slab's width is a plain style and only translateX animates.
+  const slabStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
     transform: [{ translateX: translateX.value }],
   }));
 
   return (
     <BottomNavContext.Provider value={context}>
-      <View
+      <BrutalSurface
+        pressable={false}
+        elevation="flat"
+        borderWidth="container"
+        style={cn({ alignSelf: 'stretch' }, style)}
+        surfaceStyle={[styles.surface, { paddingBottom: bottomInset }]}
         accessibilityRole="tablist"
-        style={cn(
-          styles.root,
-          {
-            backgroundColor: colors.background,
-            borderTopColor: colors.border,
-            paddingBottom: bottomInset,
-          },
-          style,
-        )}
         {...props}
       >
-        {/* The selected block: an inverted slab that slides between items. */}
         <Animated.View
           pointerEvents="none"
-          style={[
-            styles.block,
-            { width: active?.width ?? 0, backgroundColor: colors.foreground },
-            animatedBlockStyle,
-          ]}
+          importantForAccessibility="no-hide-descendants"
+          accessibilityElementsHidden
+          style={[styles.slab, { width: active?.width ?? 0, backgroundColor: colors.foreground }, slabStyle]}
         />
         <View style={styles.items}>{children}</View>
-      </View>
+      </BrutalSurface>
     </BottomNavContext.Provider>
   );
 }
@@ -165,7 +165,7 @@ export function BottomNavItem({
   disabled = false,
   ...props
 }: BottomNavItemProps) {
-  const { value: selected, onValueChange, registerLayout } = useBottomNavContext();
+  const { value: selected, showLabel, onValueChange, registerLayout } = useBottomNavContext();
   const { colors } = useTheme();
   const isSelected = selected === value;
   const fg = disabled ? colors.mutedForeground : isSelected ? colors.background : colors.foreground;
@@ -180,7 +180,7 @@ export function BottomNavItem({
       disabled={disabled}
       style={({ pressed }) => [
         styles.item,
-        { minHeight: touchTarget + spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.sm, gap: spacing.xs },
+        { minHeight: touchTarget + spacing.lg, paddingVertical: spacing.sm, gap: spacing.xs },
         // The selected slab supplies its own fill; only idle items tint on press.
         pressed && !isSelected && !disabled && { backgroundColor: colors.muted },
       ]}
@@ -214,13 +214,17 @@ export function BottomNavItem({
           </View>
         ) : null}
       </View>
-      <Text
-        numberOfLines={1}
-        maxFontSizeMultiplier={1.2}
-        style={[styles.label, { color: fg, fontSize: typography.xs }]}
-      >
-        {label}
-      </Text>
+      {isSelected && showLabel ? (
+        <Text
+          numberOfLines={1}
+          importantForAccessibility="no-hide-descendants"
+          accessibilityElementsHidden
+          maxFontSizeMultiplier={1.2}
+          style={[styles.label, { color: fg, fontSize: typography.xs }]}
+        >
+          {label}
+        </Text>
+      ) : null}
     </Pressable>
   );
 }
@@ -229,11 +233,8 @@ export function BottomNavItem({
 // Styles
 // ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
-  root: {
-    alignSelf: 'stretch',
-    borderTopWidth: borderWidths.container,
-  },
-  block: {
+  surface: { overflow: 'hidden' },
+  slab: {
     position: 'absolute',
     top: 0,
     bottom: 0,
