@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Tabs, TabsContent, TabsList, TabsTrigger, useTheme } from '@apexrn/ui';
+import { Tabs, TabsContent, TabsList, TabsTrigger, Text as UIText, useTheme } from '@apexrn/ui';
 import Layout from '../components/Layout';
-import Section, { Caption } from '../components/Section';
+import Section from '../components/Section';
 
 function Panel({ children }: { children: string }) {
   const { colors } = useTheme();
@@ -21,8 +21,8 @@ export default function TabsScreen({ onBack }: { onBack: () => void }) {
       <Section title="Controlled" note="value + onValueChange. The selected tab is an inverted block, not just a colour change.">
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList>
-            <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
+            <TabsTrigger value="profile" testID="tab-profile">Profile</TabsTrigger>
+            <TabsTrigger value="settings" testID="tab-settings">Settings</TabsTrigger>
           </TabsList>
           <TabsContent value="profile">
             <Panel>Your profile details live here.</Panel>
@@ -31,7 +31,7 @@ export default function TabsScreen({ onBack }: { onBack: () => void }) {
             <Panel>Manage notifications and privacy.</Panel>
           </TabsContent>
         </Tabs>
-        <Caption>{`Selected: ${tab}`}</Caption>
+        <UIText variant="mono" testID="tabs-log">{`Tab: ${tab}`}</UIText>
       </Section>
 
       <Section title="Uncontrolled, three tabs, one disabled" note="defaultValue keeps its own state.">
@@ -74,6 +74,21 @@ export default function TabsScreen({ onBack }: { onBack: () => void }) {
           </TabsContent>
           <TabsContent value="d">
             <Panel>Fourth panel</Panel>
+          </TabsContent>
+        </Tabs>
+      </Section>
+
+      <Section title="Overflow" note="Too many tabs scroll sideways; the selected one is brought into view.">
+        <Tabs defaultValue="t1">
+          <TabsList>
+            {['Overview', 'Analytics', 'Reports', 'Notifications', 'Integrations', 'Billing'].map((label, i) => (
+              <TabsTrigger key={label} value={`t${i + 1}`}>
+                {label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          <TabsContent value="t1">
+            <Panel>Six tabs do not fit a phone width.</Panel>
           </TabsContent>
         </Tabs>
       </Section>
