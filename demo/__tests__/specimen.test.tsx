@@ -31,6 +31,12 @@ describe('SpecimenScreen', () => {
     expect(quadrant.getAllByTestId(/^type-/)).toHaveLength(6);
   });
 
+  it('labels states a component holds internally instead of leaving them unwired', async () => {
+    await renderWithTheme(<SpecimenScreen onBack={() => {}} />);
+    expect(screen.queryAllByText('not wired')).toHaveLength(0);
+    expect(screen.queryAllByText('internal').length).toBeGreaterThan(0);
+  });
+
   it('shows the card step at 4 in neo and 2 in raw', async () => {
     await renderWithTheme(<SpecimenScreen onBack={() => {}} />);
     const card = (id: string) => within(screen.getByTestId(`quadrant-${id}`)).getByTestId('depth-card');

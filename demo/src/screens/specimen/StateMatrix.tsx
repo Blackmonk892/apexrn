@@ -14,8 +14,9 @@ import {
 const STATES = ['idle', 'pressed', 'focused', 'disabled', 'error', 'loading'] as const;
 type State = (typeof STATES)[number];
 
-// A missing entry is a state the component has no prop for yet; the cell says
-// so instead of faking it.
+// A missing entry is a state the component holds internally (press, focus) or
+// doesn't have; public components get no display-only props to force them, so
+// the cell says so instead of faking it (LEDGER, B-20 ruling).
 type Row = { name: string; cells: Partial<Record<State, ReactNode>> };
 
 function Block(props: { focused?: boolean; disabled?: boolean; invalid?: boolean; children?: ReactNode }) {
@@ -109,7 +110,7 @@ export function StateMatrix() {
               {STATES.map((state) => (
                 <View key={state} style={styles.cell}>
                   <View style={styles.specimen}>
-                    {row.cells[state] ?? <Text variant="mono" tone="muted">not wired</Text>}
+                    {row.cells[state] ?? <Text variant="mono" tone="muted">internal</Text>}
                   </View>
                   <Text variant="mono">{state}</Text>
                 </View>

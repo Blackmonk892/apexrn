@@ -122,3 +122,30 @@ Parallel tasks and their files (recorded retroactively for A5/A6, which were dis
   - B-16 Switch: `packages/ui/components/switch.tsx`, `demo/src/screens/SwitchScreen.tsx`, `demo/__tests__/switch.test.tsx`, `demo/e2e/components/switch.yaml`
   - B-17 RadioGroup: `packages/ui/components/radio-group.tsx`, `demo/src/screens/RadioGroupScreen.tsx`, `demo/__tests__/radio-group.test.tsx`, `demo/e2e/components/radiogroup.yaml`
 - Ruling (2026-11-01): this machine has 2 cores and 7 GB RAM (0.5 GB free under load), so at most **2 implementers run at once** from here on; the full Jest suite and typecheck of the whole branch run in GitHub CI (Linux runners) on each push, not locally — measured: one test file took 140s with five agents running — cost if wrong: less parallelism, but each agent finishes in minutes instead of ~40.
+
+### Owner rulings (2026-11-01, final)
+- B-20: specimen cells a component cannot be put in from outside are labelled `internal`; no display-only props on public components. Test asserts no cell reads "not wired".
+- DatePicker: single mode closes on tap — kept. Range mode does not exist yet → 0.2 list.
+- BottomNav: revert — labels on all tabs by default, optional `labelMode="selected"`; large-font-scale fallback stays.
+- InputOTP digits only: kept for 0.1.0, listed under CHANGELOG known gaps.
+- Drawer stays one file (567 lines): single-file components are intentional for the copy-paste model.
+
+### Operating rules (owner, 2026-11-01, effective now — speed first)
+1. No questions to the owner; every open choice is a ruling logged here. Only the Phase C device checklist, website landing screenshots (send, don't wait) and the final publish/Pages commands go to the owner.
+2. One Sonnet implementer + one combined Sonnet review per task; Opus review only for public component APIs, DESIGN.md tokens, the CLI, and the website landing/design system.
+3. Don't wait on CI between tasks; red CI is its own task. Only merges into ship/v0.1 and main need green CI.
+4. Phase B ends when B-40 and B-41 are done; only blocking issues they surface are fixed in 0.1.0, the rest goes to the 0.2 list.
+5. Phase D (website rebuild) runs now, in parallel, on its own agents.
+
+### B-40 / B-41 results
+- B-40 reference screens: DONE (9cf4ac6). Screenshots light + dark only — the demo has no preset switch (0.2 list).
+- B-41 fresh-app check: `scripts/fresh-app-check.mjs`. First run: registry, scaffold, peers, init, add --all, web export PASS; `tsc` FAIL in a fresh SDK 58 app (RN 0.88, @types/react 19.3): ref types for View/TextInput/ScrollView, `disabled: boolean | null`, `TextInputContentSizeChangeEventData` renamed. Ruling: **blocking** — a fresh install must typecheck — fixed in 0.1.0 by typing refs/events from the component types themselves (works on SDK 57 and 58). The script's peer install adds react-dom + react-native-web (needed for web export in a blank app).
+
+### 0.2 list
+- DatePicker range mode.
+- Demo preset (neo/raw) switch so reference screens can be shot in all four palettes.
+- ListItem: built-in switch/checkbox trailing control with one label and row-toggle; a grouped-list wrapper with automatic rules.
+- FAB passes its ink colour to a render-prop icon (as AppBarAction does).
+- A label/value summary row primitive (Checkout totals).
+- Reference screens: add Chips + BottomNav (Inbox), Drawer (Settings), Toast on Checkout submit per DESIGN §8.
+- InputOTP: alphanumeric `pattern`.
