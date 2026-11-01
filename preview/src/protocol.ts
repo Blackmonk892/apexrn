@@ -26,7 +26,16 @@ export interface PresetMessage {
   preset: 'neo' | 'raw';
 }
 
-export type ParentToPreviewMessage = RenderMessage | ThemeMessage | PresetMessage;
+/**
+ * parent -> preview: start or stop the showcase's idle self-demo. The loop only runs after an explicit
+ * `running: true`, so screenshots and docs embeds never move on their own.
+ */
+export interface DemoControlMessage {
+  type: 'apexrn:demo-control';
+  running: boolean;
+}
+
+export type ParentToPreviewMessage = RenderMessage | ThemeMessage | PresetMessage | DemoControlMessage;
 
 /** preview -> parent: mounted and listening. */
 export interface ReadyMessage {
@@ -45,7 +54,13 @@ export interface ErrorMessage {
   message: string;
 }
 
-export type PreviewToParentMessage = ReadyMessage | ResizeMessage | ErrorMessage;
+/** preview -> parent: the self-demo just acted on this part (a component slug), so the parent can highlight its label. */
+export interface DemoStepMessage {
+  type: 'apexrn:demo-step';
+  part: string;
+}
+
+export type PreviewToParentMessage = ReadyMessage | ResizeMessage | ErrorMessage | DemoStepMessage;
 
 /**
  * Optional allowlisted parent origin, set via EXPO_PUBLIC_PARENT_ORIGIN at build
@@ -76,4 +91,9 @@ export function isThemeMessage(data: unknown): data is ThemeMessage {
 export function isPresetMessage(data: unknown): data is PresetMessage {
   const d = data as { type?: unknown; preset?: unknown } | null;
   return typeof d === 'object' && d !== null && d.type === 'apexrn:preset' && (d.preset === 'neo' || d.preset === 'raw');
+}
+
+export function isDemoControlMessage(data: unknown): data is DemoControlMessage {
+  const d = data as { type?: unknown; running?: unknown } | null;
+  return typeof d === 'object' && d !== null && d.type === 'apexrn:demo-control' && typeof d.running === 'boolean';
 }
