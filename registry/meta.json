@@ -34,7 +34,7 @@
     "switch": "Toggle switch.",
     "tabs": "Tabs with a list of triggers and content panels.",
     "text": "The type scale: display, title, body, label and mono roles with theme colours and capped font scaling.",
-    "textarea": "Multiline input built on Input.",
+    "textarea": "Multiline field with Input's field rules, min/max rows and a character counter.",
     "toast": "Transient notification (controlled). Use Toaster/useToast for the one-line toast() API.",
     "toaster": "Toaster provider and useToast(): toast('Saved'), toast.success(), toast.error(); queues one at a time.",
     "colors": "Design tokens: the neo and raw presets, elevation ladder, textStyles, fontFamilies, focusRing, spacing, typography and borderWidths. Edit this file to restyle every component.",
