@@ -22,6 +22,7 @@ export default function AppBarScreen({ onBack }: { onBack: () => void }) {
           <AppBar
             title="Inbox"
             onBack={() => setLog('back')}
+            backLabel="Back to mailboxes"
             trailing={
               <>
                 <AppBarAction label="Search" icon={(c) => <SearchIcon size={20} color={c} />} onPress={() => setLog('search')} />

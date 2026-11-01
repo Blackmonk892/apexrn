@@ -9,7 +9,8 @@ appId: dev.apexrn.demo
 - assertVisible: "Last press: none"
 - tapOn: "Notifications"
 - assertVisible: "Last press: bell"
-- tapOn: "Go back"
+# The demo screen's own back button is also "Go back"; this label is the AppBar's alone.
+- tapOn: "Back to mailboxes"
 - assertVisible: "Last press: back"
 - assertNotVisible: "Render Error"
 - assertNotVisible: ".*TypeError.*"
