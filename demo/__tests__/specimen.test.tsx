@@ -23,12 +23,12 @@ describe('SpecimenScreen', () => {
     for (const id of QUADRANTS) expect(screen.getByTestId(`quadrant-title-${id}`)).toBeTruthy();
   });
 
-  it.each(QUADRANTS)('%s lists all 23 colour roles and the 5 type roles', async (id) => {
+  it.each(QUADRANTS)('%s lists all 23 colour roles and the 6 type roles', async (id) => {
     await renderWithTheme(<SpecimenScreen onBack={() => {}} />);
     const quadrant = within(screen.getByTestId(`quadrant-${id}`));
     expect(quadrant.getAllByTestId(/^role-/)).toHaveLength(23);
     expect(quadrant.getByTestId('role-scrim')).toBeTruthy();
-    expect(quadrant.getAllByTestId(/^type-/)).toHaveLength(5);
+    expect(quadrant.getAllByTestId(/^type-/)).toHaveLength(6);
   });
 
   it('shows the card step at 4 in neo and 2 in raw', async () => {
