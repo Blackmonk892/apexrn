@@ -4,13 +4,16 @@ import { ApexRNProvider, type PresetName } from '@apexrn/ui';
 
 type Options = { mode?: 'light' | 'dark'; preset?: PresetName };
 
-// RNTL 14 renders asynchronously, so callers must await this.
+// RNTL 14 renders asynchronously, so callers must await this. The provider goes in `wrapper`
+// so `rerender` keeps it; wrapping `ui` directly would rerender without a theme.
 export async function renderWithTheme(ui: ReactElement, { mode = 'light', preset }: Options = {}) {
-  return render(
-    <ApexRNProvider defaultMode={mode} preset={preset}>
-      {ui}
-    </ApexRNProvider>,
-  );
+  return render(ui, {
+    wrapper: ({ children }) => (
+      <ApexRNProvider defaultMode={mode} preset={preset}>
+        {children}
+      </ApexRNProvider>
+    ),
+  });
 }
 
 const PALETTES: { palette: string; preset: PresetName; mode: 'light' | 'dark' }[] = [
