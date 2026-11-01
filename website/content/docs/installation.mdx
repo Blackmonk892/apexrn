@@ -1,0 +1,64 @@
+---
+title: Installation
+description: Run apexrn init in an Expo app, add a part, install the peer dependencies and wrap the app root.
+---
+
+Parts are copied into your project by the [CLI](/docs/cli). Nothing is added to your dependencies except the peer packages the copied parts import.
+
+## Init
+
+Run this in the root of an Expo app, the folder with `package.json`. It writes `apexrn.json` and the three shared files every part needs: theme, colours and metrics.
+
+<CliStep id="init" />
+
+## Add a part
+
+Add any number of parts by slug. Their shared dependencies come along and are never overwritten. Slugs are listed on the [components](/docs/components) page.
+
+```bash
+npx apexrn add <part>
+npx apexrn add button card dialog
+```
+
+## Peer dependencies
+
+The CLI prints an `npx expo install` line for whichever of these your chosen parts need and your project lacks. Together they are the full set across all parts:
+
+- `react-native-reanimated`
+- `react-native-worklets`
+- `react-native-gesture-handler`
+- `react-native-svg`
+- `expo-haptics`
+
+The safe-area examples below also use `react-native-safe-area-context`, which ships with Expo.
+
+## Wrap the app root
+
+`GestureHandlerRootView` goes outermost, then `ApexRNProvider`. Drawer, Sheet and Slider rely on gestures and do not respond without the root view.
+
+<SetupCode />
+
+### Provider options
+
+```tsx
+import { ApexRNProvider } from '@/lib/apexrn/theme';
+
+// preset is 'neo' (default) or 'raw'. defaultMode is 'light' | 'dark' | 'system'.
+<ApexRNProvider defaultMode="system" preset="raw">
+  {/* app */}
+</ApexRNProvider>
+```
+
+## Pass safe-area insets
+
+Parts that touch a screen edge do not read the safe area themselves. `AppBar` takes `topInset`, `Drawer` content takes `topInset` and `bottomInset`, and `BottomNav` takes `bottomInset`.
+
+```tsx
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+const insets = useSafeAreaInsets();
+
+<AppBar title="Inbox" topInset={insets.top} />
+<DrawerContent topInset={insets.top} bottomInset={insets.bottom}>{/* items */}</DrawerContent>
+<BottomNav value={tab} onValueChange={setTab} bottomInset={insets.bottom}>{/* tabs */}</BottomNav>
+```
