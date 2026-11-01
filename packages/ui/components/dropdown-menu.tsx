@@ -13,7 +13,6 @@ import {
 } from 'react';
 import {
   type GestureResponderEvent,
-  type LayoutRectangle,
   Modal,
   Pressable,
   type PressableProps,
@@ -23,140 +22,124 @@ import {
   View,
   type ViewProps,
 } from 'react-native';
-import Animated, {
-  Easing,
-  interpolate,
-  runOnJS,
-  useAnimatedStyle,
-  useReducedMotion,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
+import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
-import { borderWidths, spacing } from '../lib/colors';
+import { borderWidths, opacity, spacing } from '../lib/colors';
+import { CloseIcon } from '../lib/icons';
+import { useMotion } from '../lib/motion';
 import { useTheme } from '../lib/theme';
 import BrutalSurface from './brutal-surface';
-import ListItem from './list-item';
+import Text from './text';
 
-// ---------------------------------------------------------------------------
-// Types & Context
-// ---------------------------------------------------------------------------
+interface Rect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 interface DropdownContextState {
-  isOpen: boolean;
-  setIsOpen: (open: boolean) => void;
-  close: () => void;
-  triggerLayout: LayoutRectangle | null;
-  setTriggerLayout: (layout: LayoutRectangle) => void;
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  anchor: Rect | null;
+  setAnchor: (rect: Rect) => void;
 }
 
 const DropdownContext = createContext<DropdownContextState | undefined>(undefined);
 
-function useDropdownContext() {
+function useDropdownContext(part: string) {
   const context = useContext(DropdownContext);
   if (!context) {
-    throw new Error('Dropdown sub-components must be used within a <DropdownMenu />');
+    throw new Error(`${part} must be used within DropdownMenu`);
   }
   return context;
 }
 
 export interface DropdownMenuProps {
-  /**
-   * The controlled open state. Omit for an uncontrolled menu.
-   */
+  /** Controlled open state. Omit for an uncontrolled menu. */
   open?: boolean;
-  /**
-   * Initial open state when uncontrolled.
-   * @default false
-   */
+  /** Initial open state when uncontrolled. @default false */
   defaultOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
   children: ReactNode;
 }
 
-export interface DropdownMenuItemProps extends Omit<PressableProps, 'style'> {
+export interface DropdownMenuTriggerProps extends Omit<PressableProps, 'children'> {
+  /** Clone the single child and inject `onPress` instead of rendering a Pressable. */
+  asChild?: boolean;
+  children?: ReactNode;
+}
+
+export interface DropdownMenuItemProps extends Omit<PressableProps, 'style' | 'children' | 'onPress'> {
   label: string;
   description?: string;
+  /** Leading icon or glyph. A destructive item shows its status icon here instead. */
   leading?: ReactNode;
   trailing?: ReactNode;
+  /** Runs when the item is chosen, before the menu closes. */
+  onSelect?: () => void;
+  /** Destructive text plus a status icon; colour is never the only signal. */
+  destructive?: boolean;
 }
 
-// ---------------------------------------------------------------------------
-// Design tokens
-// ---------------------------------------------------------------------------
-const SHADOW_OFFSET = 4;
-// Minimum width; the menu grows to its widest item, up to the screen edge.
-const MENU_WIDTH = 220;
+// The panel grows to its widest item up to the window edge; height is capped so long menus scroll.
+const MENU_MIN_WIDTH = 220;
 const MENU_MAX_HEIGHT = 320;
+const ITEM_MIN_HEIGHT = 48;
+const ENTER_OFFSET = 6;
 
-// ---------------------------------------------------------------------------
-// Components
-// ---------------------------------------------------------------------------
-export function DropdownMenu({ open: openProp, defaultOpen = false, onOpenChange, children }: DropdownMenuProps) {
-  const [triggerLayout, setTriggerLayout] = useState<LayoutRectangle | null>(null);
-  const [internalOpen, setInternalOpen] = useState(defaultOpen);
-  const isControlled = openProp !== undefined;
-  const isOpen = isControlled ? openProp : internalOpen;
+export function DropdownMenu({ open: controlledOpen, defaultOpen = false, onOpenChange, children }: DropdownMenuProps) {
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(defaultOpen);
+  const [anchor, setAnchor] = useState<Rect | null>(null);
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : uncontrolledOpen;
 
-  const setIsOpen = useCallback((nextOpen: boolean) => {
-    if (!isControlled) setInternalOpen(nextOpen);
-    onOpenChange?.(nextOpen);
-  }, [isControlled, onOpenChange]);
-
-  const close = useCallback(() => setIsOpen(false), [setIsOpen]);
-
-  const context = useMemo(
-    () => ({ isOpen, setIsOpen, close, triggerLayout, setTriggerLayout }),
-    [isOpen, setIsOpen, close, triggerLayout],
+  const setOpen = useCallback(
+    (next: boolean) => {
+      if (!isControlled) setUncontrolledOpen(next);
+      onOpenChange?.(next);
+    },
+    [isControlled, onOpenChange],
   );
 
-  return (
-    <DropdownContext.Provider value={context}>
-      {children}
-    </DropdownContext.Provider>
-  );
+  const context = useMemo(() => ({ open, setOpen, anchor, setAnchor }), [open, setOpen, anchor]);
+
+  return <DropdownContext.Provider value={context}>{children}</DropdownContext.Provider>;
 }
 
-export function DropdownMenuTrigger({ children, onPress, asChild, ...props }: PressableProps & { asChild?: boolean }) {
-  const { isOpen, setIsOpen, setTriggerLayout } = useDropdownContext();
-  const triggerRef = useRef<View>(null);
+export function DropdownMenuTrigger({ asChild, children, onPress, ...props }: DropdownMenuTriggerProps) {
+  const { open, setOpen, setAnchor } = useDropdownContext('DropdownMenuTrigger');
+  const ref = useRef<View>(null);
 
-  const openFromMeasurement = useCallback(() => {
-    // measure() is async: capture the node first so a null ref falls back
-    // to the default position instead of throwing.
-    const node = triggerRef.current;
-    if (node) {
-      node.measure((_x, _y, width, height, pageX, pageY) => {
-        setTriggerLayout({ x: pageX, y: pageY, width, height });
-        setIsOpen(true);
-      });
-    } else {
-      setIsOpen(true);
-    }
-  }, [setIsOpen, setTriggerLayout]);
-
-  const handlePress = (e: GestureResponderEvent) => {
-    onPress?.(e);
-    if (isOpen) {
-      setIsOpen(false);
+  const toggle = () => {
+    if (open) {
+      setOpen(false);
       return;
     }
-    openFromMeasurement();
+    const node = ref.current;
+    if (!node) {
+      setOpen(true);
+      return;
+    }
+    // Window coordinates match the Modal's coordinate space; plain measure() is parent-relative on some platforms.
+    node.measureInWindow((x, y, width, height) => {
+      setAnchor({ x, y, width, height });
+      setOpen(true);
+    });
   };
 
-  if (asChild && isValidElement(children)) {
-    // Never inject `ref` into an arbitrary child (e.g. `Button` is a
-    // function component without forwardRef — the ref would be null and
-    // measurement would silently fall back). Instead measure this wrapper,
-    // which hugs the child (flex-start) so its rect is the child's rect.
-    const child = children as ReactElement<{
-      onPress?: (e: GestureResponderEvent) => void;
-    }>;
+  if (asChild) {
+    if (!isValidElement(children)) {
+      throw new Error('DropdownMenuTrigger with asChild needs a single React element child');
+    }
+    const child = children as ReactElement<{ onPress?: (e: GestureResponderEvent) => void }>;
+    // Function components such as Button don't forward a ref, so measure a wrapper that hugs the child.
     return (
-      <View ref={triggerRef} collapsable={false} style={styles.triggerWrapper}>
+      <View ref={ref} collapsable={false} style={styles.wrapper}>
         {cloneElement(child, {
           onPress: (e: GestureResponderEvent) => {
             child.props.onPress?.(e);
-            handlePress(e);
+            toggle();
           },
         })}
       </View>
@@ -165,13 +148,17 @@ export function DropdownMenuTrigger({ children, onPress, asChild, ...props }: Pr
 
   return (
     <Pressable
-      ref={triggerRef}
+      ref={ref}
+      collapsable={false}
       accessibilityRole="button"
-      accessibilityState={{ expanded: isOpen }}
-      aria-expanded={isOpen}
+      accessibilityState={{ expanded: open }}
       aria-haspopup="menu"
+      hitSlop={8}
       {...props}
-      onPress={handlePress}
+      onPress={(e) => {
+        onPress?.(e);
+        toggle();
+      }}
     >
       {children}
     </Pressable>
@@ -179,95 +166,88 @@ export function DropdownMenuTrigger({ children, onPress, asChild, ...props }: Pr
 }
 
 export function DropdownMenuContent({ children, style, ...props }: ViewProps) {
-  const { isOpen, close, triggerLayout } = useDropdownContext();
-  const { colors } = useTheme();
-  const reduceMotion = useReducedMotion();
-  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+  const { open, setOpen, anchor } = useDropdownContext('DropdownMenuContent');
+  const { colors, elevation } = useTheme();
+  const { reduceMotion, enter, exit } = useMotion();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   // The Modal stays mounted until the exit animation finishes.
-  const [isModalVisible, setIsModalVisible] = useState(isOpen);
-
+  const [mounted, setMounted] = useState(open);
   const progress = useSharedValue(0);
 
   useEffect(() => {
-    if (isOpen) {
-      setIsModalVisible(true);
-      progress.value = withTiming(1, { duration: reduceMotion ? 0 : 120, easing: Easing.out(Easing.quad) });
+    if (open) {
+      setMounted(true);
+      progress.value = withTiming(1, enter);
     } else {
-      // Also runs on first mount while closed: 0 -> 0 finishes immediately.
-      progress.value = withTiming(0, { duration: reduceMotion ? 0 : 100, easing: Easing.in(Easing.quad) }, (finished) => {
-        if (finished) {
-          runOnJS(setIsModalVisible)(false);
-        }
+      // On a first closed render 0 -> 0 completes at once and unmounting a hidden Modal is a no-op.
+      progress.value = withTiming(0, exit, (finished) => {
+        if (finished) runOnJS(setMounted)(false);
       });
     }
-  }, [isOpen, reduceMotion, progress]);
+    // enter/exit change identity only when reduced motion flips, which is already a dependency.
+  }, [open, reduceMotion]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    opacity: progress.value,
-    transform: [{ scale: interpolate(progress.value, [0, 1], [0.9, 1]) }],
-  }));
-
-  // Anchored under the trigger, flipped above it when there is not enough
-  // room below, and clamped on-screen with room for the hard shadow.
-  // Falls back to a visible default when the trigger was not measured.
+  const reserve = elevation.overlay;
   const gap = spacing.xs;
   const edge = spacing.sm;
-  const left = triggerLayout
-    ? Math.max(edge, Math.min(triggerLayout.x, screenWidth - MENU_WIDTH - SHADOW_OFFSET - edge))
-    : spacing.lg;
-  let vertical: { top: number } | { bottom: number };
-  if (!triggerLayout) {
-    vertical = { top: 100 };
+
+  // Below the trigger by default; above it when the capped panel doesn't fit below and there is more room above.
+  let position: { left: number; top?: number; bottom?: number };
+  let maxHeight = MENU_MAX_HEIGHT;
+  let flipped = false;
+  if (anchor) {
+    const left = Math.max(edge, Math.min(anchor.x, windowWidth - MENU_MIN_WIDTH - reserve - edge));
+    const below = windowHeight - (anchor.y + anchor.height) - gap - reserve - edge;
+    const above = anchor.y - gap - edge;
+    flipped = below < MENU_MAX_HEIGHT && above > below;
+    maxHeight = Math.min(MENU_MAX_HEIGHT, Math.max(ITEM_MIN_HEIGHT, flipped ? above : below));
+    position = flipped
+      ? { left, bottom: windowHeight - anchor.y + gap }
+      : { left, top: anchor.y + anchor.height + gap };
   } else {
-    const below = screenHeight - (triggerLayout.y + triggerLayout.height);
-    const above = triggerLayout.y;
-    const fitsBelow = below >= MENU_MAX_HEIGHT + SHADOW_OFFSET + gap + edge;
-    vertical = fitsBelow || below >= above
-      ? { top: Math.max(edge, triggerLayout.y + triggerLayout.height + gap) }
-      : { bottom: Math.max(edge, screenHeight - triggerLayout.y + gap) };
+    position = { left: spacing.lg, top: windowHeight / 4 };
   }
-  const maxHeight = triggerLayout
-    ? Math.min(MENU_MAX_HEIGHT, Math.max(120, 'top' in vertical ? screenHeight - vertical.top - SHADOW_OFFSET - edge : triggerLayout.y - gap - edge))
-    : MENU_MAX_HEIGHT;
+
+  const panelStyle = useAnimatedStyle(() => ({
+    opacity: progress.value,
+    transform: reduceMotion ? [] : [{ translateY: (1 - progress.value) * ENTER_OFFSET * (flipped ? 1 : -1) }],
+  }));
 
   return (
     <Modal
-      visible={isModalVisible}
       transparent
+      statusBarTranslucent
+      visible={mounted}
       animationType="none"
-      onRequestClose={close}
-      accessibilityViewIsModal
+      onRequestClose={() => setOpen(false)}
     >
-      <View style={styles.portalOverlay}>
+      <View accessibilityViewIsModal style={StyleSheet.absoluteFill}>
         <Pressable
-          style={styles.backdrop}
-          onPress={close}
+          style={StyleSheet.absoluteFill}
+          onPress={() => setOpen(false)}
           accessibilityRole="button"
-          accessibilityLabel="Dismiss Dropdown"
+          accessibilityLabel="Close menu"
         />
-
         <Animated.View
+          pointerEvents="box-none"
           style={[
-            styles.menuWrapper,
-            { left, minWidth: MENU_WIDTH + SHADOW_OFFSET, maxWidth: screenWidth - left - edge, ...vertical },
-            style,
-            animatedStyle,
+            styles.panel,
+            position,
+            { minWidth: MENU_MIN_WIDTH + reserve, maxWidth: windowWidth - edge * 2 },
+            panelStyle,
           ]}
-          accessibilityRole="menu"
-          {...props}
         >
           <BrutalSurface
             pressable={false}
-            elevation="card"
-            borderWidth="container"
+            elevation="overlay"
             backgroundColor={colors.background}
-            surfaceStyle={[styles.surface, { maxHeight }]}
+            surfaceStyle={{ overflow: 'hidden', maxHeight }}
           >
             <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
-              {/* Every item draws a bottom divider; the negative margin lets
-                  the last one slide under the surface border instead of
-                  doubling it. */}
-              <View style={{ marginBottom: -borderWidths.control }}>{children}</View>
+              {/* Each item draws a bottom divider; the negative margin lets the last one sit under the surface border. */}
+              <View accessibilityRole="menu" style={[{ marginBottom: -borderWidths.control }, style]} {...props}>
+                {children}
+              </View>
             </ScrollView>
           </BrutalSurface>
         </Animated.View>
@@ -281,54 +261,72 @@ export function DropdownMenuItem({
   description,
   leading,
   trailing,
-  onPress,
+  onSelect,
+  destructive = false,
   disabled,
   ...props
 }: DropdownMenuItemProps) {
-  const { close } = useDropdownContext();
+  const { setOpen } = useDropdownContext('DropdownMenuItem');
   const { colors } = useTheme();
 
-  const handlePress = (e: GestureResponderEvent) => {
-    onPress?.(e);
-    close();
+  const select = () => {
+    onSelect?.();
+    setOpen(false);
   };
 
   return (
-    <ListItem
-      title={label}
-      description={description}
-      leading={leading}
-      trailing={trailing}
-      disabled={!!disabled}
-      onPress={handlePress}
-      style={[{ borderColor: colors.border, paddingVertical: spacing.sm, paddingHorizontal: spacing.sm }]}
+    <Pressable
       accessibilityRole="menuitem"
+      accessibilityLabel={label}
+      accessibilityState={{ disabled: !!disabled }}
+      disabled={disabled}
+      onPress={select}
       {...props}
-    />
+      style={({ pressed }) => [
+        styles.item,
+        {
+          gap: spacing.sm,
+          paddingHorizontal: spacing.md,
+          paddingVertical: spacing.sm,
+          borderBottomColor: colors.border,
+          backgroundColor: pressed ? (destructive ? colors.destructive : colors.foreground) : colors.background,
+          opacity: disabled ? opacity.disabled : 1,
+        },
+      ]}
+    >
+      {({ pressed }) => {
+        const ink = pressed
+          ? destructive ? colors.destructiveForeground : colors.background
+          : destructive ? colors.destructive : colors.foreground;
+        return (
+          <>
+            {destructive ? <CloseIcon size={20} color={ink} /> : leading}
+            <View style={styles.text}>
+              <Text tone="inherit" style={{ color: ink }}>
+                {label}
+              </Text>
+              {description ? (
+                <Text tone="inherit" style={{ color: ink }}>
+                  {description}
+                </Text>
+              ) : null}
+            </View>
+            {trailing}
+          </>
+        );
+      }}
+    </Pressable>
   );
 }
 
-// ---------------------------------------------------------------------------
-// Styles
-// ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
-  triggerWrapper: {
-    alignSelf: 'flex-start',
+  wrapper: { alignSelf: 'flex-start' },
+  panel: { position: 'absolute' },
+  item: {
+    minHeight: ITEM_MIN_HEIGHT,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderBottomWidth: borderWidths.control,
   },
-  portalOverlay: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: 'transparent',
-  },
-  backdrop: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: 'transparent',
-  },
-  menuWrapper: {
-    position: 'absolute',
-    zIndex: 1,
-  },
-  surface: {
-    overflow: 'hidden',
-    flexDirection: 'column',
-  },
+  text: { flex: 1 },
 });

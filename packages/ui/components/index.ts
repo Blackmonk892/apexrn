@@ -42,7 +42,7 @@ export {
   type SheetTitleProps,
   type SheetTriggerProps,
 } from './sheet';
-export { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, type DropdownMenuProps, type DropdownMenuItemProps } from './dropdown-menu';
+export { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, type DropdownMenuProps, type DropdownMenuTriggerProps, type DropdownMenuItemProps } from './dropdown-menu';
 export { Select, SelectTrigger, SelectContent, SelectItem, type SelectProps, type SelectTriggerProps, type SelectContentProps, type SelectItemProps } from './select';
 export { DatePicker, DatePickerTrigger, DatePickerContent, formatLocalDate, type DatePickerProps, type DatePickerTriggerProps } from './date-picker';
 export { Accordion, AccordionItem, AccordionTrigger, AccordionContent, type AccordionProps, type AccordionItemProps, type AccordionTriggerProps } from './accordion';

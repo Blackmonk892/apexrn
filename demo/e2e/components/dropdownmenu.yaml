@@ -1,0 +1,20 @@
+appId: dev.apexrn.demo
+---
+- runFlow:
+    file: ../_open.yaml
+    env:
+      ID: dropdown
+- tapOn:
+    id: "dropdown-open"
+- assertVisible: "Account settings"
+- tapOn: "Account settings"
+- assertVisible: "Last item: settings"
+- assertNotVisible: "Account settings"
+- tapOn:
+    id: "dropdown-open"
+- assertVisible: "Account settings"
+- back
+- assertNotVisible: "Account settings"
+- assertNotVisible: "Render Error"
+- assertNotVisible: ".*TypeError.*"
+- takeScreenshot: dropdownmenu
