@@ -147,6 +147,6 @@ const index = [
   "",
 ].join("\n");
 writeFileSync(join(outDir, "index.mdx"), index);
-writeFileSync(join(outDir, "meta.json"), JSON.stringify({ title: "Components", pages: ["index", ...parts.map((p) => p.slug)] }, null, 2));
+writeFileSync(join(outDir, "meta.json"), JSON.stringify({ title: "Components", pages: [...parts.map((p) => p.slug)] }, null, 2));
 writeFileSync(join(site, "src", "generated", "parts.json"), JSON.stringify(parts, null, 2));
 console.log(`[generate-component-mdx] wrote ${parts.length} pages, ${Object.keys(manifest).length} slugs with examples`);

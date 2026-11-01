@@ -169,7 +169,7 @@ dd {
   font-weight: 900;
 }
 .ax-part-label {
-  margin-bottom: 8px;
+  margin-bottom: -8px;
 }
 .ax-part-number {
   display: inline-block;
@@ -253,8 +253,39 @@ a[data-active="true"]:where(#nd-sidebar *, [role="dialog"] *) {
   background: var(--ax-muted);
   padding: 0 4px;
 }
+.ax-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.ax-title-row h1 {
+  margin: 0;
+}
 .ax-page-actions {
-  margin-block: 16px 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-inline-start: auto;
+}
+.ax-page-nav {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  min-height: 36px;
+  border: 2px solid var(--ax-border);
+  background: var(--ax-bg);
+  color: var(--ax-fg);
+  font-weight: 900;
+}
+.ax-page-nav:hover {
+  background: var(--ax-fg);
+  color: var(--ax-bg);
+}
+.ax-title-row + p {
+  margin-block: -8px 16px;
 }
 .ax-page-actions button {
   display: inline-flex;
@@ -531,11 +562,26 @@ figure.shiki figcaption {
 
 /* An iframe whose document differs in color-scheme from its parent gets an opaque canvas. */
 .ax-frame {
-  color-scheme: normal;
+  background: transparent;
+}
+.ax-preview-stage[data-box="dark"] .ax-frame {
+  color-scheme: dark;
+}
+.ax-preview-stage[data-box="light"] .ax-frame {
+  color-scheme: light;
+}
+[class*="backdrop-blur"] {
+  --tw-backdrop-blur: blur(0px);
+}
+.fixed.inset-0.z-50[class*="bg-fd-overlay"] {
+  background: rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+.dark .fixed.inset-0.z-50[class*="bg-fd-overlay"] {
+  background: rgba(0, 0, 0, 0.7) !important;
 }
 #nd-sidebar a[data-active] {
   padding-inline: 8px;
 }
-.ax-page-actions {
-  margin-top: -8px;
-}
+

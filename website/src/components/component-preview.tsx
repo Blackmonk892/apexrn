@@ -71,7 +71,13 @@ export function ComponentPreview({ slug, id, title, minHeight = MIN_HEIGHT, chil
   }, [send, minHeight]);
 
   useEffect(() => {
-    if (ready) send({ type: "apexrn:theme", mode });
+    if (!ready) return;
+    send({ type: "apexrn:theme", mode });
+    // A frame whose color-scheme differs from its document gets an opaque white canvas; keep both on the box's mode.
+    try {
+      const root = frameRef.current?.contentDocument?.documentElement;
+      root?.style.setProperty("color-scheme", mode);
+    } catch {}
   }, [ready, mode, send]);
   useEffect(() => {
     if (ready) send({ type: "apexrn:preset", preset });
