@@ -8,6 +8,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type ComponentRef,
   type ReactElement,
   type ReactNode,
 } from 'react';
@@ -109,7 +110,7 @@ export function DropdownMenu({ open: controlledOpen, defaultOpen = false, onOpen
 
 export function DropdownMenuTrigger({ asChild, children, onPress, ...props }: DropdownMenuTriggerProps) {
   const { open, setOpen, setAnchor } = useDropdownContext('DropdownMenuTrigger');
-  const ref = useRef<View>(null);
+  const ref = useRef<ComponentRef<typeof View>>(null);
 
   const toggle = () => {
     if (open) {

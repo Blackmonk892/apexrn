@@ -1,10 +1,8 @@
-import { forwardRef, useId, useState } from 'react';
+import { forwardRef, type ComponentRef, useId, useState } from 'react';
 import {
-  type NativeSyntheticEvent,
   type StyleProp,
   StyleSheet,
   TextInput,
-  type TextInputContentSizeChangeEventData,
   type TextInputProps,
   type TextStyle,
   View,
@@ -49,7 +47,7 @@ const ERROR_ICON_SIZE = 16;
 
 const clamp = (n: number, min: number, max: number) => Math.min(Math.max(n, min), max);
 
-export const Textarea = forwardRef<TextInput, TextareaProps>(function Textarea(
+export const Textarea = forwardRef<ComponentRef<typeof TextInput>, TextareaProps>(function Textarea(
   {
     label,
     required = false,
@@ -98,7 +96,7 @@ export const Textarea = forwardRef<TextInput, TextareaProps>(function Textarea(
   // iOS has no accessibilityLabelledBy, so the label text is repeated on the field.
   const spoken = accessibilityLabel ?? (label ? (required ? `${label}, required` : label) : undefined);
 
-  const handleContentSize = (e: NativeSyntheticEvent<TextInputContentSizeChangeEventData>) => {
+  const handleContentSize = (e: Parameters<NonNullable<TextInputProps['onContentSizeChange']>>[0]) => {
     setContent(e.nativeEvent.contentSize.height);
     onContentSizeChange?.(e);
   };

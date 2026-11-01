@@ -1,4 +1,4 @@
-import { forwardRef, useId, useState, type ReactNode } from 'react';
+import { forwardRef, type ComponentRef, useId, useState, type ReactNode } from 'react';
 import {
   type StyleProp,
   StyleSheet,
@@ -67,7 +67,7 @@ const inputStyles = (c: ColorScheme) =>
 
 const ERROR_ICON_SIZE = 16;
 
-export const Input = forwardRef<TextInput, InputProps>(function Input(
+export const Input = forwardRef<ComponentRef<typeof TextInput>, InputProps>(function Input(
   {
     label,
     required = false,

@@ -1,4 +1,4 @@
-import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
+import { forwardRef, type ComponentRef, useImperativeHandle, useRef, useState } from 'react';
 import {
   type LayoutChangeEvent,
   Pressable,
@@ -40,7 +40,7 @@ const MAX_BLOCK_SIZE = 56;
 // Below this a digit stops being comfortably legible.
 const MIN_BLOCK_SIZE = 28;
 
-export const InputOTP = forwardRef<TextInput, InputOTPProps>(function InputOTP(
+export const InputOTP = forwardRef<ComponentRef<typeof TextInput>, InputOTPProps>(function InputOTP(
   {
     length = 4,
     value: valueProp,
@@ -61,8 +61,8 @@ export const InputOTP = forwardRef<TextInput, InputOTPProps>(function InputOTP(
   ref,
 ) {
   const { colors, elevation } = useTheme();
-  const inputRef = useRef<TextInput>(null);
-  useImperativeHandle(ref, () => inputRef.current as TextInput);
+  const inputRef = useRef<ComponentRef<typeof TextInput>>(null);
+  useImperativeHandle(ref, () => inputRef.current as ComponentRef<typeof TextInput>);
 
   const safeLength = Math.max(1, Math.floor(length));
   const clean = (text: string) => text.replace(/\D/g, '').slice(0, safeLength);

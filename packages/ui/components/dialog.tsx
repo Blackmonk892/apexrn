@@ -8,6 +8,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type ComponentRef,
   type ReactElement,
   type ReactNode,
 } from 'react';
@@ -220,7 +221,7 @@ export function DialogFooter({ style, ...props }: ViewProps) {
 
 export function DialogTitle(props: TextProps) {
   useDialogContext('DialogTitle');
-  const ref = useRef<RNText>(null);
+  const ref = useRef<ComponentRef<typeof RNText>>(null);
 
   // The title mounts with the Modal content, so mount time is open time.
   useEffect(() => {

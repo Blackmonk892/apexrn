@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { createContext, type ComponentRef, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   type LayoutChangeEvent,
   Pressable,
@@ -106,7 +106,7 @@ export function TabsList({ children, style, ...props }: TabsListProps) {
   const { selection, reduceMotion } = useMotion();
   const [boxes, setBoxes] = useState<Record<string, Box>>({});
   const [viewport, setViewport] = useState(0);
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ComponentRef<typeof ScrollView>>(null);
   const placed = useRef(false);
 
   const translateX = useSharedValue(0);

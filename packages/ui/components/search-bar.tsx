@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, type ComponentRef, useState } from 'react';
 import {
   Pressable,
   type StyleProp,
@@ -70,7 +70,7 @@ export function SearchBar({
   ...props
 }: SearchBarProps) {
   const { colors } = useTheme();
-  const inputRef = useRef<TextInput>(null);
+  const inputRef = useRef<ComponentRef<typeof TextInput>>(null);
   const [internalValue, setInternalValue] = useState(defaultValue);
   const [focused, setFocused] = useState(false);
   const value = valueProp ?? internalValue;
