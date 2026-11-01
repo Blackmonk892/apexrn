@@ -98,3 +98,9 @@ export const PlusIcon = (p: IconProps) => (
     <Path d="M12 4V20M4 12H20" />
   </Icon>
 );
+
+export const ChevronDownIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <Path d="M6 9L12 15L18 9" />
+  </Icon>
+);
