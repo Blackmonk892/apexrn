@@ -149,3 +149,8 @@ Parallel tasks and their files (recorded retroactively for A5/A6, which were dis
 - A label/value summary row primitive (Checkout totals).
 - Reference screens: add Chips + BottomNav (Inbox), Drawer (Settings), Toast on Checkout submit per DESIGN §8.
 - InputOTP: alphanumeric `pattern`.
+
+### Site v2 (2026-11-02): Fumadocs + poster landing
+- Rejected v1 site replaced. Plan: `docs/ship-plan/site-v2.md`.
+- Ruling: the machine has 2 cores and 7 GB of RAM, so preview and web run as 2 parallel agents on separate branches, merged into `ship/site-v2`. The landing starts once the web foundation is merged. Cost if wrong: about 30 minutes of serial time.
+- Ruling: the preview example sources live in `preview/src/examples/<slug>/<example>.tsx` and import only from `@apexrn/ui`. The website reads those files as text for the Code tab, so the code shown is the code that runs.
