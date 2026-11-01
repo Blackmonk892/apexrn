@@ -12,20 +12,19 @@ function exampleUrl(slug: string, id: string, mode: Mode, preset: string) {
   return `${BASE_PATH}/preview/index.html?theme=${mode}&preset=${preset}#/example/${slug}/${id}`;
 }
 
-export function ComponentPreview({ slug, id, title, children }: { slug: string; id: string; title: string; children: ReactNode }) {
+export function ComponentPreview({ slug, id, title, minHeight = MIN_HEIGHT, children }: { slug: string; id: string; title: string; minHeight?: number; children: ReactNode }) {
   const { resolvedTheme } = useTheme();
   const preset = usePreset();
   const siteMode: Mode = resolvedTheme === "dark" ? "dark" : "light";
   const [tab, setTab] = useState<"preview" | "code">("preview");
   const [override, setOverride] = useState<Mode | null>(null);
-  const [visible, setVisible] = useState(false);
+  const [src, setSrc] = useState<string | undefined>();
   const [ready, setReady] = useState(false);
-  const [height, setHeight] = useState(MIN_HEIGHT);
+  const [height, setHeight] = useState(minHeight);
   const [error, setError] = useState<string | null>(null);
   const [shotFailed, setShotFailed] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef<HTMLIFrameElement>(null);
-  const initial = useRef<{ mode: Mode; preset: string } | null>(null);
 
   const mode = override ?? siteMode;
   const latest = useRef({ mode, preset });
@@ -39,7 +38,7 @@ export function ComponentPreview({ slug, id, title, children }: { slug: string; 
     const io = new IntersectionObserver(
       (entries) => {
         if (entries.some((e) => e.isIntersecting)) {
-          setVisible(true);
+          setSrc(exampleUrl(slug, id, latest.current.mode, latest.current.preset));
           io.disconnect();
         }
       },
@@ -47,7 +46,7 @@ export function ComponentPreview({ slug, id, title, children }: { slug: string; 
     );
     io.observe(el);
     return () => io.disconnect();
-  }, []);
+  }, [slug, id]);
 
   const send = useCallback((message: object) => {
     frameRef.current?.contentWindow?.postMessage(message, window.location.origin);
@@ -62,14 +61,14 @@ export function ComponentPreview({ slug, id, title, children }: { slug: string; 
         send({ type: "apexrn:theme", mode: latest.current.mode });
         send({ type: "apexrn:preset", preset: latest.current.preset });
       } else if (d?.type === "apexrn:resize" && typeof d.height === "number") {
-        setHeight(Math.max(MIN_HEIGHT, Math.ceil(d.height)));
+        setHeight(Math.max(minHeight, Math.ceil(d.height)));
       } else if (d?.type === "apexrn:error") {
         setError(d.message ?? "The example failed to render.");
       }
     }
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, [send]);
+  }, [send, minHeight]);
 
   useEffect(() => {
     if (ready) send({ type: "apexrn:theme", mode });
@@ -78,8 +77,6 @@ export function ComponentPreview({ slug, id, title, children }: { slug: string; 
     if (ready) send({ type: "apexrn:preset", preset });
   }, [ready, preset, send]);
 
-  if (visible && !initial.current) initial.current = { mode, preset };
-  const src = initial.current ? exampleUrl(slug, id, initial.current.mode, initial.current.preset) : undefined;
   const openUrl = exampleUrl(slug, id, mode, preset);
 
   return (
@@ -101,10 +98,10 @@ export function ComponentPreview({ slug, id, title, children }: { slug: string; 
           </a>
         </div>
       </div>
-      <div role="tabpanel" id={`${slug}-${id}-panel-preview`} aria-labelledby={`${slug}-${id}-tab-preview`} hidden={tab !== "preview"} className="ax-preview-stage" data-box={mode} data-ready={ready || undefined} style={{ minHeight: MIN_HEIGHT }}>
+      <div role="tabpanel" id={`${slug}-${id}-panel-preview`} aria-labelledby={`${slug}-${id}-tab-preview`} hidden={tab !== "preview"} className="ax-preview-stage" data-box={mode} data-ready={ready || undefined} style={{ minHeight }}>
         {!shotFailed && (
           // eslint-disable-next-line @next/next/no-img-element -- static export, fixed dimensions
-          <img className="ax-shot" src={`${BASE_PATH}/previews/${slug}/${id}-${mode}.png`} width={720} height={MIN_HEIGHT} alt="" aria-hidden="true" onError={() => setShotFailed(true)} />
+          <img className="ax-shot" src={`${BASE_PATH}/previews/${slug}/${id}-${mode}.png`} width={720} height={minHeight} alt="" aria-hidden="true" onError={() => setShotFailed(true)} />
         )}
         {src && <iframe ref={frameRef} className="ax-frame" title={`${title} example`} src={src} loading="lazy" style={{ height }} />}
         {error && <p className="ax-preview-error" role="alert">{error}</p>}

@@ -1,10 +1,9 @@
+"use client";
+
 import { useSyncExternalStore } from "react";
+import { PRESET_KEY } from "./preset-script";
 
 export type Preset = "neo" | "raw";
-export const PRESET_KEY = "apexrn-preset";
-
-// Runs in <head> before first paint so the preset never flashes.
-export const PRESET_SCRIPT = `try{var p=localStorage.getItem("${PRESET_KEY}");document.documentElement.dataset.preset=p==="raw"?"raw":"neo"}catch(e){document.documentElement.dataset.preset="neo"}`;
 
 export function readPreset(): Preset {
   return document.documentElement.dataset.preset === "raw" ? "raw" : "neo";
