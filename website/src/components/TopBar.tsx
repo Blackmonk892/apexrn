@@ -22,6 +22,11 @@ export function TopBar() {
 
   useDismissableOverlay(menuOpen, closeMenu, menuRef);
 
+  // The trap only engages on Tab; put focus inside the dialog as soon as it opens.
+  useEffect(() => {
+    if (menuOpen) menuRef.current?.querySelector<HTMLElement>("button, a[href]")?.focus();
+  }, [menuOpen]);
+
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {

@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   title: { absolute: "ApexRN: brutalist UI parts for React Native" },
   description:
     "Copy React Native components into your Expo app with one command and own every line. Thick borders, zero radius, hard shadows.",
-  alternates: { canonical: "/" },
+  alternates: process.env.NEXT_PUBLIC_SITE_URL ? { canonical: "/" } : undefined,
 };
 
 function leader(slug: string, label: string, y: number) {
