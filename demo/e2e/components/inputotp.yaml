@@ -1,0 +1,16 @@
+appId: dev.apexrn.demo
+---
+- runFlow:
+    file: ../_open.yaml
+    env:
+      ID: input_otp
+- assertVisible:
+    id: "input-otp-6"
+- tapOn:
+    id: "input-otp-6"
+- inputText: "123456"
+- hideKeyboard
+- assertVisible: "Complete: 123456"
+- assertNotVisible: "Render Error"
+- assertNotVisible: ".*TypeError.*"
+- takeScreenshot: inputotp

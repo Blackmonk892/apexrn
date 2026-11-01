@@ -11,25 +11,29 @@ export default function InputOTPScreen({ onBack }: { onBack: () => void }) {
   const [otp4, setOtp4] = useState('');
   const [otp6, setOtp6] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [log, setLog] = useState('No code entered');
   const wrong = submitted && otp6 !== CORRECT;
 
   return (
     <Layout id="input_otp" title="INPUT OTP" onBack={onBack}>
-      <Section title="Four digits" note="Tap the blocks to focus. The active block shows a cursor and its shadow.">
-        <InputOTP value={otp4} onChangeText={setOtp4} length={4} />
+      <Section title="Four digits" note="Tap the cells to focus. The active cell shows the focus ring. Paste a full code to fill every cell.">
+        <InputOTP testID="input-otp-4" value={otp4} onValueChange={setOtp4} length={4} />
         <Caption>{`Value: ${otp4 || 'empty'}`}</Caption>
       </Section>
 
-      <Section title="Six digits, with validation" note={`The correct code is ${CORRECT}. A wrong code turns every block destructive with a permanent shadow.`}>
+      <Section title="Six digits, with validation" note={`The correct code is ${CORRECT}. A wrong code turns every cell's border destructive.`}>
         <InputOTP
+          testID="input-otp-6"
           value={otp6}
-          onChangeText={(t) => {
+          onValueChange={(t) => {
             setOtp6(t);
             setSubmitted(false);
           }}
+          onComplete={(code) => setLog(`Complete: ${code}`)}
           length={6}
-          error={wrong}
+          invalid={wrong}
         />
+        <Caption>{log}</Caption>
         <View style={styles.row}>
           <Button title="Verify" variant="primary" size="sm" disabled={otp6.length < 6} onPress={() => setSubmitted(true)} />
           <Button title="Clear" variant="outline" size="sm" onPress={() => { setOtp6(''); setSubmitted(false); }} />
@@ -47,10 +51,10 @@ export default function InputOTPScreen({ onBack }: { onBack: () => void }) {
 
       <Section title="Disabled">
         <InputOTP value="12" length={4} disabled />
-        <Caption>Muted blocks, no shadow, no focus.</Caption>
+        <Caption>Dashed cells, no shadow, no focus.</Caption>
       </Section>
 
-      <Section title="Edge cases" note="Blocks shrink to fit: eight digits in a 320pt container.">
+      <Section title="Edge cases" note="Cells shrink to fit: eight digits in a 320pt container.">
         <View style={styles.narrow}>
           <InputOTP defaultValue="1234" length={8} />
         </View>
