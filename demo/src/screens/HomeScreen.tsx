@@ -68,6 +68,7 @@ const GROUPS: { title: string; items: { id: string; name: string }[] }[] = [
       { id: 'dropdown', name: 'Dropdown menu' },
       { id: 'select', name: 'Select' },
       { id: 'datepicker', name: 'Date picker' },
+      { id: 'numberinput', name: 'Number input' },
     ],
   },
   {

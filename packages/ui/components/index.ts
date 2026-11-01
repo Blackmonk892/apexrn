@@ -45,6 +45,7 @@ export {
 export { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, type DropdownMenuProps, type DropdownMenuTriggerProps, type DropdownMenuItemProps } from './dropdown-menu';
 export { Select, SelectTrigger, SelectContent, SelectItem, type SelectProps, type SelectTriggerProps, type SelectContentProps, type SelectItemProps } from './select';
 export { DatePicker, DatePickerTrigger, DatePickerContent, formatLocalDate, type DatePickerProps, type DatePickerTriggerProps, type DatePickerContentProps } from './date-picker';
+export { NumberInput, type NumberInputProps } from './number-input';
 export { Accordion, AccordionItem, AccordionTrigger, AccordionContent, type AccordionProps, type AccordionItemProps, type AccordionTriggerProps } from './accordion';
 export { SegmentedControl, type SegmentedControlProps, type SegmentedControlItem } from './segmented-control';
 export { Tabs, TabsList, TabsTrigger, TabsContent, type TabsProps, type TabsTriggerProps, type TabsContentProps } from './tabs';

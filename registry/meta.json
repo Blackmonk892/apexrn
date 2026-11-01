@@ -14,6 +14,7 @@
     "checkbox": "Controlled/uncontrolled checkbox.",
     "chip": "Toggleable, removable filter/tag chip.",
     "date-picker": "Date field that opens a calendar sheet.",
+    "number-input": "Stepper field with minus/plus buttons that repeat while held, optional typed entry, min/max/step.",
     "dialog": "Compound modal dialog (Trigger, Content, Title, Description, Footer).",
     "drawer": "Side drawer with swipe-to-close, scrim and Android back handling.",
     "dropdown-menu": "Anchored menu that opens from a trigger.",
