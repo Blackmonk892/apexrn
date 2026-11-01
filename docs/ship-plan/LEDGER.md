@@ -171,3 +171,9 @@ Parallel tasks and their files (recorded retroactively for A5/A6, which were dis
   - the footer wordmark at full width;
   - no blank stretches.
 - Adopted from Vercel: every rule other than the Title Case one is a build rule, and a full audit runs before the checkpoint.
+- Ruling: Usage falls back to the `demo` example source on six pages whose docs-data snippets don't run: drawer (DrawerList missing), dropdown-menu (`onPress` where it should be `onSelect`), empty-state (icon imported from the components barrel), checkbox (RadioGroupItem with no label), toast and toaster (no `<Toaster>`). The library and docs-data are untouched; fixing the snippets goes on the 0.2 list.
+- Ruling: on the site, the raw preset uses the brief's 4px/6px shadows (DESIGN.md raw elevation is 2). The owner's site brief is the more specific instruction.
+- Ruling: overlay examples (7 slugs) get a 480px minimum preview box, because their Modal is sized to the iframe viewport.
+- Ruling: Playground dropped from v2 (the owner allowed it to stay only if it already worked).
+- Ruling: the landing terminal is an inverted ink block in both themes (white in dark), the same treatment as active and selected states.
+- Process (owner, 2026-11-02): long agent sessions were replaced by small single-commit tasks, two at a time, with a build lock file (`../.build.lock`) so only one `next build` runs on this 2-core machine.
