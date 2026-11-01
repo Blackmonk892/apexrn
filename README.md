@@ -5,8 +5,6 @@
 
 ApexRN is an open-source component library for React Native inspired by the aesthetics of web brutalism. Thick borders, hard shadows, sharp corners, loud colors, and expressive interactions—all designed without sacrificing developer experience.
 
-https://www.ilovemd.online/pdf-to-md (imp design)
-
 Whether you're building a startup MVP, hackathon project, or an app that refuses to look generic, ApexRN gives you the tools to stand out.
 
 ## Why ApexRN?
@@ -17,7 +15,7 @@ ApexRN embraces personality.
 
 * 🧱 Brutalist design language
 * 📱 React Native first
-* ⚡ Works with Expo and bare React Native
+* ⚡ Built for Expo
 * 🎨 Themeable design tokens
 * ♿ Accessible defaults
 * 🔧 TypeScript support
@@ -62,7 +60,7 @@ ApexRN prioritizes:
       <img src="https://github.com/user-attachments/assets/41d1960b-59a2-4a2a-a863-c2118e2b5fe8" width="220" alt="Home" />
     </td>
     <td align="center">
-      <img src="https://github.com/user-attachments/assets/646a24e0-ec3a-437a-99e0-7aad05931eaf" width="220 alt="Buttons" />
+      <img src="https://github.com/user-attachments/assets/646a24e0-ec3a-437a-99e0-7aad05931eaf" width="220" alt="Buttons" />
     </td>
     <td align="center">
       <img src="https://github.com/user-attachments/assets/6fef9971-1f6e-4626-939b-753682eb143d" width="220" alt="Cards" />
@@ -79,7 +77,6 @@ ApexRN prioritizes:
       <td align="center">
       <img src="https://github.com/user-attachments/assets/e11a34b6-87f3-4e50-a267-0410f3fbca79" width="220" alt="Cards" />
     </td>
-    </td>
       <td align="center">
       <img src="https://github.com/user-attachments/assets/59f4bac3-2bec-413a-bb0d-5669c566e320" width="220" alt="Cards" />
     </td>
@@ -95,7 +92,7 @@ ApexRN prioritizes:
 </table>
 
 
-**36 components:** Accordion, Alert, Alert Dialog, App Bar, Avatar, Badge, Bottom Nav, Button, Card, Carousel, Checkbox, Chip, Date Picker, Dialog, Drawer, Dropdown Menu, FAB, Input, Input OTP, Label, List Item, Marquee, Progress, Radio Group, Search Bar, Select, Separator, Sheet, Skeleton, Slider, Switch, Tabs, Textarea, Toast, plus the `BrutalSurface` primitive and a light/dark theme with design tokens.
+**39 components:** Accordion, Alert, Alert Dialog, App Bar, Avatar, Badge, Bottom Nav, Button, Card, Carousel, Checkbox, Chip, Date Picker, Dialog, Drawer, Dropdown Menu, Empty State, FAB, Input, Input OTP, Label, List Item, Marquee, Number Input, Progress, Radio Group, Search Bar, Segmented Control, Select, Separator, Sheet, Skeleton, Slider, Switch, Tabs, Text, Textarea, Toast, plus the `BrutalSurface` primitive and two theme presets (`neo`, `raw`), each light and dark, built on design tokens.
 
 ---
 
@@ -105,16 +102,16 @@ ApexRN works like shadcn/ui: a CLI **copies component source into your app**. Yo
 
 ```bash
 # in an Expo project
-npx apexrn init            # writes apexrn.json, copies the theme + tokens
-npx apexrn add button card dialog
+npx apexrn init                     # writes apexrn.json, copies the theme + tokens
+npx apexrn add button card dialog   # or: npx apexrn add --all
 ```
 
 - Dependencies between components (and the shared `lib` files) are added automatically.
 - Peer packages (reanimated, worklets, gesture-handler, svg, haptics) are installed with `npx expo install` so versions match your Expo SDK.
-- `npx apexrn list` shows everything available, `npx apexrn diff button` shows how your copy differs from upstream, and `npx apexrn add button --overwrite` replaces it.
+- `npx apexrn list` shows everything available, `npx apexrn diff button` shows how your copy differs from upstream, and `npx apexrn add button --overwrite` replaces it. `--registry <url|path>` points the CLI at another registry; see [packages/cli/README.md](packages/cli/README.md).
 - Files you already have are never overwritten unless you name them with `--overwrite`; shared files (tokens, `brutal-surface`) are never overwritten as a side effect.
 
-Requires Expo (SDK 57 is what the components are tested against) and Node 18+.
+Requires an Expo project (components are tested against SDK 57 and 58) and Node 18+.
 
 ---
 
@@ -138,7 +135,7 @@ export default function App() {
 Then use what you added. The CLI keeps a generated barrel, so one import reaches everything installed:
 
 ```tsx
-import { Button, Card, CardText } from './src/components/apexrn';
+import { Button, Card, CardTitle } from './src/components/apexrn';
 
 <Button variant="primary" onPress={() => console.log('Pressed')}>Hello ApexRN</Button>
 ```
@@ -155,13 +152,7 @@ AppBar, Drawer and BottomNav take safe-area insets as props (`topInset` / `botto
 
 Unlike many UI kits adapted from the web, ApexRN is built specifically for React Native.
 
-Supported environments:
-
-* Expo
-* Expo Router
-* React Native CLI
-* Android
-* iOS
+Targets Expo apps (SDK 57 and 58) on Android and iOS, including Expo Router. The CLI refuses to `init` outside an Expo project, and bare React Native is not tested.
 
 ---
 
@@ -200,15 +191,18 @@ The library embraces:
 
 ## Status
 
-See [docs/releasing.md](docs/releasing.md) for exactly what is verified, what is not, and the steps to a 0.1.0 release.
+Version 0.1.0 is not published yet. What is verified:
 
-Components are verified in Expo Go; a full Android + iOS + screen-reader pass is tracked in `shipping.md`. The registry and CLI are built and tested locally but not published yet.
+* **Android:** run on an emulator by automation (Maestro flows in CI), plus Jest smoke tests for every component.
+* **iOS and device feel** (haptics, gestures, keyboard, screen readers): verified by hand with the device checklist in [docs/ship-plan/DEVICE-CHECKLIST.md](docs/ship-plan/DEVICE-CHECKLIST.md). Anything unchecked there is unverified.
+* **Web:** used for development and the website preview, not a supported target.
+
+Known gaps are listed in [CHANGELOG.md](CHANGELOG.md).
 
 ## Roadmap
 
-* Hosted registry and published CLI
-* Documentation site
-* Raw-brutalist theme preset
+* Publish the CLI and the hosted registry
+* DatePicker range mode, alphanumeric InputOTP
 * Popover / Tooltip, Segmented control, Stepper, Rating
 * Figma kit
 

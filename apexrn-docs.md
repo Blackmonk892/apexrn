@@ -1,3 +1,5 @@
+> **ARCHIVED.** This describes the pre-rewrite library and no longer matches the code. See the website docs for current usage.
+
 # ApexRN — Complete Component Library Documentation
 
 > **Version:** 1.0.0 (`@apexrn/ui`)
