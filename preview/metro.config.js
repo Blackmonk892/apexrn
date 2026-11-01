@@ -12,10 +12,18 @@ config.watchFolders = [uiRoot];
 // so the lib and preview always share ONE react / reanimated / svg.
 config.resolver.nodeModulesPaths = [path.resolve(projectRoot, 'node_modules')];
 
-// Alias (extraNodeModules can't map scoped subpaths).
+// Aliases (extraNodeModules can't map scoped subpaths). `@/components/apexrn` and
+// `@/lib/apexrn/*` are where the CLI installs the library, so example files read
+// exactly as they would in a consumer's app.
 config.resolver.resolveRequest = (context, moduleName, platform) => {
   if (moduleName === '@apexrn/ui') {
     return context.resolveRequest(context, path.join(uiRoot, 'index.ts'), platform);
+  }
+  if (moduleName === '@/components/apexrn') {
+    return context.resolveRequest(context, path.join(uiRoot, 'components', 'index.ts'), platform);
+  }
+  if (moduleName.startsWith('@/lib/apexrn/')) {
+    return context.resolveRequest(context, path.join(uiRoot, 'lib', moduleName.slice('@/lib/apexrn/'.length)), platform);
   }
   return context.resolveRequest(context, moduleName, platform);
 };

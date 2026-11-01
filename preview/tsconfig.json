@@ -6,6 +6,8 @@
     "baseUrl": ".",
     "paths": {
       "@apexrn/ui": ["../packages/ui/index.ts"],
+      "@/components/apexrn": ["../packages/ui/components/index.ts"],
+      "@/lib/apexrn/*": ["../packages/ui/lib/*"],
       "*": ["./node_modules/@types/*", "./node_modules/*"]
     }
   },

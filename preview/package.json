@@ -8,7 +8,9 @@
     "start": "expo start",
     "web": "expo start --web",
     "build:web": "expo export --platform web",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "npm run check:examples && tsc --noEmit",
+    "gen:examples": "node scripts/gen-examples.mjs",
+    "check:examples": "node scripts/gen-examples.mjs --check",
     "doctor": "node scripts/doctor.js"
   },
   "dependencies": {
