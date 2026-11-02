@@ -4,9 +4,11 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ApexRNProvider, useTheme, type PresetName } from '@apexrn/ui';
 
+import { ExampleScreen } from './src/example-screen';
 import { PreviewErrorBoundary } from './src/error-boundary';
 import { isPresetMessage, isRenderMessage, isThemeMessage, postToParent, type PreviewTheme, type RenderMessage } from './src/protocol';
 import { resolveComponent } from './src/registry';
+import { useRoute, type Route } from './src/route';
 import { Showcase } from './src/showcase';
 
 function isEmbed(): boolean {
@@ -35,9 +37,16 @@ function initialPreset(): PresetName {
   return new URLSearchParams(window.location.search).get('preset') === 'raw' ? 'raw' : 'neo';
 }
 
-function isShowcase(): boolean {
+function isShowcaseQuery(): boolean {
   if (Platform.OS !== 'web' || typeof window === 'undefined') return false;
   return new URLSearchParams(window.location.search).get('view') === 'showcase';
+}
+
+/** `?theme=` seeds the provider for routes that have no render message; later changes arrive as `apexrn:theme`. */
+function initialTheme(): PreviewTheme {
+  if (Platform.OS !== 'web' || typeof window === 'undefined') return 'system';
+  const theme = new URLSearchParams(window.location.search).get('theme');
+  return theme === 'light' || theme === 'dark' ? theme : 'system';
 }
 
 /** Applies a theme message to the provider's own state, so nothing remounts. */
@@ -51,6 +60,7 @@ function ModeSync({ mode }: { mode: 'light' | 'dark' | null }) {
 
 export default function App() {
   const embed = isEmbed();
+  const route = useRoute();
   const [message, setMessage] = useState<RenderMessage | null>(initialRenderMessage);
   const [mode, setMode] = useState<'light' | 'dark' | null>(null);
   const [preset, setPreset] = useState<PresetName>(initialPreset);
@@ -71,26 +81,28 @@ export default function App() {
     return () => window.removeEventListener('message', onMessage);
   }, []);
 
-  const theme: PreviewTheme = message?.theme ?? 'system';
+  const theme: PreviewTheme = message?.theme ?? initialTheme();
 
   return (
     <GestureHandlerRootView style={styles.flex}>
       <SafeAreaProvider>
         <ApexRNProvider defaultMode={theme} preset={preset}>
           <ModeSync mode={mode} />
-          <PreviewRoot embed={embed} message={message} />
+          <PreviewRoot embed={embed} message={message} route={route} />
         </ApexRNProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }
 
-function PreviewRoot({ embed, message }: { embed: boolean; message: RenderMessage | null }) {
+function PreviewRoot({ embed, message, route }: { embed: boolean; message: RenderMessage | null; route: Route }) {
   const { colors } = useTheme();
 
   const handleLayout = useCallback((e: LayoutChangeEvent) => {
     postToParent({ type: 'apexrn:resize', height: Math.ceil(e.nativeEvent.layout.height) });
   }, []);
+
+  if (route.kind === 'example') return <ExampleScreen slug={route.slug} id={route.id} />;
 
   return (
     <View
@@ -98,7 +110,7 @@ function PreviewRoot({ embed, message }: { embed: boolean; message: RenderMessag
       onLayout={handleLayout}
     >
       <PreviewErrorBoundary>
-        {message ? <RenderedComponent message={message} /> : isShowcase() ? <Showcase /> : !embed ? <Placeholder /> : null}
+        {message ? <RenderedComponent message={message} /> : route.kind === 'showcase' || isShowcaseQuery() ? <Showcase /> : !embed ? <Placeholder /> : null}
       </PreviewErrorBoundary>
     </View>
   );

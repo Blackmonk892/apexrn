@@ -149,3 +149,31 @@ Parallel tasks and their files (recorded retroactively for A5/A6, which were dis
 - A label/value summary row primitive (Checkout totals).
 - Reference screens: add Chips + BottomNav (Inbox), Drawer (Settings), Toast on Checkout submit per DESIGN §8.
 - InputOTP: alphanumeric `pattern`.
+
+### Site v2 (2026-11-02): Fumadocs + poster landing
+- Rejected v1 site replaced. Plan: `docs/ship-plan/site-v2.md`.
+- Ruling: the machine has 2 cores and 7 GB of RAM, so preview and web run as 2 parallel agents on separate branches, merged into `ship/site-v2`. The landing starts once the web foundation is merged. Cost if wrong: about 30 minutes of serial time.
+- Ruling: the preview example sources live in `preview/src/examples/<slug>/<example>.tsx` and import only from `@apexrn/ui`. The website reads those files as text for the Code tab, so the code shown is the code that runs.
+- Design skills (owner, 2026-11-02). Ran frontend-design (plan in `site-v2.md`), Leonxlnx `design-taste-frontend` (tasteskill v2, not the soft variant) and Vercel `web-design-guidelines` (fetched live).
+- `redesign-existing-projects` no longer exists upstream; tasteskill folded it into the "Redesign" route of `design-taste-frontend`. Ruling: we follow that route. Its "record the before" step uses the owner's rejection list, because no build of the old site exists on disk.
+- Conflict rulings (our spec wins in each case):
+  - tasteskill bans monospace labels, tracked uppercase labels, index numbers, thin rules and grid lines, and shadows at rest. Our brief requires mono part numbers (AX-0NN are real catalogue IDs, not ornament), ruled tables, a visible grid behind the phone, and hard offset shadows.
+  - Vercel's "Title Case for headings and buttons" is overruled by DESIGN.md §2 sentence case.
+- Adopted from tasteskill:
+  - headings at most two lines at every width;
+  - equal outer margins;
+  - section gap ≥120px on desktop;
+  - running text in full ink, not grey;
+  - one accent;
+  - left alignment by default;
+  - one h1, and a heading on every section;
+  - nav = wordmark, a few links and one action;
+  - the footer wordmark at full width;
+  - no blank stretches.
+- Adopted from Vercel: every rule other than the Title Case one is a build rule, and a full audit runs before the checkpoint.
+- Ruling: Usage falls back to the `demo` example source on six pages whose docs-data snippets don't run: drawer (DrawerList missing), dropdown-menu (`onPress` where it should be `onSelect`), empty-state (icon imported from the components barrel), checkbox (RadioGroupItem with no label), toast and toaster (no `<Toaster>`). The library and docs-data are untouched; fixing the snippets goes on the 0.2 list.
+- Ruling: on the site, the raw preset uses the brief's 4px/6px shadows (DESIGN.md raw elevation is 2). The owner's site brief is the more specific instruction.
+- Ruling: overlay examples (7 slugs) get a 480px minimum preview box, because their Modal is sized to the iframe viewport.
+- Ruling: Playground dropped from v2 (the owner allowed it to stay only if it already worked).
+- Ruling: the landing terminal is an inverted ink block in both themes (white in dark), the same treatment as active and selected states.
+- Process (owner, 2026-11-02): long agent sessions were replaced by small single-commit tasks, two at a time, with a build lock file (`../.build.lock`) so only one `next build` runs on this 2-core machine.

@@ -1,0 +1,38 @@
+---
+title: Theming
+description: Every ApexRN colour token for the neo and raw presets in light and dark, and the elevation ladder that sets shadow depth.
+---
+
+One file holds every colour: `lib/apexrn/colors.ts`, copied into your app by `npx apexrn init`. Parts read colours from the theme and never contain a hex value, so editing that file restyles everything.
+
+## Edit the tokens
+
+Open `colors.ts` and change the values of the preset you use. Keep each foreground token readable on its fill; the library checks 4.5:1 contrast for every pair.
+
+```ts title="lib/apexrn/colors.ts"
+const neoLight: ColorScheme = {
+  background: '#FFFFFF',
+  primary: '#FF5252', // change the value, every part follows
+  // ...
+};
+```
+
+Pick the preset on the provider: `<ApexRNProvider preset="raw">`. The default is neo.
+
+## Neo colours
+
+Saturated fills, hard shadows that step up with depth.
+
+<TokenTable preset="neo" />
+
+## Raw colours
+
+Ink on paper with one red signal colour. Every raised surface sits the same 2px off its shadow.
+
+<TokenTable preset="raw" />
+
+## Depth ladder
+
+Elevation is the pixel offset of the hard shadow. Surfaces pick a rung from the preset; raising depth moves the shadow, it never blurs it.
+
+<ElevationTable />

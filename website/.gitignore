@@ -48,3 +48,8 @@ next-env.d.ts
 
 # built from ../preview at prebuild
 /public/preview/
+
+# fumadocs
+/.source/
+/content/docs/components/
+/public/previews/

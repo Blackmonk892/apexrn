@@ -1,21 +1,31 @@
+import { DocsLayout } from "fumadocs-ui/layouts/notebook";
 import type { ReactNode } from "react";
-import { DocsMobileNav, DocsSidebar } from "@/components/DocsSidebar";
-import { Toc } from "@/components/Toc";
-import { getParts } from "@/lib/parts";
-import "./docs.css";
+import { NavItem } from "@/components/sidebar-item";
+import { ThemeControls } from "@/components/theme-controls";
+import { baseOptions } from "@/lib/layout.shared";
+import { sidebarTree } from "@/lib/source";
 
-export default function DocsLayout({ children }: { children: ReactNode }) {
-  const parts = getParts().map(({ slug, name, number }) => ({ slug, name, number }));
+export default function Layout({ children }: { children: ReactNode }) {
+  const base = baseOptions();
   return (
-    <div className="page docs-shell">
-      <DocsSidebar parts={parts} />
-      <div className="docs-content">
-        <DocsMobileNav parts={parts} />
-        <article id="docs-article" className="docs-article">
-          {children}
-        </article>
-      </div>
-      <Toc />
-    </div>
+    <DocsLayout
+      {...base}
+      tree={sidebarTree()}
+      nav={{ ...base.nav, mode: "top" }}
+      tabMode="sidebar"
+      tabs={false}
+      sidebar={{
+        collapsible: false,
+        defaultOpenLevel: 1,
+        components: { Item: NavItem },
+        footer: (
+          <div className="ax-sidebar-theme">
+            <ThemeControls />
+          </div>
+        ),
+      }}
+    >
+      {children}
+    </DocsLayout>
   );
 }

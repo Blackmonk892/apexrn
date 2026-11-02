@@ -3,23 +3,29 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "predev": "node scripts/generate-docs.mjs && node scripts/generate-theme-docs.mjs && node scripts/capture-cli.mjs && node scripts/capture-cli-docs.mjs",
+    "predev": "node scripts/generate-docs.mjs && node scripts/generate-theme-docs.mjs && node scripts/capture-cli.mjs && node scripts/capture-cli-docs.mjs && node scripts/generate-component-mdx.mjs",
     "dev": "next dev",
-    "prebuild": "node scripts/generate-docs.mjs && node scripts/generate-theme-docs.mjs && node scripts/capture-cli.mjs && node scripts/capture-cli-docs.mjs && node scripts/build-preview.mjs",
+    "prebuild": "node scripts/generate-docs.mjs && node scripts/generate-theme-docs.mjs && node scripts/capture-cli.mjs && node scripts/capture-cli-docs.mjs && node scripts/generate-component-mdx.mjs && node scripts/build-preview.mjs && node scripts/capture-previews.mjs",
     "build": "next build",
-    "postbuild": "node scripts/build-search-index.mjs",
     "start": "next start",
     "lint": "eslint",
-    "pretypecheck": "node scripts/generate-docs.mjs && node scripts/generate-theme-docs.mjs && node scripts/capture-cli.mjs && node scripts/capture-cli-docs.mjs",
+    "pretypecheck": "node scripts/generate-docs.mjs && node scripts/generate-theme-docs.mjs && node scripts/capture-cli.mjs && node scripts/capture-cli-docs.mjs && node scripts/generate-component-mdx.mjs",
     "typecheck": "tsc --noEmit",
     "check:no-rn": "node scripts/check-no-rn.mjs",
+    "check:output": "node scripts/check-output.mjs",
     "test:scripts": "node --test \"scripts/*.test.mjs\"",
-    "build:preview": "node scripts/build-preview.mjs"
+    "build:preview": "node scripts/build-preview.mjs",
+    "capture:previews": "node scripts/capture-previews.mjs"
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.3.3",
+    "@types/mdx": "^2.0.14",
     "clsx": "^2.1.1",
+    "fumadocs-core": "^16.17.9",
+    "fumadocs-mdx": "^15.4.10",
+    "fumadocs-ui": "^16.17.9",
     "next": "16.3.7",
+    "next-themes": "^0.4.6",
     "postcss": "^8.5.28",
     "react": "19.2.8",
     "react-dom": "19.2.8",
@@ -31,7 +37,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.7",
-    "pagefind": "^1.5.2",
+    "playwright": "^1.64.1",
     "typescript": "^5"
   }
 }

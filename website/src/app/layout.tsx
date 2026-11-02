@@ -1,29 +1,39 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { RootProvider } from "fumadocs-ui/provider/next";
+import type { ReactNode } from "react";
+import { ThemeColorSync } from "@/components/theme-color-sync";
+import { BASE_PATH } from "@/lib/base-path";
+import { PRESET_SCRIPT } from "@/lib/preset-script";
 import "./globals.css";
-import { Footer } from "@/components/Footer";
-import { TopBar } from "@/components/TopBar";
-import { NO_FLASH_SCRIPT } from "@/lib/site-theme";
 
-// Canonical URLs must be absolute, so they exist only when the deploy supplies the origin.
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL;
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://example-apexrn-site.invalid";
 
 export const metadata: Metadata = {
-  metadataBase: SITE_URL ? new URL(SITE_URL) : undefined,
-  title: { default: "ApexRN: brutalist UI parts for React Native", template: "%s | ApexRN" },
-  description:
-    "A catalogue of React Native components you copy into your app with one command. Thick borders, zero radius, hard shadows. You own the code.",
+  metadataBase: new URL(SITE_URL.endsWith("/") ? SITE_URL : `${SITE_URL}/`),
+  title: { default: "ApexRN", template: "%s | ApexRN" },
+  description: "Brutalist UI components for React Native and Expo. A CLI copies the source into your app.",
+  other: { "color-scheme": "light dark" },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export const viewport: Viewport = { themeColor: "#FFFFFF", colorScheme: "light dark" };
+
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" data-theme="light" data-preset="neo" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: NO_FLASH_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: PRESET_SCRIPT }} />
       </head>
       <body>
-        <TopBar />
-        <main id="main">{children}</main>
-        <Footer />
+        <a href="#nd-page" className="ax-skip">
+          Skip to content
+        </a>
+        <RootProvider
+          theme={{ attribute: "class", defaultTheme: "system", enableSystem: true, disableTransitionOnChange: true }}
+          search={{ options: { type: "static", api: `${BASE_PATH}/api/search` } }}
+        >
+          <ThemeColorSync />
+          {children}
+        </RootProvider>
       </body>
     </html>
   );

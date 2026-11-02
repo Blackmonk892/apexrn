@@ -1,36 +1,22 @@
 import type { MetadataRoute } from "next";
-import { getAllComponents } from "@/lib/docs-data";
+import { source } from "@/lib/source";
 
 export const dynamic = "force-static";
 
-// Static export has no request-time host, so the absolute base must come from the
-// deploy environment. Falls back to a placeholder (and warns at build time) rather
-// than guessing a real domain.
+// Static export has no request-time host, so the absolute base comes from the deploy environment.
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://example-apexrn-site.invalid";
 
 if (!process.env.NEXT_PUBLIC_SITE_URL) {
-  console.warn(
-    "[sitemap] NEXT_PUBLIC_SITE_URL is not set — sitemap.xml will use a placeholder domain. " +
-      "Set it before deploying so the sitemap points at the real site.",
-  );
+  console.warn("[sitemap] NEXT_PUBLIC_SITE_URL is not set, so sitemap.xml uses a placeholder domain.");
 }
 
-const STATIC_ROUTES = ["/", "/docs", "/docs/installation", "/docs/theming", "/docs/cli", "/docs/components"];
-
 export default function sitemap(): MetadataRoute.Sitemap {
-  const components = getAllComponents();
-
-  const staticEntries: MetadataRoute.Sitemap = STATIC_ROUTES.map((route) => ({
-    url: `${SITE_URL}${route}`,
-    changeFrequency: route === "/" ? "weekly" : "monthly",
-    priority: route === "/" ? 1 : 0.7,
-  }));
-
-  const componentEntries: MetadataRoute.Sitemap = components.map((c) => ({
-    url: `${SITE_URL}/docs/components/${c.slug}`,
-    changeFrequency: "monthly" as const,
-    priority: 0.6,
-  }));
-
-  return [...staticEntries, ...componentEntries];
+  return [
+    { url: `${SITE_URL}/`, changeFrequency: "weekly", priority: 1 },
+    ...source.getPages().map((page) => ({
+      url: `${SITE_URL}${page.url}`,
+      changeFrequency: "monthly" as const,
+      priority: page.slugs.length <= 1 ? 0.7 : 0.6,
+    })),
+  ];
 }
