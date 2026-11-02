@@ -16,14 +16,14 @@ export const metadata: Metadata = {
   description: "A CLI copies brutalist React Native components into your Expo app. You own every line.",
 };
 
-// reach is a percentage of the phone width, so the dots stay on their parts when the phone shrinks.
+// top is the part's centre as a percentage of the phone height, so each line meets the bezel level with its part.
 const ON_SCREEN: Omit<Leader, "number" | "name">[] = [
-  { slug: "app-bar", side: "left", top: 4, reach: 11 },
-  { slug: "search-bar", side: "left", top: 13, reach: 17 },
-  { slug: "list-item", side: "left", top: 31, reach: 17 },
-  { slug: "segmented-control", side: "right", top: 20, reach: 17 },
-  { slug: "floating-action-button", side: "right", top: 87, reach: 14 },
-  { slug: "bottom-nav", side: "right", top: 96, reach: 17 },
+  { slug: "drawer", side: "left", top: 4 },
+  { slug: "segmented-control", side: "left", top: 47 },
+  { slug: "switch", side: "left", top: 76 },
+  { slug: "progress", side: "right", top: 34 },
+  { slug: "checkbox", side: "right", top: 57 },
+  { slug: "bottom-nav", side: "right", top: 96 },
 ];
 
 const HEADLINE = ["Brutalist", "parts", "for", "React", "Native."];

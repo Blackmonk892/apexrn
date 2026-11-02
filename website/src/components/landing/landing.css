@@ -293,14 +293,15 @@
   color: var(--paper);
 }
 
-/* Leaders: equal-width labels on fixed columns either side of the phone, so the stage stays balanced. */
+/* Leaders: equal-width labels on fixed columns either side of the phone, so the stage stays balanced.
+   Lines stop at the bezel; nothing is drawn over the screen. The phone outlines the named part itself. */
 @media (min-width: 800px) {
   .lp-stage {
     --label: 160px;
     --line: 40px;
   }
   .lp-stage-inner {
-    width: min(360px, calc(100% - 2 * (var(--label) + var(--line))));
+    width: min(360px, calc(100% - 2 * (var(--label) + var(--line) + 6px)));
   }
   .lp-leaderlist {
     display: none;
@@ -316,14 +317,15 @@
     position: absolute;
     display: flex;
     align-items: center;
-    width: calc(var(--reach) * 1% + var(--line) + var(--label));
+    width: calc(var(--line) + var(--label));
     transform: translateY(-50%);
   }
   .lp-leader[data-side="left"] {
-    right: calc(100% - var(--reach) * 1%);
+    right: 100%;
   }
+  /* The right-hand lines meet the hard shadow's edge, the visible outside of the phone on that side. */
   .lp-leader[data-side="right"] {
-    left: calc(100% - var(--reach) * 1%);
+    left: calc(100% + 6px);
     flex-direction: row-reverse;
   }
   .lp-leader-label {
@@ -353,6 +355,7 @@
     text-overflow: ellipsis;
   }
   .lp-leader-label:hover,
+  .lp-leader-label:focus-visible,
   .lp-leader[data-flash] .lp-leader-label {
     background: var(--ink);
     color: var(--paper);
@@ -364,17 +367,18 @@
     background: var(--rule);
   }
   .lp-leader[data-side="left"] .lp-leader-line {
-    transform-origin: right center;
-  }
-  .lp-leader[data-side="right"] .lp-leader-line {
     transform-origin: left center;
   }
+  .lp-leader[data-side="right"] .lp-leader-line {
+    transform-origin: right center;
+  }
+  /* The tick that meets the bezel: outside the screen, on the frame's edge. */
   .lp-leader-line::after {
     content: "";
     position: absolute;
-    top: -3px;
-    width: 8px;
-    height: 8px;
+    top: -5px;
+    width: 4px;
+    height: 12px;
     background: var(--rule);
   }
   .lp-leader[data-side="left"] .lp-leader-line::after {
