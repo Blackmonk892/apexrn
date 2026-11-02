@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
+import { Fragment } from "react";
 import { BuiltWith } from "@/components/landing/built-with";
-import { Catalogue } from "@/components/landing/catalogue";
 import { parts, part, version } from "@/components/landing/data";
 import { PosterFooter } from "@/components/landing/footer";
 import { InstallBlock } from "@/components/landing/install-block";
 import { LooksControls } from "@/components/landing/looks-controls";
 import { OwnTheCode } from "@/components/landing/own-the-code";
+import { PartsTicker } from "@/components/landing/parts-ticker";
 import { PhoneStage, type Leader } from "@/components/landing/phone-stage";
 import { INIT_COMMAND } from "@/lib/site";
 import "@/components/landing/landing.css";
@@ -15,14 +16,17 @@ export const metadata: Metadata = {
   description: "A CLI copies brutalist React Native components into your Expo app. You own every line.",
 };
 
+// reach is a percentage of the phone width, so the dots stay on their parts when the phone shrinks.
 const ON_SCREEN: Omit<Leader, "number" | "name">[] = [
-  { slug: "app-bar", side: "left", top: 4, reach: 40 },
-  { slug: "search-bar", side: "left", top: 13, reach: 60 },
-  { slug: "list-item", side: "left", top: 31, reach: 60 },
-  { slug: "segmented-control", side: "right", top: 20, reach: 60 },
-  { slug: "floating-action-button", side: "right", top: 87, reach: 50 },
-  { slug: "bottom-nav", side: "right", top: 96, reach: 60 },
+  { slug: "app-bar", side: "left", top: 4, reach: 11 },
+  { slug: "search-bar", side: "left", top: 13, reach: 17 },
+  { slug: "list-item", side: "left", top: 31, reach: 17 },
+  { slug: "segmented-control", side: "right", top: 20, reach: 17 },
+  { slug: "floating-action-button", side: "right", top: 87, reach: 14 },
+  { slug: "bottom-nav", side: "right", top: 96, reach: 17 },
 ];
+
+const HEADLINE = ["Brutalist", "parts", "for", "React", "Native."];
 
 export default function Home() {
   const leaders: Leader[] = ON_SCREEN.map((l) => ({ ...l, number: part(l.slug).number, name: part(l.slug).name }));
@@ -30,7 +34,14 @@ export default function Home() {
     <main className="lp">
       <section className="lp-hero" aria-labelledby="lp-h1">
         <h1 id="lp-h1" className="lp-h1">
-          Brutalist parts for React Native.
+          {HEADLINE.map((word, i) => (
+            <Fragment key={word}>
+              {i > 0 ? " " : null}
+              <span className="lp-word" style={{ ["--i" as string]: i }}>
+                {word}
+              </span>
+            </Fragment>
+          ))}
         </h1>
         <div className="lp-hero-row">
           <div className="lp-cell">
@@ -62,18 +73,15 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="lp-section" aria-labelledby="lp-parts">
-        <h2 id="lp-parts" className="lp-h2">
-          All {parts.length} parts
-        </h2>
-        <Catalogue parts={parts} />
+      <section className="lp-section" aria-label={`All ${parts.length} parts`}>
+        <PartsTicker parts={parts} />
       </section>
 
       <section className="lp-section" aria-labelledby="lp-own">
         <h2 id="lp-own" className="lp-h2">
           You own every line
         </h2>
-        <p className="lp-text lp-lede">The CLI writes plain source files into your project. Nothing is imported from a package, so you can edit any of it.</p>
+        <p className="lp-text lp-lede">One command writes the drawer into your project as plain source you can edit.</p>
         <OwnTheCode />
       </section>
 
@@ -81,7 +89,7 @@ export default function Home() {
         <h2 id="lp-built" className="lp-h2">
           Built with ApexRN
         </h2>
-        <p className="lp-text lp-lede">Three reference screens made from the parts in the catalogue.</p>
+        <p className="lp-text lp-lede">Three reference screens made from these parts.</p>
         <BuiltWith />
       </section>
 

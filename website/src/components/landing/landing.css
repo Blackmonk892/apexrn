@@ -111,7 +111,8 @@
   font-size: clamp(18px, 1.6vw, 24px);
   line-height: 1.3;
   font-weight: 600;
-  align-self: center;
+  display: flex;
+  align-items: center;
   padding-block: 28px;
 }
 .lp-hero-meta {
@@ -122,18 +123,47 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  align-self: end;
+  display: flex;
+  align-items: flex-end;
   padding-block: 28px;
   white-space: nowrap;
 }
 .lp-install {
+  position: relative;
+  display: block;
+  width: 100%;
+  max-width: 460px;
+  padding: 0 6px 6px 0;
+  border: 0;
+  background: transparent;
+  color: #000;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+/* The hard shadow is its own layer so the press can slide the face onto it. */
+.lp-install::before {
+  content: "";
+  position: absolute;
+  inset: 6px 0 0 6px;
+  background: var(--shadow);
+}
+.lp-install-face {
+  position: relative;
   display: flex;
   align-items: stretch;
-  max-width: 460px;
   background: var(--signal);
-  color: #000;
   border: 3px solid #000;
-  box-shadow: 6px 6px 0 var(--shadow);
+}
+.lp-install:active .lp-install-face {
+  transform: translate(6px, 6px);
+}
+.lp-install:focus-visible {
+  outline: 0;
+}
+.lp-install:focus-visible .lp-install-face {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
 }
 .lp-install-cmd {
   flex: 1;
@@ -143,29 +173,38 @@
   font-weight: 700;
   white-space: nowrap;
 }
-.lp-install-copy {
+.lp-install-tag {
+  display: grid;
+  place-items: center;
   min-width: 96px;
   min-height: 44px;
-  padding: 0 16px;
-  border: 0;
   border-inline-start: 3px solid #000;
-  background: transparent;
-  color: #000;
   font-family: var(--mono);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  cursor: pointer;
-  transition: background-color 120ms, color 120ms;
+  perspective: 200px;
 }
-.lp-install-copy:hover {
+.lp-install:hover .lp-install-tag {
   background: #000;
   color: var(--signal);
 }
-.lp-install-copy:focus-visible {
-  outline-offset: -6px;
-  outline-color: #000;
+.lp-install-flip {
+  display: grid;
+  transform-style: preserve-3d;
+  transition: transform 180ms steps(3, end);
+}
+.lp-install-flip > span {
+  grid-area: 1 / 1;
+  text-align: center;
+  backface-visibility: hidden;
+}
+.lp-install-flip > span + span {
+  transform: rotateX(180deg);
+}
+.lp-install-tag[data-copied] .lp-install-flip {
+  transform: rotateX(180deg);
 }
 
 /* Phone on the grid */
@@ -249,7 +288,20 @@
   text-decoration-thickness: 2px;
 }
 
-@media (min-width: 1100px) {
+.lp-leaderlist li[data-flash] a {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* Leaders: equal-width labels on fixed columns either side of the phone, so the stage stays balanced. */
+@media (min-width: 800px) {
+  .lp-stage {
+    --label: 160px;
+    --line: 40px;
+  }
+  .lp-stage-inner {
+    width: min(360px, calc(100% - 2 * (var(--label) + var(--line))));
+  }
   .lp-leaderlist {
     display: none;
   }
@@ -264,20 +316,23 @@
     position: absolute;
     display: flex;
     align-items: center;
-    width: calc(var(--reach) + 300px);
+    width: calc(var(--reach) * 1% + var(--line) + var(--label));
     transform: translateY(-50%);
   }
   .lp-leader[data-side="left"] {
-    right: calc(100% - var(--reach));
+    right: calc(100% - var(--reach) * 1%);
   }
   .lp-leader[data-side="right"] {
-    left: calc(100% - var(--reach));
+    left: calc(100% - var(--reach) * 1%);
     flex-direction: row-reverse;
   }
   .lp-leader-label {
     pointer-events: auto;
     display: grid;
     gap: 2px;
+    box-sizing: border-box;
+    flex: none;
+    width: var(--label);
     padding: 6px 10px;
     border: 2px solid var(--rule);
     background: var(--paper);
@@ -289,10 +344,16 @@
     text-transform: uppercase;
     white-space: nowrap;
   }
+  .lp-leader[data-side="right"] .lp-leader-label {
+    text-align: end;
+  }
   .lp-leader-name {
     font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
-  .lp-leader-label:hover {
+  .lp-leader-label:hover,
+  .lp-leader[data-flash] .lp-leader-label {
     background: var(--ink);
     color: var(--paper);
   }
@@ -301,6 +362,12 @@
     flex: 1;
     height: 2px;
     background: var(--rule);
+  }
+  .lp-leader[data-side="left"] .lp-leader-line {
+    transform-origin: right center;
+  }
+  .lp-leader[data-side="right"] .lp-leader-line {
+    transform-origin: left center;
   }
   .lp-leader-line::after {
     content: "";
@@ -315,6 +382,12 @@
   }
   .lp-leader[data-side="right"] .lp-leader-line::after {
     left: 0;
+  }
+}
+@media (min-width: 1100px) {
+  .lp-stage {
+    --label: 200px;
+    --line: 64px;
   }
 }
 
@@ -341,6 +414,10 @@
   max-width: 420px;
   border: 2px solid var(--rule);
   box-shadow: 4px 4px 0 var(--shadow);
+}
+.lp-switch-options:has(button:active) {
+  transform: translate(4px, 4px);
+  box-shadow: 0 0 0 var(--shadow);
 }
 .lp-switch-options button {
   min-height: 56px;
@@ -372,114 +449,88 @@
   outline-color: var(--paper);
 }
 
-/* Catalogue */
-.lp-table {
-  width: 100%;
-  border-collapse: collapse;
-  border-top: 2px solid var(--rule);
-}
-.lp-table th,
-.lp-table td {
-  padding: 18px 16px;
-  text-align: start;
-  vertical-align: baseline;
-  border-bottom: 2px solid var(--rule);
-}
-.lp-table thead th {
-  padding-block: 12px;
-  font-family: var(--mono);
-  font-size: 12px;
-  line-height: 16px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-.lp-table th:first-child,
-.lp-table td:first-child {
-  padding-inline-start: 0;
-}
-.lp-table th:last-child,
-.lp-table td:last-child {
-  padding-inline-end: 0;
-}
-.lp-table tbody tr {
-  position: relative;
-  transition: background-color 120ms, color 120ms;
-}
-.lp-table tbody tr:hover {
+/* Parts ticker: a full-bleed inverted band */
+.lp-ticker {
+  margin-inline: calc(-1 * var(--margin));
+  overflow: hidden;
   background: var(--ink);
   color: var(--paper);
 }
-.lp-table tbody tr:hover td:first-child,
-.lp-table tbody tr:hover th:first-child {
-  padding-inline-start: 16px;
+.lp-ticker-track {
+  display: flex;
+  width: max-content;
 }
-.lp-table tbody tr:has(a:focus-visible) {
-  outline: 2px solid var(--ring);
-  outline-offset: -2px;
+.lp-ticker-run {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
-.lp-table-num {
-  font-family: var(--mono);
-  font-size: clamp(22px, 2.4vw, 34px);
+.lp-ticker-run li {
+  border-inline-end: 2px solid var(--paper);
+}
+.lp-ticker-run a {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 24px 28px;
+  font-size: clamp(22px, 2.4vw, 32px);
   line-height: 1;
-  font-weight: 500;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-.lp-table-name {
-  font-size: 22px;
-  line-height: 1.1;
-  font-weight: 800;
+  font-weight: 900;
   letter-spacing: -0.01em;
-}
-.lp-table-name a {
   text-decoration: none;
-}
-.lp-table-name a:focus-visible {
-  outline: 0;
-}
-.lp-table-name a::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-}
-.lp-table-desc {
-  max-width: 52ch;
-  font-size: 16px;
-  line-height: 1.4;
-}
-.lp-table-add {
-  font-size: 13px;
   white-space: nowrap;
+}
+.lp-ticker-run a:hover {
+  background: var(--paper);
+  color: var(--ink);
+}
+.lp-ticker-run a:focus-visible {
+  outline-color: var(--paper);
+  outline-offset: -6px;
 }
 
-/* Own the code */
-.lp-code-grid {
+/* Own the code: one frame, terminal | source */
+.lp-split {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 32px;
-  align-items: start;
+  border: 3px solid var(--rule);
+  box-shadow: 6px 6px 0 var(--shadow);
+  background: var(--paper);
 }
-.lp-code-side {
-  display: grid;
-  gap: 32px;
-  min-width: 0;
-}
-.lp-code-grid figure {
+.lp-split figure {
   margin: 0;
   min-width: 0;
 }
-.lp-code-grid figcaption {
-  margin-bottom: 8px;
+.lp-split-pane {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.lp-split-head {
+  padding: 10px 16px;
+  border-bottom: 2px solid var(--rule);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lp-split-code {
+  position: relative;
+  min-width: 0;
+  border-inline-start: 3px solid var(--rule);
+}
+.lp-terminal {
+  background: var(--ink);
+  color: var(--paper);
+}
+.lp-terminal .lp-split-head {
+  border-bottom-color: var(--paper);
 }
 .lp-terminal pre {
+  flex: 1;
   margin: 0;
   padding: 20px;
   overflow-x: auto;
-  border: 2px solid var(--rule);
-  background: var(--ink);
-  color: var(--paper);
-  box-shadow: 4px 4px 0 var(--shadow);
   font-family: var(--mono);
   font-size: 13px;
   line-height: 1.6;
@@ -487,27 +538,24 @@
 .lp-prompt {
   opacity: 0.6;
 }
-.lp-tree ul {
-  margin: 0;
-  padding: 0 0 0 20px;
-  list-style: none;
-  font-family: var(--mono);
-  font-size: 13px;
-  line-height: 1.8;
+.lp-ghost {
+  visibility: hidden;
 }
-.lp-tree > ul {
-  padding: 12px 16px;
-  border: 2px solid var(--rule);
+.lp-cursor {
+  display: inline-block;
+  width: 0.6em;
+  height: 1.1em;
+  vertical-align: text-bottom;
+  background: var(--paper);
 }
-.lp-tree-name[data-written]::before {
-  content: "+ ";
-  font-weight: 700;
+.lp-source-code {
+  height: 440px;
+  overflow: auto;
+  overscroll-behavior: contain;
 }
 .lp-source-code pre {
   margin: 0;
   padding: 12px 0;
-  overflow-x: auto;
-  border: 2px solid var(--rule);
   background: var(--paper);
   font-family: var(--mono);
   font-size: 13px;
@@ -542,6 +590,30 @@
 }
 .dark .lp-source-code span {
   color: var(--shiki-dark);
+}
+/* Code reveal: a paper blind over the source lifts in hard steps once the terminal finishes. */
+.lp-split-code::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--paper);
+  transform-origin: bottom;
+  transform: scaleY(0);
+  pointer-events: none;
+}
+.lp-split:is([data-phase="armed"], [data-phase="typing"], [data-phase="printing"]) .lp-split-code::after {
+  transform: none;
+}
+.lp-split[data-phase="done"] .lp-split-code::after {
+  animation: lp-blind 400ms steps(8, end) both;
+}
+@keyframes lp-blind {
+  from {
+    transform: none;
+  }
+  to {
+    transform: scaleY(0);
+  }
 }
 
 /* Built with */
@@ -624,10 +696,6 @@
 }
 
 @media (max-width: 1099px) {
-  .lp-table-add {
-    white-space: normal;
-    overflow-wrap: anywhere;
-  }
   .lp-built {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 24px;
@@ -635,12 +703,19 @@
 }
 
 @media (max-width: 899px) {
-  .lp-code-grid,
+  .lp-split,
   .lp-looks {
     grid-template-columns: minmax(0, 1fr);
   }
   .lp-looks {
     gap: 32px;
+  }
+  .lp-split-code {
+    border-inline-start: 0;
+    border-top: 3px solid var(--rule);
+  }
+  .lp-source-code {
+    height: 360px;
   }
 }
 
@@ -675,47 +750,6 @@
   .lp-phone {
     box-shadow: 4px 4px 0 var(--shadow);
   }
-  .lp-table,
-  .lp-table tbody,
-  .lp-table tr,
-  .lp-table td,
-  .lp-table th {
-    display: block;
-  }
-  .lp-table thead {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-  }
-  .lp-table tbody tr {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    column-gap: 16px;
-    padding: 16px 0;
-    border-bottom: 2px solid var(--rule);
-  }
-  .lp-table th,
-  .lp-table td {
-    padding: 0;
-    border: 0;
-  }
-  .lp-table-desc,
-  .lp-table-add {
-    grid-column: 1 / -1;
-    margin-top: 8px;
-  }
-  .lp-table tbody tr:hover td:first-child,
-  .lp-table tbody tr:hover th:first-child {
-    padding-inline-start: 0;
-  }
-  .lp-table tbody tr:hover {
-    padding-inline: 8px;
-  }
-  .lp-table-num {
-    font-size: 22px;
-  }
   .lp-built {
     grid-template-columns: minmax(0, 320px);
     gap: 40px;
@@ -731,10 +765,115 @@
   }
 }
 
+/* Home header: the rule sits on the same margins and weight as every other rule on the page. */
+#nd-nav > div {
+  border-bottom: 0;
+  background: var(--ax-bg);
+}
+#nd-nav > div > div:first-child {
+  max-width: none;
+  margin-inline: clamp(16px, 3.5vw, 48px);
+  border-bottom: 2px solid var(--ax-border);
+}
+#nd-nav > div > div:first-child > nav {
+  padding-inline: 0;
+}
+
+/* Motion: transform and opacity only, and none of it under reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .lp-word {
+    display: inline-block;
+    animation: lp-word 160ms steps(1, end) both;
+    animation-delay: calc(var(--i) * 80ms);
+  }
+  .lp-hero .lp-install {
+    animation: lp-stamp 260ms steps(1, end) 520ms both;
+  }
+  .lp-hero .lp-install::before {
+    animation: lp-shadow 260ms steps(1, end) 520ms both;
+  }
+  .lp-leader-line {
+    animation: lp-draw 180ms steps(6, end) both;
+    animation-delay: calc(820ms + var(--i) * 60ms);
+  }
+  .lp-ticker-track {
+    animation: lp-ticker 140s linear infinite;
+  }
+  .lp-ticker:is(:hover, :focus-within) .lp-ticker-track {
+    animation-play-state: paused;
+  }
+  .lp-cursor {
+    animation: lp-blink 1s steps(1, end) infinite;
+  }
+}
+@keyframes lp-word {
+  from {
+    opacity: 0;
+    transform: translateY(0.12em);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(0.12em);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes lp-stamp {
+  from {
+    opacity: 0;
+    transform: scale(1.06);
+  }
+  35% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes lp-shadow {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes lp-draw {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes lp-ticker {
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes lp-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .lp *,
   .lp *::before,
   .lp *::after {
     transition: none !important;
+  }
+  .lp-ticker-track {
+    width: auto;
+  }
+  .lp-ticker-run {
+    flex-wrap: wrap;
+  }
+  .lp-ticker-run[aria-hidden] {
+    display: none;
   }
 }
