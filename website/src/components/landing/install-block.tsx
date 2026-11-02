@@ -21,7 +21,7 @@ export function InstallBlock({ command }: { command: string }) {
 
   return (
     <>
-      <button type="button" className="lp-install" onClick={copy} aria-label={`Copy ${command}`}>
+      <button type="button" className="lp-install" onClick={copy} aria-label={`${command} Copy`}>
         <span className="lp-install-face">
           <code className="lp-install-cmd" translate="no">
             {command}

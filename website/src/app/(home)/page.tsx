@@ -31,7 +31,7 @@ const HEADLINE = ["Brutalist", "parts", "for", "React", "Native."];
 export default function Home() {
   const leaders: Leader[] = ON_SCREEN.map((l) => ({ ...l, number: part(l.slug).number, name: part(l.slug).name }));
   return (
-    <main className="lp">
+    <main id="nd-page" className="lp">
       <section className="lp-hero" aria-labelledby="lp-h1">
         <h1 id="lp-h1" className="lp-h1">
           {HEADLINE.map((word, i) => (
