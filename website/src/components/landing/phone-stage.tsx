@@ -13,8 +13,6 @@ export interface Leader {
   side: "left" | "right";
   /** Vertical position as a percentage of the phone height. */
   top: number;
-  /** How far the line reaches into the phone, as a percentage of the phone width. */
-  reach: number;
 }
 
 const FRAME_SRC = `${BASE_PATH}/preview/index.html?theme=light&preset=neo#/showcase`;
@@ -32,6 +30,9 @@ export function PhoneStage({ leaders }: { leaders: Leader[] }) {
   const frame = useRef<HTMLIFrameElement>(null);
   const [ready, setReady] = useState(false);
   const [flash, setFlash] = useState<string | null>(null);
+  // Nothing is drawn over the screen; a hovered or flashed label asks the phone to outline its part instead.
+  const [pointed, setPointed] = useState<string | null>(null);
+  const highlight = pointed ?? flash;
   // The preview posts `apexrn:ready` once on mount. The iframe is in the static HTML, so it can
   // finish booting before React hydrates and attaches the listener; set src only after the
   // listener exists or the message is lost and the phone stays on the still forever.
@@ -91,6 +92,18 @@ export function PhoneStage({ leaders }: { leaders: Leader[] }) {
     frame.current?.contentWindow?.postMessage({ type: "apexrn:preset", preset }, window.location.origin);
   }, [ready, preset]);
 
+  useEffect(() => {
+    if (!ready) return;
+    frame.current?.contentWindow?.postMessage({ type: "apexrn:highlight", part: highlight }, window.location.origin);
+  }, [ready, highlight]);
+
+  const point = (slug: string) => ({
+    onPointerEnter: () => setPointed(slug),
+    onPointerLeave: () => setPointed(null),
+    onFocus: () => setPointed(slug),
+    onBlur: () => setPointed(null),
+  });
+
   // The demo drives the phone by itself; a visitor reaching for it takes over until they leave.
   function hold() {
     held.current = true;
@@ -115,7 +128,7 @@ export function PhoneStage({ leaders }: { leaders: Leader[] }) {
             <img className="lp-shot lp-shot-light" src={`${STILL}-light.png`} width={390} height={844} alt="" aria-hidden="true" />
             <img className="lp-shot lp-shot-dark" src={`${STILL}-dark.png`} width={390} height={844} alt="" aria-hidden="true" />
             {/* eslint-enable @next/next/no-img-element */}
-            <iframe ref={frame} className="lp-frame" title="ApexRN Inbox screen, running live" />
+            <iframe ref={frame} className="lp-frame" title="ApexRN training-plan screen, running live" />
           </div>
           <ul className="lp-leaders">
             {leaders.map((l, i) => (
@@ -124,9 +137,9 @@ export function PhoneStage({ leaders }: { leaders: Leader[] }) {
                 className="lp-leader"
                 data-side={l.side}
                 data-flash={flash === l.slug || undefined}
-                style={{ top: `${l.top}%`, ["--reach" as string]: l.reach, ["--i" as string]: i }}
+                style={{ top: `${l.top}%`, ["--i" as string]: i }}
               >
-                <Link href={`/docs/components/${l.slug}`} className="lp-leader-label">
+                <Link href={`/docs/components/${l.slug}`} className="lp-leader-label" {...point(l.slug)}>
                   <span className="lp-num">{l.number}</span>
                   <span className="lp-leader-name" translate="no">
                     {l.name}
@@ -141,7 +154,7 @@ export function PhoneStage({ leaders }: { leaders: Leader[] }) {
       <ul className="lp-leaderlist" aria-label="Parts on screen">
         {leaders.map((l) => (
           <li key={l.slug} data-flash={flash === l.slug || undefined}>
-            <Link href={`/docs/components/${l.slug}`}>
+            <Link href={`/docs/components/${l.slug}`} {...point(l.slug)}>
               <span className="lp-num">{l.number}</span>
               <span translate="no">{l.name}</span>
             </Link>

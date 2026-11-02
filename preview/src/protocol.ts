@@ -35,7 +35,16 @@ export interface DemoControlMessage {
   running: boolean;
 }
 
-export type ParentToPreviewMessage = RenderMessage | ThemeMessage | PresetMessage | DemoControlMessage;
+/**
+ * parent -> preview: outline the showcase part with this component slug, or clear the outline with null.
+ * The landing page never draws over the phone; it asks the phone to mark the part it is naming.
+ */
+export interface HighlightMessage {
+  type: 'apexrn:highlight';
+  part: string | null;
+}
+
+export type ParentToPreviewMessage = RenderMessage | ThemeMessage | PresetMessage | DemoControlMessage | HighlightMessage;
 
 /** preview -> parent: mounted and listening. */
 export interface ReadyMessage {
@@ -96,4 +105,9 @@ export function isPresetMessage(data: unknown): data is PresetMessage {
 export function isDemoControlMessage(data: unknown): data is DemoControlMessage {
   const d = data as { type?: unknown; running?: unknown } | null;
   return typeof d === 'object' && d !== null && d.type === 'apexrn:demo-control' && typeof d.running === 'boolean';
+}
+
+export function isHighlightMessage(data: unknown): data is HighlightMessage {
+  const d = data as { type?: unknown; part?: unknown } | null;
+  return typeof d === 'object' && d !== null && d.type === 'apexrn:highlight' && (d.part === null || typeof d.part === 'string');
 }
