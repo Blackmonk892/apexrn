@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   AppBar,
@@ -36,6 +36,7 @@ import {
   spacing,
   useTheme,
 } from '@apexrn/ui';
+import { isDemoControlMessage, postToParent } from './protocol';
 
 interface Message {
   id: string;
@@ -69,6 +70,71 @@ const FILTERS = [
 
 type Tab = 'inbox' | 'alerts' | 'me';
 
+const STEP_MS = 2200;
+const DRAWER_HOLD_MS = 1500;
+const KEYSTROKE_MS = 90;
+const DEMO_QUERY = 'review';
+
+type Schedule = (fn: () => void, ms: number) => void;
+
+/** One scripted beat of the self-demo; `part` is the component slug the landing page labels. */
+interface DemoStep {
+  part: string;
+  run: (after: Schedule) => void;
+}
+
+/**
+ * Plays `steps` on a loop while the parent says so. Idle until the first `running: true`, so screenshots
+ * and docs embeds stay still, and every pending timer dies on stop so a hover hands over a quiet screen.
+ */
+function useDemoLoop(steps: DemoStep[], onStop: () => void) {
+  // Steps close over the latest render's setters; the listener is installed once.
+  const latest = useRef({ steps, onStop });
+  useEffect(() => {
+    latest.current = { steps, onStop };
+  });
+
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined') return;
+    let timers: ReturnType<typeof setTimeout>[] = [];
+    let running = false;
+    let index = 0;
+
+    const after: Schedule = (fn, ms) => {
+      timers.push(setTimeout(fn, ms));
+    };
+    const clear = () => {
+      timers.forEach(clearTimeout);
+      timers = [];
+    };
+    const tick = () => {
+      const { steps: script } = latest.current;
+      const step = script[index % script.length];
+      index += 1;
+      step.run(after);
+      postToParent({ type: 'apexrn:demo-step', part: step.part });
+      after(tick, STEP_MS);
+    };
+
+    function onMessage(event: MessageEvent) {
+      if (!isDemoControlMessage(event.data)) return;
+      if (event.data.running && !running) {
+        running = true;
+        after(tick, STEP_MS);
+      } else if (!event.data.running && running) {
+        running = false;
+        clear();
+        latest.current.onStop();
+      }
+    }
+    window.addEventListener('message', onMessage);
+    return () => {
+      window.removeEventListener('message', onMessage);
+      clear();
+    };
+  }, []);
+}
+
 /** The landing page's phone: the Inbox reference screen plus the drawer and bottom nav the leader lines point at. */
 export function Showcase() {
   const { colors } = useTheme();
@@ -77,13 +143,55 @@ export function Showcase() {
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('all');
   const [drafts, setDrafts] = useState(0);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [push, setPush] = useState(true);
+
+  useDemoLoop(
+    [
+      {
+        part: 'segmented-control',
+        run: () => {
+          setTab('inbox');
+          setFilter('unread');
+        },
+      },
+      {
+        part: 'search-bar',
+        run: (after) => {
+          setFilter('all');
+          setQuery('');
+          for (let i = 1; i <= DEMO_QUERY.length; i += 1) after(() => setQuery(DEMO_QUERY.slice(0, i)), i * KEYSTROKE_MS);
+        },
+      },
+      {
+        part: 'floating-action-button',
+        run: () => {
+          setQuery('');
+          // Wraps so the draft counter never grows without bound on a long idle.
+          setDrafts((n) => (n % 3) + 1);
+        },
+      },
+      {
+        part: 'drawer',
+        run: (after) => {
+          setDrawerOpen(true);
+          after(() => setDrawerOpen(false), DRAWER_HOLD_MS);
+        },
+      },
+      { part: 'bottom-nav', run: () => setTab('me') },
+      { part: 'switch', run: () => setPush((p) => !p) },
+      { part: 'bottom-nav', run: () => setTab('inbox') },
+    ],
+    // A stop cancels the scheduled close, so close here or the drawer stays open under the user's cursor.
+    () => setDrawerOpen(false),
+  );
 
   const unread = MESSAGES.filter((m) => m.unread).length;
   const title = tab === 'inbox' ? 'Inbox' : tab === 'alerts' ? 'Alerts' : 'Me';
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
-      <Drawer>
+      <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
         <AppBar
           title={title}
           subtitle={tab === 'inbox' ? `${unread} unread` : undefined}
@@ -120,7 +228,7 @@ export function Showcase() {
             ))}
           </ScrollView>
         ) : (
-          <MeTab />
+          <MeTab push={push} onPush={setPush} />
         )}
         {tab === 'inbox' ? (
           <FAB
@@ -205,8 +313,7 @@ function InboxTab({ query, onQuery, filter, onFilter, drafts }: InboxTabProps) {
   );
 }
 
-function MeTab() {
-  const [push, setPush] = useState(true);
+function MeTab({ push, onPush }: { push: boolean; onPush: (on: boolean) => void }) {
   return (
     <ScrollView contentContainerStyle={styles.page}>
       <View style={styles.profile}>
@@ -217,7 +324,7 @@ function MeTab() {
         </View>
       </View>
       <Separator />
-      <Switch checked={push} onCheckedChange={setPush} label="Push notifications" />
+      <Switch checked={push} onCheckedChange={onPush} label="Push notifications" />
       <Separator />
     </ScrollView>
   );
