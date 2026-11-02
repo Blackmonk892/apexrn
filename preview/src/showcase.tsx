@@ -226,11 +226,11 @@ function TrainingScreen() {
 
       <View style={styles.grow}>
         {tab === 'today' ? (
-          <ScrollView contentContainerStyle={{ padding: spacing.lg, gap: spacing.lg }}>
+          <ScrollView contentContainerStyle={{ padding: spacing.lg, gap: spacing.md }}>
             <View style={[styles.row, { gap: spacing.md }]}>
               <Avatar name="Maya Okafor" size="md" />
               <View style={styles.grow}>
-                <Text variant="label" tone="muted">
+                <Text variant="label" tone="muted" numberOfLines={1}>
                   Half marathon plan
                 </Text>
                 <Text variant="title">Week 6 of 12</Text>
@@ -290,7 +290,6 @@ function TrainingScreen() {
         )}
         <FAB
           accessibilityLabel="Log a run"
-          label="Log run"
           icon={<PlusIcon size={22} color={colors.primaryForeground} />}
           onPress={() => toggle('sat', true)}
         />
